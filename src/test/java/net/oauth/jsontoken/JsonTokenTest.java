@@ -4,23 +4,28 @@ import junit.framework.TestCase;
 
 public class JsonTokenTest extends TestCase {
 
-    public void testSignature() {
+    private static final byte[] SYMMETRIC_KEY = "kjdhasdkjhaskdjhaskdjhaskdjh".getBytes();
+
+    public void testSignature() throws Exception {
+        HmacSHA256Signer signer = new HmacSHA256Signer(SYMMETRIC_KEY);
+
         Envelope env = new Envelope();
         env.setIssuer("google.com");
         SamplePayload payload = new SamplePayload();
         payload.setBar(15);
         payload.setFoo("some value");
-        JsonToken<SamplePayload> token = new JsonToken<SamplePayload>(payload, env);
+        JsonToken<SamplePayload> token = JsonToken.generateToken(payload, env, signer);
 
         System.out.println(token.toString());
 
         assertNotNull(token.toString());
     }
 
-    public void testVerification() {
-        String tokenString = "eyJmb28iOiJzb21lIHZhbHVlIiwiYmFyIjoxNX0.eyJpc3N1ZXIiOiJnb29nbGUuY29tIn0.signature";
+    public void testVerification() throws Exception {
+        String tokenString = "eyJmb28iOiJzb21lIHZhbHVlIiwiYmFyIjoxNX0.eyJpc3N1ZXIiOiJnb29nbGUuY29tIn0.sqB9n1ciT1N21wfSdWBJ8BqAgMyu-2qUWpk8i6FirFA";
+        HmacSHA256Verifier verifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
 
-        JsonToken<SamplePayload> token = JsonToken.parseToken(tokenString, SamplePayload.class);
+        JsonToken<SamplePayload> token = JsonToken.parseToken(tokenString, SamplePayload.class, verifier);
 
         assertEquals("google.com", token.getEnvelope().getIssuer());
         assertEquals(15, token.getPayload().getBar());
