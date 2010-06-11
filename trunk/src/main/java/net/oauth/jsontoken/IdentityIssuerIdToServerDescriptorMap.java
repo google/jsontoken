@@ -16,17 +16,13 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
+import java.net.URI;
 
+public class IdentityIssuerIdToServerDescriptorMap implements
+    IssuerIdToServerDescriptorMap {
 
-public interface Signer {
-
-  public String getKeyId();
-
-  public String getSignerId();
-
-  public SignatureAlgorithm getSignatureAlgorithm();
-
-  public byte[] sign(byte[] source) throws SignatureException;
-
+  @Override
+  public URI getServerDescriptor(String issuer) {
+    return URI.create(issuer);
+  }
 }

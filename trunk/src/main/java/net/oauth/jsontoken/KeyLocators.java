@@ -16,17 +16,19 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 
-public interface Signer {
+public class KeyLocators {
 
-  public String getKeyId();
+  private final Map<SignatureAlgorithm, KeyLocator> map = Maps.newHashMap();
 
-  public String getSignerId();
+  public void setKeyLocator(SignatureAlgorithm alg, KeyLocator locator) {
+    map.put(alg, locator);
+  }
 
-  public SignatureAlgorithm getSignatureAlgorithm();
-
-  public byte[] sign(byte[] source) throws SignatureException;
-
+  public KeyLocator getKeyLocator(SignatureAlgorithm alg) {
+    return map.get(alg);
+  }
 }
