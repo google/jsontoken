@@ -18,11 +18,8 @@ package net.oauth.jsontoken.discovery;
 
 import java.net.URI;
 
-public class IdentityIssuerIdToServerDescriptorMap implements
-    IssuerIdToServerDescriptorMap {
+public interface ServerInfoResolver {
 
-  @Override
-  public URI getServerDescriptor(String issuer) {
-    return URI.create(issuer);
-  }
+  public ServerInfo resolve(URI serverDescriptor);
+
 }

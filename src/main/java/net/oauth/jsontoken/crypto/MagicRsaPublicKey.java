@@ -14,7 +14,9 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken.discovery;
+package net.oauth.jsontoken.crypto;
+
+import org.apache.commons.codec.binary.Base64;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -22,32 +24,21 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
-import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.commons.codec.binary.Base64;
+public class MagicRsaPublicKey {
 
-import com.google.common.collect.Maps;
-import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
+  private final PublicKey publicKey;
 
-public class JsonServerDescriptorDocument implements ServerDescriptorDocument {
-
-  @SerializedName("verification_keys")
-  private final Map<String, String> verificationKeys = Maps.newHashMap();
-
-  public static JsonServerDescriptorDocument getDocument(String json) {
-    return new Gson().fromJson(json, JsonServerDescriptorDocument.class);
+  public MagicRsaPublicKey(String magicKey) {
+    this.publicKey = parseKey(magicKey);
   }
 
-  @Override
-  public PublicKey getVerificationKey(String keyId) {
-    String magicKey = verificationKeys.get(keyId);
+  public PublicKey getKey() {
+    return publicKey;
+  }
 
-    if (magicKey == null) {
-      return null;
-    }
-
+  private static PublicKey parseKey(String magicKey) {
     String[] pieces = magicKey.split(Pattern.quote("."));
     if (pieces.length != 3) {
       throw new IllegalStateException("not a valid magic key: " + magicKey);

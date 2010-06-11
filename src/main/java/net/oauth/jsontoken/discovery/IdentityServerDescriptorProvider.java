@@ -16,21 +16,13 @@
  */
 package net.oauth.jsontoken.discovery;
 
-import java.util.Map;
+import java.net.URI;
 
-import com.google.common.collect.Maps;
+public class IdentityServerDescriptorProvider implements
+    ServerDescriptorProvider {
 
-import net.oauth.jsontoken.crypto.SignatureAlgorithm;
-
-public class KeyLocators {
-
-  private final Map<SignatureAlgorithm, KeyLocator> map = Maps.newHashMap();
-
-  public void setKeyLocator(SignatureAlgorithm alg, KeyLocator locator) {
-    map.put(alg, locator);
-  }
-
-  public KeyLocator getKeyLocator(SignatureAlgorithm alg) {
-    return map.get(alg);
+  @Override
+  public URI getServerDescriptor(String issuer) {
+    return URI.create(issuer);
   }
 }

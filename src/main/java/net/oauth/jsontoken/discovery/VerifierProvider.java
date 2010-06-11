@@ -16,10 +16,11 @@
  */
 package net.oauth.jsontoken.discovery;
 
-import java.net.URI;
+import net.oauth.jsontoken.crypto.Verifier;
 
-public interface IssuerIdToServerDescriptorMap {
 
-  public URI getServerDescriptor(String issuer);
+public interface VerifierProvider {
+
+  public Verifier findVerifier(String signerId, String keyId);
 
 }

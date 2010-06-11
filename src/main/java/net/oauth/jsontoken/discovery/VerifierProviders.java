@@ -16,10 +16,21 @@
  */
 package net.oauth.jsontoken.discovery;
 
-import java.security.PublicKey;
+import java.util.Map;
 
-public interface ServerDescriptorDocument {
+import com.google.common.collect.Maps;
 
-  public PublicKey getVerificationKey(String keyId);
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 
+public class VerifierProviders {
+
+  private final Map<SignatureAlgorithm, VerifierProvider> map = Maps.newHashMap();
+
+  public void setKeyLocator(SignatureAlgorithm alg, VerifierProvider locator) {
+    map.put(alg, locator);
+  }
+
+  public VerifierProvider getKeyLocator(SignatureAlgorithm alg) {
+    return map.get(alg);
+  }
 }

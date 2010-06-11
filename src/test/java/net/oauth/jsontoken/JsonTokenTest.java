@@ -31,12 +31,12 @@ import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.DefaultPublickeyLocator;
-import net.oauth.jsontoken.discovery.IdentityIssuerIdToServerDescriptorMap;
-import net.oauth.jsontoken.discovery.JsonServerDescriptorDocument;
-import net.oauth.jsontoken.discovery.KeyLocator;
-import net.oauth.jsontoken.discovery.KeyLocators;
-import net.oauth.jsontoken.discovery.ServerDescriptorDocument;
-import net.oauth.jsontoken.discovery.ServerDescriptorResolver;
+import net.oauth.jsontoken.discovery.IdentityServerDescriptorProvider;
+import net.oauth.jsontoken.discovery.JsonServerInfo;
+import net.oauth.jsontoken.discovery.VerifierProvider;
+import net.oauth.jsontoken.discovery.VerifierProviders;
+import net.oauth.jsontoken.discovery.ServerInfo;
+import net.oauth.jsontoken.discovery.ServerInfoResolver;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
@@ -74,26 +74,26 @@ public class JsonTokenTest extends TestCase {
       "\"key1\":\"RSA.ALqcwRcW7FOczn7IzgB-eDJt_lnz0nGVyEEDc2L_8abX_bkx63N8h3YmDw2S2GZEPMfqwVqg1LufpnonI0kWzNvY9coGRl16bbX0XmSNrCget8DUu7x8GYZBgb9obvRo9-3Z4Rltj5epblZSUyTu8VbsEOKTAFfK__musVqwF89Z3XfGjND3rXYgStYaUYyDGYHriNxNsZYzMODMT-xxKbJ5DS9BAxbwn42dv_IOljuWhetWsCBnHwgG_V_0W_enu2KtMP-8WDPETasgBq4z9pTzMEcTJcvU1I2rQjrY4AXgMuIOVwQU69iOqiII9AiHQ1edDLwNyznEcKPR7Vvdf8s.AQAB\"" +
       "}}";
 
-  private KeyLocators locators;
+  private VerifierProviders locators;
 
   @Override
   protected void setUp() throws Exception {
     final HmacSHA256Verifier hmacVerifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
-    KeyLocator hmacLocator = new KeyLocator() {
+    VerifierProvider hmacLocator = new VerifierProvider() {
       @Override
-      public Verifier findVerificationKey(String signerId, String keyId) {
+      public Verifier findVerifier(String signerId, String keyId) {
         return hmacVerifier;
       }
     };
-    KeyLocator rsaLocator = new DefaultPublickeyLocator(new IdentityIssuerIdToServerDescriptorMap(),
-        new ServerDescriptorResolver() {
+    VerifierProvider rsaLocator = new DefaultPublickeyLocator(new IdentityServerDescriptorProvider(),
+        new ServerInfoResolver() {
           @Override
-          public ServerDescriptorDocument resolve(URI uri) {
-            return JsonServerDescriptorDocument.getDocument(DESCRIPTOR_DOCUMENT);
+          public ServerInfo resolve(URI uri) {
+            return JsonServerInfo.getDocument(DESCRIPTOR_DOCUMENT);
           }
         });
 
-    locators = new KeyLocators();
+    locators = new VerifierProviders();
     locators.setKeyLocator(SignatureAlgorithm.HMAC_SHA256, hmacLocator);
     locators.setKeyLocator(SignatureAlgorithm.RSA_SHA256, rsaLocator);
   }

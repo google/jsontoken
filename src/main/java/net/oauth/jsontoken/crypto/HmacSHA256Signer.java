@@ -23,23 +23,17 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.google.common.base.Preconditions;
 
-
-public class HmacSHA256Signer implements Signer {
+public class HmacSHA256Signer extends AbstractSigner {
 
   private static final String HMAC_SHA256_ALG = "HmacSHA256";
 
   private final Mac hmac;
   private final SecretKey signingKey;
-  private final String keyId;
-  private final String signerId;
 
   public HmacSHA256Signer(String signerId, String keyId, byte[] keyBytes) throws InvalidKeyException {
-    Preconditions.checkNotNull(signerId, "signerId must not be null");
+    super(signerId, keyId);
 
-    this.signerId = signerId;
-    this.keyId = keyId;
     this.signingKey = new SecretKeySpec(keyBytes, HMAC_SHA256_ALG);
     try {
       this.hmac = Mac.getInstance(HMAC_SHA256_ALG);
@@ -63,17 +57,7 @@ public class HmacSHA256Signer implements Signer {
   }
 
   @Override
-  public String getKeyId() {
-    return keyId;
-  }
-
-  @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
     return SignatureAlgorithm.HMAC_SHA256;
-  }
-
-  @Override
-  public String getSignerId() {
-    return signerId;
   }
 }

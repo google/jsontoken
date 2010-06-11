@@ -20,7 +20,7 @@ import net.oauth.jsontoken.crypto.AsciiStringSigner;
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.Signer;
 import net.oauth.jsontoken.crypto.Verifier;
-import net.oauth.jsontoken.discovery.KeyLocators;
+import net.oauth.jsontoken.discovery.VerifierProviders;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
@@ -37,7 +37,7 @@ public class JsonToken<T extends Payload> {
   private final String signature;
 
   public static <V extends Payload> JsonToken<V> parseToken(String tokenString, PayloadDeserializer<V> deserializer,
-      KeyLocators locators) throws SignatureException {
+      VerifierProviders locators) throws SignatureException {
     String[] pieces = tokenString.split(Pattern.quote(DELIMITER));
     if (pieces.length != 3) {
       throw new IllegalArgumentException("token did not have three separate parts");
@@ -50,7 +50,7 @@ public class JsonToken<T extends Payload> {
     Envelope env = Envelope.fromJson(fromBase64ToJsonString(envelopeString));
 
     String baseString = getBaseString(payloadString, envelopeString);
-    Verifier verifier = locators.getKeyLocator(env.getSignatureAlgorithm()).findVerificationKey(env.getIssuer(), env.getKeyId());
+    Verifier verifier = locators.getKeyLocator(env.getSignatureAlgorithm()).findVerifier(env.getIssuer(), env.getKeyId());
     AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
     asciiVerifier.verifySignature(baseString, fromBase64ToBytes(signature));
 
