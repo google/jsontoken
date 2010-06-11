@@ -18,11 +18,13 @@ package net.oauth.jsontoken;
 
 import java.security.SignatureException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
 import com.google.common.base.Preconditions;
 
+import net.oauth.jsontoken.crypto.AsciiStringSigner;
 import net.oauth.jsontoken.crypto.Signer;
 
 public class JsonTokenBuilder<T extends Payload> {
@@ -69,6 +71,9 @@ public class JsonTokenBuilder<T extends Payload> {
     env.setSignatureAlgorithm(signer.getSignatureAlgorithm());
     env.setTokenLifetime(duration);
 
-    return JsonToken.generateToken(payload, env, signer);
+    String baseString = JsonTokenUtil.getBaseString(payload, env);
+    AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);
+    String signature = Base64.encodeBase64URLSafeString(asciiSigner.sign(baseString));
+    return new JsonToken<T>(payload, env, signature);
   }
 }
