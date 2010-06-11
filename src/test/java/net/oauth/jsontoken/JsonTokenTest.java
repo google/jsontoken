@@ -16,13 +16,6 @@
  */
 package net.oauth.jsontoken;
 
-import java.net.URI;
-import java.security.KeyFactory;
-import java.security.SignatureException;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-
 import junit.framework.TestCase;
 
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
@@ -33,14 +26,21 @@ import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.DefaultPublickeyLocator;
 import net.oauth.jsontoken.discovery.IdentityServerDescriptorProvider;
 import net.oauth.jsontoken.discovery.JsonServerInfo;
-import net.oauth.jsontoken.discovery.VerifierProvider;
-import net.oauth.jsontoken.discovery.VerifierProviders;
 import net.oauth.jsontoken.discovery.ServerInfo;
 import net.oauth.jsontoken.discovery.ServerInfoResolver;
+import net.oauth.jsontoken.discovery.VerifierProvider;
+import net.oauth.jsontoken.discovery.VerifierProviders;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
+
+import java.net.URI;
+import java.security.KeyFactory;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 public class JsonTokenTest extends TestCase {
 
@@ -123,7 +123,10 @@ public class JsonTokenTest extends TestCase {
     PayloadDeserializer<SamplePayload> deserializer =
         DefaultPayloadDeserializer.newDeserializer(SamplePayload.class);
 
-    JsonToken<SamplePayload> token = JsonToken.parseToken(tokenString, deserializer, locators);
+    FakeClock clock = new FakeClock();
+    clock.setNow(new Instant(1276233887000L));
+    JsonTokenParser parser = new JsonTokenParser(clock);
+    JsonToken<SamplePayload> token = parser.parseToken(tokenString, deserializer, locators);
 
     assertEquals("google.com", token.getEnvelope().getIssuer());
     assertEquals(15, token.getPayload().getBar());
@@ -159,7 +162,8 @@ public class JsonTokenTest extends TestCase {
 
     PayloadDeserializer<SamplePayload> deserializer =
         DefaultPayloadDeserializer.newDeserializer(SamplePayload.class);
-    token = JsonToken.parseToken(tokenString, deserializer, locators);
+    JsonTokenParser parser = new JsonTokenParser();
+    token = parser.parseToken(tokenString, deserializer, locators);
 
     assertEquals("google.com", token.getEnvelope().getIssuer());
     assertEquals(15, token.getPayload().getBar());
@@ -172,7 +176,7 @@ public class JsonTokenTest extends TestCase {
 
     System.out.println(tamperedToken);
     try {
-      token = JsonToken.parseToken(tamperedToken, deserializer, locators);
+      token = parser.parseToken(tamperedToken, deserializer, locators);
       fail("verification should have failed");
     } catch (SignatureException e) {
       // expected
