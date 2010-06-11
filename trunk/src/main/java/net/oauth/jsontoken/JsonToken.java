@@ -16,6 +16,12 @@
  */
 package net.oauth.jsontoken;
 
+import net.oauth.jsontoken.crypto.AsciiStringSigner;
+import net.oauth.jsontoken.crypto.AsciiStringVerifier;
+import net.oauth.jsontoken.crypto.Signer;
+import net.oauth.jsontoken.crypto.Verifier;
+import net.oauth.jsontoken.discovery.KeyLocators;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 

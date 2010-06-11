@@ -14,7 +14,8 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
+
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -36,7 +37,7 @@ public class RsaSHA256Verifier implements Verifier {
       throw new IllegalStateException("platform is missing RSAwithSHA256 signature alg", e);
     } catch (InvalidKeyException e) {
       throw new IllegalStateException("key is invalid", e);
-    };
+    }
   }
 
   @Override

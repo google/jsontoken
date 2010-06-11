@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.discovery;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;

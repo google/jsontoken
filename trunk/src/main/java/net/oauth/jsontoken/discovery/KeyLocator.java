@@ -14,12 +14,13 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.discovery;
 
-import java.security.SignatureException;
+import net.oauth.jsontoken.crypto.Verifier;
 
-public interface Verifier {
 
-  public void verifySignature(byte[] source, byte[] signature) throws SignatureException;
+public interface KeyLocator {
+
+  public Verifier findVerificationKey(String signerId, String keyId);
 
 }

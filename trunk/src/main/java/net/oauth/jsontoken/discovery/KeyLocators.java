@@ -14,11 +14,13 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.discovery;
 
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 
 public class KeyLocators {
 

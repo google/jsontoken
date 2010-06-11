@@ -14,21 +14,26 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
 
-import org.apache.commons.codec.binary.StringUtils;
 
+import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.Arrays;
 
-public class AsciiStringVerifier {
+public class HmacSHA256Verifier implements Verifier {
 
-  private final Verifier verifier;
+  private final HmacSHA256Signer signer;
 
-  public AsciiStringVerifier(Verifier verifier) {
-    this.verifier = verifier;
+  public HmacSHA256Verifier(byte[] verificationKey) throws InvalidKeyException {
+    signer = new HmacSHA256Signer("", null, verificationKey);
   }
 
-  public void verifySignature(String source, byte[] signature) throws SignatureException {
-    verifier.verifySignature(StringUtils.getBytesUsAscii(source), signature);
+  @Override
+  public void verifySignature(byte[] source, byte[] signature) throws SignatureException {
+    byte[] comparison = signer.sign(source);
+    if (!Arrays.equals(comparison, signature)) {
+      throw new SignatureException("signature did not verify");
+    }
   }
 }

@@ -23,6 +23,8 @@ import org.joda.time.Instant;
 
 import com.google.common.base.Preconditions;
 
+import net.oauth.jsontoken.crypto.Signer;
+
 public class JsonTokenBuilder<T extends Payload> {
 
   public static <V extends Payload> JsonTokenBuilder<V> newBuilder() {
