@@ -21,19 +21,19 @@ import net.oauth.jsontoken.crypto.Verifier;
 
 import java.net.URI;
 
-public class DefaultPublickeyLocator implements KeyLocator {
+public class DefaultPublickeyLocator implements VerifierProvider {
 
-  private final IssuerIdToServerDescriptorMap issuerToDescriptorMap;
-  private final ServerDescriptorResolver descriptorResolver;
+  private final ServerDescriptorProvider issuerToDescriptorMap;
+  private final ServerInfoResolver descriptorResolver;
 
-  public DefaultPublickeyLocator(IssuerIdToServerDescriptorMap issuerToServerDescriptor,
-      ServerDescriptorResolver resolver) {
+  public DefaultPublickeyLocator(ServerDescriptorProvider issuerToServerDescriptor,
+      ServerInfoResolver resolver) {
     this.issuerToDescriptorMap = issuerToServerDescriptor;
     this.descriptorResolver = resolver;
   }
 
   @Override
-  public Verifier findVerificationKey(String signerId, String keyId) {
+  public Verifier findVerifier(String signerId, String keyId) {
     URI serverDescriptor = issuerToDescriptorMap.getServerDescriptor(signerId);
     return new RsaSHA256Verifier(descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
   }

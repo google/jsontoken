@@ -23,22 +23,15 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 
-import com.google.common.base.Preconditions;
 
-
-public class RsaSHA256Signer implements Signer {
+public class RsaSHA256Signer extends AbstractSigner {
 
   private final Signature signature;
   private final PrivateKey signingKey;
-  private final String keyId;
-  private final String signerId;
 
   public RsaSHA256Signer(String signerId, String keyId, RSAPrivateKey key) throws InvalidKeyException {
-    Preconditions.checkNotNull(signerId, "signerId must not be null");
-    Preconditions.checkNotNull(key, "signing key must not be null");
+    super(signerId, keyId);
 
-    this.signerId = signerId;
-    this.keyId = keyId;
     this.signingKey = key;
 
     try {
@@ -50,18 +43,8 @@ public class RsaSHA256Signer implements Signer {
   }
 
   @Override
-  public String getKeyId() {
-    return keyId;
-  }
-
-  @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
     return SignatureAlgorithm.RSA_SHA256;
-  }
-
-  @Override
-  public String getSignerId() {
-    return signerId;
   }
 
   @Override

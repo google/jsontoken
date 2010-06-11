@@ -16,10 +16,10 @@
  */
 package net.oauth.jsontoken.discovery;
 
-import java.security.PublicKey;
+import java.net.URI;
 
-public interface ServerDescriptor {
+public interface ServerDescriptorProvider {
 
-  public PublicKey getPublicKey(String keyIdentifier);
+  public URI getServerDescriptor(String issuer);
 
 }

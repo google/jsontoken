@@ -14,13 +14,26 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken.discovery;
-
-import net.oauth.jsontoken.crypto.Verifier;
+package net.oauth.jsontoken.crypto;
 
 
-public interface KeyLocator {
+public abstract class AbstractSigner implements Signer {
 
-  public Verifier findVerificationKey(String signerId, String keyId);
+  private final String signerId;
+  private final String keyId;
 
+  protected AbstractSigner(String signerId, String keyId) {
+    this.signerId = signerId;
+    this.keyId = keyId;
+  }
+
+  @Override
+  public String getKeyId() {
+    return keyId;
+  }
+
+  @Override
+  public String getSignerId() {
+    return signerId;
+  }
 }
