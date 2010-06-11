@@ -18,47 +18,34 @@ package net.oauth.jsontoken;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-
-import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
 
 import com.google.common.base.Preconditions;
 
-public class HmacSHA256Signer implements Signer {
+public class RsaSHA256Signer implements Signer {
 
-  private static final String HMAC_SHA256_ALG = "HmacSHA256";
-
-  private final Mac hmac;
-  private final SecretKey signingKey;
+  private final Signature signature;
+  private final PrivateKey signingKey;
   private final String keyId;
   private final String signerId;
 
-  public HmacSHA256Signer(String signerId, String keyId, byte[] keyBytes) throws InvalidKeyException {
+  public RsaSHA256Signer(String signerId, String keyId, RSAPrivateKey key) throws InvalidKeyException {
     Preconditions.checkNotNull(signerId, "signerId must not be null");
+    Preconditions.checkNotNull(key, "signing key must not be null");
 
     this.signerId = signerId;
     this.keyId = keyId;
-    this.signingKey = new SecretKeySpec(keyBytes, HMAC_SHA256_ALG);
+    this.signingKey = key;
+
     try {
-      this.hmac = Mac.getInstance(HMAC_SHA256_ALG);
+      this.signature = Signature.getInstance("SHA256withRSA");
+      this.signature.initSign(signingKey);
     } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("cannot use Hmac256Signer on system without HmacSHA256 alg", e);
-    }
-
-    // just to make sure we catch invalid keys early, let's initialize the hmac and throw if something goes wrong
-    hmac.init(signingKey);
-  }
-
-  @Override
-  public byte[] sign(byte[] source) {
-    try {
-      hmac.init(signingKey);
-    } catch (InvalidKeyException e) {
-      // this should not happen - we tested this in the constructor
-      throw new IllegalStateException("key somehow became invalid", e);
-    }
-    return hmac.doFinal(source);
+      throw new IllegalStateException("platform is missing RSAwithSHA256 signature alg, or key is invalid", e);
+    };
   }
 
   @Override
@@ -68,11 +55,22 @@ public class HmacSHA256Signer implements Signer {
 
   @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
-    return SignatureAlgorithm.HMAC_SHA256;
+    return SignatureAlgorithm.RSA_SHA256;
   }
 
   @Override
   public String getSignerId() {
     return signerId;
+  }
+
+  @Override
+  public byte[] sign(byte[] source) throws SignatureException {
+    try {
+      signature.initSign(signingKey);
+    } catch (InvalidKeyException e) {
+      throw new RuntimeException("key somehow became invalid since calling the constructor");
+    }
+    signature.update(source);
+    return signature.sign();
   }
 }

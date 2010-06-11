@@ -16,17 +16,10 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
+import java.security.PublicKey;
 
+public interface ServerDescriptorDocument {
 
-public interface Signer {
-
-  public String getKeyId();
-
-  public String getSignerId();
-
-  public SignatureAlgorithm getSignatureAlgorithm();
-
-  public byte[] sign(byte[] source) throws SignatureException;
+  public PublicKey getVerificationKey(String keyId);
 
 }

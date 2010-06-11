@@ -31,7 +31,7 @@ public class JsonToken<T extends Payload> {
   private final String signature;
 
   public static <V extends Payload> JsonToken<V> parseToken(String tokenString, PayloadDeserializer<V> deserializer,
-      Verifier verifier) throws SignatureException {
+      KeyLocators locators) throws SignatureException {
     String[] pieces = tokenString.split(Pattern.quote(DELIMITER));
     if (pieces.length != 3) {
       throw new IllegalArgumentException("token did not have three separate parts");
@@ -40,17 +40,19 @@ public class JsonToken<T extends Payload> {
     String envelopeString = pieces[1];
     String signature = pieces[2];
 
-    String baseString = getBaseString(payloadString, envelopeString);
-    AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
-    asciiVerifier.verifySignature(baseString, fromBase64ToBytes(signature));
-
     V payload = deserializer.fromJson(fromBase64ToJsonString(payloadString));
     Envelope env = Envelope.fromJson(fromBase64ToJsonString(envelopeString));
 
+    String baseString = getBaseString(payloadString, envelopeString);
+    Verifier verifier = locators.getKeyLocator(env.getSignatureAlgorithm()).findVerificationKey(env.getIssuer(), env.getKeyId());
+    AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
+    asciiVerifier.verifySignature(baseString, fromBase64ToBytes(signature));
+
+    // TODO: validate timestamp
     return new JsonToken<V>(payload, env, signature);
   }
 
-  public static <V extends Payload> JsonToken<V> generateToken(V payload, Envelope env, Signer signer) {
+  public static <V extends Payload> JsonToken<V> generateToken(V payload, Envelope env, Signer signer) throws SignatureException {
     String baseString = getBaseString(payload, env);
     AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);
     String signature = toBase64(asciiSigner.sign(baseString));

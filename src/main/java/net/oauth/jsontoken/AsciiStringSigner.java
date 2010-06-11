@@ -16,6 +16,8 @@
  */
 package net.oauth.jsontoken;
 
+import java.security.SignatureException;
+
 import org.apache.commons.codec.binary.StringUtils;
 
 public class AsciiStringSigner {
@@ -26,7 +28,7 @@ public class AsciiStringSigner {
     this.signer = signer;
   }
 
-  public byte[] sign(String source) {
+  public byte[] sign(String source) throws SignatureException {
     return signer.sign(StringUtils.getBytesUsAscii(source));
   }
 }

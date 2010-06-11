@@ -16,17 +16,9 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
 
+public interface KeyLocator {
 
-public interface Signer {
-
-  public String getKeyId();
-
-  public String getSignerId();
-
-  public SignatureAlgorithm getSignatureAlgorithm();
-
-  public byte[] sign(byte[] source) throws SignatureException;
+  public Verifier findVerificationKey(String signerId, String keyId);
 
 }

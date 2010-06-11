@@ -25,7 +25,7 @@ public class HmacSHA256Verifier implements Verifier {
   private final HmacSHA256Signer signer;
 
   public HmacSHA256Verifier(byte[] verificationKey) throws InvalidKeyException {
-    signer = new HmacSHA256Signer(verificationKey);
+    signer = new HmacSHA256Signer("", null, verificationKey);
   }
 
   @Override
