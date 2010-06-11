@@ -14,12 +14,19 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
 
-import java.security.PublicKey;
+import java.security.SignatureException;
 
-public interface ServerDescriptor {
 
-  public PublicKey getPublicKey(String keyIdentifier);
+public interface Signer {
+
+  public String getKeyId();
+
+  public String getSignerId();
+
+  public SignatureAlgorithm getSignatureAlgorithm();
+
+  public byte[] sign(byte[] source) throws SignatureException;
 
 }

@@ -14,21 +14,22 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
 
-import java.security.SignatureException;
 
 import org.apache.commons.codec.binary.StringUtils;
 
-public class AsciiStringSigner {
+import java.security.SignatureException;
 
-  private final Signer signer;
+public class AsciiStringVerifier {
 
-  public AsciiStringSigner(Signer signer) {
-    this.signer = signer;
+  private final Verifier verifier;
+
+  public AsciiStringVerifier(Verifier verifier) {
+    this.verifier = verifier;
   }
 
-  public byte[] sign(String source) throws SignatureException {
-    return signer.sign(StringUtils.getBytesUsAscii(source));
+  public void verifySignature(String source, byte[] signature) throws SignatureException {
+    verifier.verifySignature(StringUtils.getBytesUsAscii(source), signature);
   }
 }

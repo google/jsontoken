@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +24,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.google.common.base.Preconditions;
+
 
 public class HmacSHA256Signer implements Signer {
 

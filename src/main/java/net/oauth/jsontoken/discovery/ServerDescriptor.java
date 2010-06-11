@@ -14,11 +14,12 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.discovery;
 
+import java.security.PublicKey;
 
-public interface KeyLocator {
+public interface ServerDescriptor {
 
-  public Verifier findVerificationKey(String signerId, String keyId);
+  public PublicKey getPublicKey(String keyIdentifier);
 
 }

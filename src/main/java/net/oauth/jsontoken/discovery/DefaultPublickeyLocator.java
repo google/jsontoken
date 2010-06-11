@@ -14,7 +14,10 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.discovery;
+
+import net.oauth.jsontoken.crypto.RsaSHA256Verifier;
+import net.oauth.jsontoken.crypto.Verifier;
 
 import java.net.URI;
 

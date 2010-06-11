@@ -25,6 +25,19 @@ import java.security.spec.PKCS8EncodedKeySpec;
 
 import junit.framework.TestCase;
 
+import net.oauth.jsontoken.crypto.HmacSHA256Signer;
+import net.oauth.jsontoken.crypto.HmacSHA256Verifier;
+import net.oauth.jsontoken.crypto.RsaSHA256Signer;
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+import net.oauth.jsontoken.crypto.Verifier;
+import net.oauth.jsontoken.discovery.DefaultPublickeyLocator;
+import net.oauth.jsontoken.discovery.IdentityIssuerIdToServerDescriptorMap;
+import net.oauth.jsontoken.discovery.JsonServerDescriptorDocument;
+import net.oauth.jsontoken.discovery.KeyLocator;
+import net.oauth.jsontoken.discovery.KeyLocators;
+import net.oauth.jsontoken.discovery.ServerDescriptorDocument;
+import net.oauth.jsontoken.discovery.ServerDescriptorResolver;
+
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
 import org.joda.time.Instant;

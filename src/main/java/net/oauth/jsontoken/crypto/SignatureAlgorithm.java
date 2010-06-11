@@ -14,12 +14,17 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
 
-import java.net.URI;;
+public enum SignatureAlgorithm {
+  HMAC_SHA256,
+  RSA_SHA256;
 
-public interface IssuerIdToServerDescriptorMap {
+  public String getNameForJson() {
+    return name().replace('_', '-');
+  }
 
-  public URI getServerDescriptor(String issuer);
-
+  public static SignatureAlgorithm getFromJsonName(String name) {
+    return SignatureAlgorithm.valueOf(name.replace('-', '_'));
+  }
 }

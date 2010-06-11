@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +24,7 @@ import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 
 import com.google.common.base.Preconditions;
+
 
 public class RsaSHA256Signer implements Signer {
 
@@ -45,7 +46,7 @@ public class RsaSHA256Signer implements Signer {
       this.signature.initSign(signingKey);
     } catch (NoSuchAlgorithmException e) {
       throw new IllegalStateException("platform is missing RSAwithSHA256 signature alg, or key is invalid", e);
-    };
+    }
   }
 
   @Override

@@ -27,6 +27,8 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.SerializedName;
 
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 

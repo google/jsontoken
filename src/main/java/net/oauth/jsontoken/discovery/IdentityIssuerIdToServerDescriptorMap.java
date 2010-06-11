@@ -14,12 +14,15 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.jsontoken.discovery;
 
-import java.security.PublicKey;
+import java.net.URI;
 
-public interface ServerDescriptorDocument {
+public class IdentityIssuerIdToServerDescriptorMap implements
+    IssuerIdToServerDescriptorMap {
 
-  public PublicKey getVerificationKey(String keyId);
-
+  @Override
+  public URI getServerDescriptor(String issuer) {
+    return URI.create(issuer);
+  }
 }
