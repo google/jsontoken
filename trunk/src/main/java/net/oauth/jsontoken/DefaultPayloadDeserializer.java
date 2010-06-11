@@ -18,8 +18,20 @@ package net.oauth.jsontoken;
 
 import com.google.gson.Gson;
 
+/**
+ * Class that knows how to deserialize a JSON object. It uses the standard Gson
+ * deserializer, i.e., doesn't use any custom type handlers.
+ *
+ * @param <T> The type of the class that will fall out of the deserialization process.
+ */
 public class DefaultPayloadDeserializer<T extends Payload> implements PayloadDeserializer<T> {
 
+  /**
+   * Creates a new deserializer for a certain class.
+   * @param <T> type of the class to deserialize.
+   * @param clazz class object of the deserializable class.
+   * @return the deserializer.
+   */
   public static <T extends Payload> DefaultPayloadDeserializer<T> newDeserializer(Class<T> clazz) {
     return new DefaultPayloadDeserializer<T>(clazz);
   }
@@ -30,6 +42,10 @@ public class DefaultPayloadDeserializer<T extends Payload> implements PayloadDes
     this.clazz = clazz;
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.PayloadDeserializer#fromJson(java.lang.String)
+   */
   @Override
   public T fromJson(String json) {
     return new Gson().fromJson(json, clazz);

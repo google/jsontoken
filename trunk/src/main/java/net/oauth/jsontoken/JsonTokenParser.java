@@ -26,20 +26,48 @@ import org.apache.commons.codec.binary.StringUtils;
 import java.security.SignatureException;
 import java.util.regex.Pattern;
 
+/**
+ * Class that parses and verifies JSON Tokens.
+ */
 public class JsonTokenParser {
 
   private final Clock clock;
+  private final VerifierProviders locators;
 
-  public JsonTokenParser() {
-    this(new SystemClock());
+  /**
+   * Creates a new {@link JsonTokenParser} with a default system clock. The default
+   * system clock tolerates a clock skew of up to {@link SystemClock#DEFAULT_ACCEPTABLE_CLOCK_SKEW}.
+   *
+   * @param locators an object that provides signature verifiers, based signature algorithm,
+   *   as well as on the signer and key ids.
+   */
+  public JsonTokenParser(VerifierProviders locators) {
+    this(new SystemClock(), locators);
   }
 
-  public JsonTokenParser(Clock clock) {
+  /**
+   * Creates a new {@link JsonTokenParser}.
+   *
+   * @param clock a clock object that will decide whether a given token is currently
+   *   valid or not.
+   * @param locators an object that provides signature verifiers, based signature algorithm,
+   *   as well as on the signer and key ids.
+   */
+  public JsonTokenParser(Clock clock, VerifierProviders locators) {
     this.clock = clock;
+    this.locators = locators;
   }
 
-  public <V extends Payload> JsonToken<V> parseToken(String tokenString, PayloadDeserializer<V> deserializer,
-      VerifierProviders locators) throws SignatureException {
+  /**
+   * Parses, and verifies, a JSON Token.
+   * @param <V> The type of the token payload
+   * @param tokenString the serialized token that is to parsed and verified.
+   * @param deserializer a deserializer for the payload type.
+   * @return the deserialized {@link JsonToken}.
+   * @throws SignatureException if the signature doesn't check out, or if the token is oterwise invalid.
+   */
+  public <V extends Payload> JsonToken<V> parseToken(String tokenString, PayloadDeserializer<V> deserializer)
+      throws SignatureException {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
     if (pieces.length != 3) {
       throw new IllegalArgumentException("token did not have three separate parts");

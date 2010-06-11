@@ -22,7 +22,7 @@ import org.joda.time.Interval;
 
 public class SystemClock implements Clock {
 
-  private static final Duration DEFAULT_ACCEPTABLE_CLOCK_SKEW = Duration.standardMinutes(2);
+  public static final Duration DEFAULT_ACCEPTABLE_CLOCK_SKEW = Duration.standardMinutes(2);
 
   private final Duration acceptableClockSkew;
 

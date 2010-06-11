@@ -19,10 +19,21 @@ package net.oauth.jsontoken;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
+/**
+ * Clock interface.
+ */
 public interface Clock {
 
+  /**
+   * Returns current time.
+   */
   public Instant now();
 
+  /**
+   * Determines whether the current time falls within the interval defined by the
+   * start and intervalLength parametets. Implementations are free to fudge this a
+   * little bit to take into account possible clock skew.
+   */
   public boolean isCurrentTimeInInterval(Instant start, Duration intervalLength);
 
 }

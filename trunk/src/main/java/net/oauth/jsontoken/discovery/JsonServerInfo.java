@@ -37,12 +37,10 @@ public class JsonServerInfo implements ServerInfo {
   @Override
   public PublicKey getVerificationKey(String keyId) {
     String magicKey = verificationKeys.get(keyId);
-
     if (magicKey == null) {
       return null;
+    } else {
+      return new MagicRsaPublicKey(magicKey).getKey();
     }
-
-    MagicRsaPublicKey key = new MagicRsaPublicKey(magicKey);
-    return key.getKey();
   }
 }

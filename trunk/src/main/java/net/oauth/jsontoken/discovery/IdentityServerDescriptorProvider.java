@@ -18,8 +18,7 @@ package net.oauth.jsontoken.discovery;
 
 import java.net.URI;
 
-public class IdentityServerDescriptorProvider implements
-    ServerDescriptorProvider {
+public class IdentityServerDescriptorProvider implements ServerDescriptorProvider {
 
   @Override
   public URI getServerDescriptor(String issuer) {

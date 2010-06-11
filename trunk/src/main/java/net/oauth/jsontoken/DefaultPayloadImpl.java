@@ -18,8 +18,16 @@ package net.oauth.jsontoken;
 
 import com.google.gson.Gson;
 
+/**
+ * Superclass for {@link Payload} implementations that don't need any customizations
+ * to the Gson serialization mechanism (e.g., custom type handlers).
+ */
 public class DefaultPayloadImpl implements Payload {
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.Payload#toJson()
+   */
   @Override
   public String toJson() {
     return new Gson().toJson(this);
