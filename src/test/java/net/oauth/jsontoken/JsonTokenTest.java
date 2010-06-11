@@ -70,7 +70,8 @@ public class JsonTokenTest extends TestCase {
       "nX9eCYvLqJqZZwPy/002H7So3Yd1/d9ORkKetDKGjXHPDYyEPQQ+ss9OGm53XlViklXb+i9wsdDz" +
       "R7tAFexSjyVKnWSDBh52t6lBtHo=";
 
-  private static final String DESCRIPTOR_DOCUMENT = "{ \"verification_keys\": {" +
+  private static final String SERVER_INFO_DOCUMENT = "{ \"verification_keys\": {" +
+      // this is the public key that goes with the above private key
       "\"key1\":\"RSA.ALqcwRcW7FOczn7IzgB-eDJt_lnz0nGVyEEDc2L_8abX_bkx63N8h3YmDw2S2GZEPMfqwVqg1LufpnonI0kWzNvY9coGRl16bbX0XmSNrCget8DUu7x8GYZBgb9obvRo9-3Z4Rltj5epblZSUyTu8VbsEOKTAFfK__musVqwF89Z3XfGjND3rXYgStYaUYyDGYHriNxNsZYzMODMT-xxKbJ5DS9BAxbwn42dv_IOljuWhetWsCBnHwgG_V_0W_enu2KtMP-8WDPETasgBq4z9pTzMEcTJcvU1I2rQjrY4AXgMuIOVwQU69iOqiII9AiHQ1edDLwNyznEcKPR7Vvdf8s.AQAB\"" +
       "}}";
 
@@ -79,17 +80,20 @@ public class JsonTokenTest extends TestCase {
   @Override
   protected void setUp() throws Exception {
     final HmacSHA256Verifier hmacVerifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
+
     VerifierProvider hmacLocator = new VerifierProvider() {
       @Override
       public Verifier findVerifier(String signerId, String keyId) {
         return hmacVerifier;
       }
     };
-    VerifierProvider rsaLocator = new DefaultPublickeyLocator(new IdentityServerDescriptorProvider(),
+
+    VerifierProvider rsaLocator = new DefaultPublickeyLocator(
+        new IdentityServerDescriptorProvider(),
         new ServerInfoResolver() {
           @Override
           public ServerInfo resolve(URI uri) {
-            return JsonServerInfo.getDocument(DESCRIPTOR_DOCUMENT);
+            return JsonServerInfo.getDocument(SERVER_INFO_DOCUMENT);
           }
         });
 
@@ -125,8 +129,8 @@ public class JsonTokenTest extends TestCase {
 
     FakeClock clock = new FakeClock();
     clock.setNow(new Instant(1276233887000L));
-    JsonTokenParser parser = new JsonTokenParser(clock);
-    JsonToken<SamplePayload> token = parser.parseToken(tokenString, deserializer, locators);
+    JsonTokenParser parser = new JsonTokenParser(clock, locators);
+    JsonToken<SamplePayload> token = parser.parseToken(tokenString, deserializer);
 
     assertEquals("google.com", token.getEnvelope().getIssuer());
     assertEquals(15, token.getPayload().getBar());
@@ -162,8 +166,8 @@ public class JsonTokenTest extends TestCase {
 
     PayloadDeserializer<SamplePayload> deserializer =
         DefaultPayloadDeserializer.newDeserializer(SamplePayload.class);
-    JsonTokenParser parser = new JsonTokenParser();
-    token = parser.parseToken(tokenString, deserializer, locators);
+    JsonTokenParser parser = new JsonTokenParser(locators);
+    token = parser.parseToken(tokenString, deserializer);
 
     assertEquals("google.com", token.getEnvelope().getIssuer());
     assertEquals(15, token.getPayload().getBar());
@@ -176,7 +180,7 @@ public class JsonTokenTest extends TestCase {
 
     System.out.println(tamperedToken);
     try {
-      token = parser.parseToken(tamperedToken, deserializer, locators);
+      token = parser.parseToken(tamperedToken, deserializer);
       fail("verification should have failed");
     } catch (SignatureException e) {
       // expected

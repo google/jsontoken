@@ -34,6 +34,10 @@ import org.joda.time.Instant;
 
 import java.lang.reflect.Type;
 
+/**
+ * A JsonToken envelope. Objects of this class can be serialized to JSON and
+ * deserialized from JSON.
+ */
 public class Envelope {
 
   @SerializedName("issuer")

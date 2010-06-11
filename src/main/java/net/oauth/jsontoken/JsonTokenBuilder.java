@@ -27,8 +27,16 @@ import com.google.common.base.Preconditions;
 import net.oauth.jsontoken.crypto.AsciiStringSigner;
 import net.oauth.jsontoken.crypto.Signer;
 
+/**
+ * Class that can create a signed JSON Token.
+ *
+ * @param <T> type of the payload that is to be included in the JSON Token.
+ */
 public class JsonTokenBuilder<T extends Payload> {
 
+  /**
+   * Returns a new {@link JsonTokenBuilder} for the specified payload type.
+   */
   public static <V extends Payload> JsonTokenBuilder<V> newBuilder() {
     return new JsonTokenBuilder<V>();
   }
@@ -42,35 +50,51 @@ public class JsonTokenBuilder<T extends Payload> {
     notBefore = new Instant();
   }
 
+  /**
+   * Set the start of the validity interval for the JSON Token. If not called,
+   * the token will start at the instant the {@link JsonTokenBuilder} was created.
+   */
   public JsonTokenBuilder<T> setNotBefore(Instant instant) {
     this.notBefore = instant;
     return this;
   }
 
+  /**
+   * Set the duration of the validity interval for the JSON Token. You have to
+   * call this method.
+   */
   public JsonTokenBuilder<T> setDuration(Duration d) {
     this.duration = d;
     return this;
   }
 
+  /**
+   * Set the signer that will sign the JSON Token. You have to call this method.
+   */
   public JsonTokenBuilder<T> setSigner(Signer s) {
     this.signer = s;
     return this;
   }
 
+  /**
+   * Create a token with the provided payload.
+   * @throws SignatureException if the signer could not be used to create a signature.
+   */
   public JsonToken<T> create(T payload) throws SignatureException {
     Preconditions.checkNotNull(signer, "signer must not be null");
     Preconditions.checkNotNull(notBefore, "notBefore must not be null");
     Preconditions.checkNotNull(duration, "duration must not be null");
 
     Envelope env = new Envelope();
-    env.setIssuer(signer.getSignerId());
     if (signer.getKeyId() != null) {
       env.setKeyId(signer.getKeyId());
     }
+    env.setIssuer(signer.getSignerId());
     env.setNotBefore(notBefore);
-    env.setSignatureAlgorithm(signer.getSignatureAlgorithm());
     env.setTokenLifetime(duration);
+    env.setSignatureAlgorithm(signer.getSignatureAlgorithm());
 
+    // now, generate the signature
     String baseString = JsonTokenUtil.getBaseString(payload, env);
     AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);
     String signature = Base64.encodeBase64URLSafeString(asciiSigner.sign(baseString));
