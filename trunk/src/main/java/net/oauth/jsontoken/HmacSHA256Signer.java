@@ -44,7 +44,6 @@ public class HmacSHA256Signer implements Signer {
 
   @Override
   public byte[] sign(byte[] source) {
-    hmac.reset();
     try {
       hmac.init(signingKey);
     } catch (InvalidKeyException e) {

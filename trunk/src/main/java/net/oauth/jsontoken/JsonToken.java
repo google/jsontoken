@@ -16,13 +16,13 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
-
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.StringUtils;
 
-import com.google.gson.Gson;
+import java.security.SignatureException;
+import java.util.regex.Pattern;
 
-public class JsonToken<T> {
+public class JsonToken<T extends Payload> {
 
   static private final String DELIMITER = ".";
 
@@ -30,9 +30,9 @@ public class JsonToken<T> {
   private final Envelope envelope;
   private final String signature;
 
-  public static <V> JsonToken<V> parseToken(String tokenString, Class<V> payloadClass,
+  public static <V extends Payload> JsonToken<V> parseToken(String tokenString, PayloadDeserializer<V> deserializer,
       Verifier verifier) throws SignatureException {
-    String[] pieces = tokenString.split("\\.");
+    String[] pieces = tokenString.split(Pattern.quote(DELIMITER));
     if (pieces.length != 3) {
       throw new IllegalArgumentException("token did not have three separate parts");
     }
@@ -40,18 +40,20 @@ public class JsonToken<T> {
     String envelopeString = pieces[1];
     String signature = pieces[2];
 
-    String baseString = payloadString + DELIMITER + envelopeString;
-    verifier.verifySignature(baseString.getBytes(), fromBase64(signature).getBytes());
+    String baseString = getBaseString(payloadString, envelopeString);
+    AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
+    asciiVerifier.verifySignature(baseString, fromBase64ToBytes(signature));
 
-    V payload = fromJson(fromBase64(payloadString), payloadClass);
-    Envelope env = fromJson(fromBase64(envelopeString), Envelope.class);
+    V payload = deserializer.fromJson(fromBase64ToJsonString(payloadString));
+    Envelope env = Envelope.fromJson(fromBase64ToJsonString(envelopeString));
 
     return new JsonToken<V>(payload, env, signature);
   }
 
-  public static <V> JsonToken<V> generateToken(V payload, Envelope env, Signer signer) {
+  public static <V extends Payload> JsonToken<V> generateToken(V payload, Envelope env, Signer signer) {
     String baseString = getBaseString(payload, env);
-    String signature = toBase64(signer.sign(baseString.getBytes()));
+    AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);
+    String signature = toBase64(asciiSigner.sign(baseString));
     return new JsonToken<V>(payload, env, signature);
   }
 
@@ -69,32 +71,36 @@ public class JsonToken<T> {
     return envelope;
   }
 
-  private static String toJson(Object obj) {
-    return new Gson().toJson(obj);
-  }
-
-  private static <V> V fromJson(String json, Class<V> clazz) {
-    return new Gson().fromJson(json, clazz);
-  }
-
   private static String toBase64(byte[] source) {
-    return new Base64(true).encodeToString(source).trim();
+    return Base64.encodeBase64URLSafeString(source);
   }
 
-  private static String toBase64(String source) {
-    return toBase64(source.getBytes());
+  private static String jsonToBase64(String source) {
+    return toBase64(StringUtils.getBytesUtf8(source));
   }
 
-  private static String fromBase64(String source) {
-    return new String(new Base64(true).decode(source));
+  private static byte[] fromBase64ToBytes(String source) {
+    return Base64.decodeBase64(source);
   }
 
-  private static <V> String getBaseString(V payload, Envelope envelope) {
-    return toBase64(toJson(payload)) + DELIMITER + toBase64(toJson(envelope));
+  private static String fromBase64ToJsonString(String source) {
+    return StringUtils.newStringUtf8(fromBase64ToBytes(source));
+  }
+
+  private static String getBaseString(Payload payload, Envelope envelope) {
+    return getBaseString(jsonToBase64(payload.toJson()), jsonToBase64(envelope.toJson()));
+  }
+
+  private static String getBaseString(String payload, String envelope) {
+    return payload + DELIMITER + envelope + DELIMITER;
+  }
+
+  public String getToken() {
+   return getBaseString(payload, envelope) + signature;
   }
 
   @Override
   public String toString() {
-    return getBaseString(payload, envelope) + DELIMITER + signature;
+    return payload.toJson() + DELIMITER + envelope.toJson() + DELIMITER + signature;
   }
 }
