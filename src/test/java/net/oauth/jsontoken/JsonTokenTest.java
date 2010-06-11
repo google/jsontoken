@@ -18,6 +18,9 @@ package net.oauth.jsontoken;
 
 import junit.framework.TestCase;
 
+import org.joda.time.Duration;
+import org.joda.time.Instant;
+
 public class JsonTokenTest extends TestCase {
 
   private static final byte[] SYMMETRIC_KEY = "kjdhasdkjhaskdjhaskdjhaskdjh".getBytes();
@@ -27,28 +30,35 @@ public class JsonTokenTest extends TestCase {
 
     Envelope env = new Envelope();
     env.setIssuer("google.com");
+    env.setKeyId("key2");
+    env.setNotBefore(new Instant());
+    env.setTokenLifetime(Duration.standardMinutes(1));
+    env.setSignatureAlgorithm(SignatureAlgorithm.HMAC_SHA256);
     SamplePayload payload = new SamplePayload();
     payload.setBar(15);
     payload.setFoo("some value");
     JsonToken<SamplePayload> token = JsonToken.generateToken(payload, env, signer);
 
     System.out.println(token.toString());
+    System.out.println(token.getToken());
 
     assertNotNull(token.toString());
   }
 
   public void testVerification() throws Exception {
-    String tokenString = "eyJmb28iOiJzb21lIHZhbHVlIiwiYmFyIjoxNX0.eyJpc3N1ZXIiOiJnb29nbGUuY29tIn0.sqB9n1ciT1N21wfSdWBJ8BqAgMyu-2qUWpk8i6FirFA";
+    String tokenString = "eyJmb28iOiJzb21lIHZhbHVlIiwiYmFyIjoxNX0.eyJpc3N1ZXIiOiJnb29nbGUuY29tIiwia2V5X2lkIjoia2V5MiIsImFsZyI6IkhNQUNfU0hBMjU2Iiwibm90X2JlZm9yZSI6MTI3NjIxNzg2NjcwMSwidG9rZW5fbGlmZXRpbWUiOjYwMDAwfQ.gG8g3rrXIBKg0dFKxR9cxbvwvSAn-yb1cR3ogpU6ui8";
     HmacSHA256Verifier verifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
+    PayloadDeserializer<SamplePayload> deserializer =
+        DefaultPayloadDeserializer.newDeserializer(SamplePayload.class);
 
-    JsonToken<SamplePayload> token = JsonToken.parseToken(tokenString, SamplePayload.class, verifier);
+    JsonToken<SamplePayload> token = JsonToken.parseToken(tokenString, deserializer, verifier);
 
     assertEquals("google.com", token.getEnvelope().getIssuer());
     assertEquals(15, token.getPayload().getBar());
     assertEquals("some value", token.getPayload().getFoo());
   }
 
-  private static class SamplePayload {
+  private static class SamplePayload extends DefaultPayloadImpl {
     private String foo;
     private int bar;
 
