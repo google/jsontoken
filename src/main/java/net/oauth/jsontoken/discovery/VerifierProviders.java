@@ -20,17 +20,35 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+import net.oauth.jsontoken.crypto.Verifier;
 
+/**
+ * A collection of {@link VerifierProvider}s, one for each signature algorithm.
+ * The {@link JsonTokenParser} uses a {@link VerifierProviders} instance to locate
+ * verification keys. In particular, it will first look up the {@link VerifierProvider}
+ * for the signature algorithm used in the JSON Token (different signature methods
+ * will use different ways to look up verification keys - for example, symmetric keys
+ * will always be pre-negotiated and looked up in a local database, while public
+ * verification keys can be looked up on demand), and the ask the {@link VerifierProvider}
+ * to provide a {@link Verifier} to check the validity of the JSON Token.
+ */
 public class VerifierProviders {
 
   private final Map<SignatureAlgorithm, VerifierProvider> map = Maps.newHashMap();
 
-  public void setKeyLocator(SignatureAlgorithm alg, VerifierProvider locator) {
+  /**
+   * Sets a new {@link VerifierProvider} for the given {@link SignatureAlgorithm}.
+   */
+  public void setVerifierProvider(SignatureAlgorithm alg, VerifierProvider locator) {
     map.put(alg, locator);
   }
 
-  public VerifierProvider getKeyLocator(SignatureAlgorithm alg) {
+  /**
+   * Returns the {@link VerifierProvider} for the given {@link SignatureAlgorithm}.
+   */
+  public VerifierProvider getVerifierProvider(SignatureAlgorithm alg) {
     return map.get(alg);
   }
 }

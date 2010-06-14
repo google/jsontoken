@@ -16,8 +16,15 @@
  */
 package net.oauth.jsontoken;
 
+/**
+ * Deserializer for JSON Token payloads.
+ *
+ * @param <T> type of the object that serialization will produce.
+ */
 public interface PayloadDeserializer<T extends Payload> {
 
+  /**
+   * Converts a JSON string into a Java object.
+   */
   public T fromJson(String json);
-
 }

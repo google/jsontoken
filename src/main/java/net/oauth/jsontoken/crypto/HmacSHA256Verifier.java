@@ -16,19 +16,30 @@
  */
 package net.oauth.jsontoken.crypto;
 
-
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.Arrays;
 
+/**
+ * A {@link Verifier} that uses HMAC-SHA256 to verify symmetric-key signatures on byte arrays.
+ */
 public class HmacSHA256Verifier implements Verifier {
 
   private final HmacSHA256Signer signer;
 
+  /**
+   * Public constructor.
+   * @param verificationKey the HMAC verification key to be used for signature verification.
+   * @throws InvalidKeyException if the verificationKey cannot be used as an HMAC key.
+   */
   public HmacSHA256Verifier(byte[] verificationKey) throws InvalidKeyException {
-    signer = new HmacSHA256Signer("", null, verificationKey);
+    signer = new HmacSHA256Signer("verifier", null, verificationKey);
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Verifier#verifySignature(byte[], byte[])
+   */
   @Override
   public void verifySignature(byte[] source, byte[] signature) throws SignatureException {
     byte[] comparison = signer.sign(source);

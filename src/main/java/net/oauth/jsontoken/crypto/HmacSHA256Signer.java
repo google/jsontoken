@@ -23,7 +23,9 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-
+/**
+ * A signer that can sign byte arrays using HMAC-SHA256.
+ */
 public class HmacSHA256Signer extends AbstractSigner {
 
   private static final String HMAC_SHA256_ALG = "HmacSHA256";
@@ -31,8 +33,16 @@ public class HmacSHA256Signer extends AbstractSigner {
   private final Mac hmac;
   private final SecretKey signingKey;
 
-  public HmacSHA256Signer(String signerId, String keyId, byte[] keyBytes) throws InvalidKeyException {
-    super(signerId, keyId);
+  /**
+   * Public constructor.
+   * @param issuer the id of this signer, to be included in the envelope of the JSON token.
+   * @param keyId the id of the key that will be included in the envelope. If null, will be omitted
+   *   from the envelope.
+   * @param keyBytes the actual key.
+   * @throws InvalidKeyException if the key cannot be used as an HMAC key.
+   */
+  public HmacSHA256Signer(String issuer, String keyId, byte[] keyBytes) throws InvalidKeyException {
+    super(issuer, keyId);
 
     this.signingKey = new SecretKeySpec(keyBytes, HMAC_SHA256_ALG);
     try {
@@ -45,17 +55,25 @@ public class HmacSHA256Signer extends AbstractSigner {
     hmac.init(signingKey);
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Signer#sign(byte[])
+   */
   @Override
   public byte[] sign(byte[] source) {
     try {
       hmac.init(signingKey);
     } catch (InvalidKeyException e) {
       // this should not happen - we tested this in the constructor
-      throw new IllegalStateException("key somehow became invalid", e);
+      throw new IllegalStateException("key somehow became invalid since calling the constructor", e);
     }
     return hmac.doFinal(source);
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Signer#getSignatureAlgorithm()
+   */
   @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
     return SignatureAlgorithm.HMAC_SHA256;

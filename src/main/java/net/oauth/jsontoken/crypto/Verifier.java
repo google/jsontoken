@@ -18,8 +18,17 @@ package net.oauth.jsontoken.crypto;
 
 import java.security.SignatureException;
 
+/**
+ * Interface that a JSON Token verifier has to implement.
+ */
 public interface Verifier {
 
+  /**
+   * Verifies a signature on an array of bytes.
+   * @param source The bytes that were signed.
+   * @param signature The signature on the bytes.
+   * @throws SignatureException If the signature doesn't match, or if some other error occurred.
+   */
   public void verifySignature(byte[] source, byte[] signature) throws SignatureException;
 
 }

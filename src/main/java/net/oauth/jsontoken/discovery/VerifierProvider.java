@@ -16,11 +16,28 @@
  */
 package net.oauth.jsontoken.discovery;
 
+import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.Verifier;
 
-
+/**
+ * An interface that must be implemented by JSON Token verifiers. The {@link JsonTokenParser}
+ * uses {@link VerifierProvider} implementations to find verification keys with which to
+ * verify the parsed JSON Token. There are different implementations of this interface for
+ * different types of verification keys.
+ *
+ * For symmetric signing keys, an implementation of {@link VerifierProvider} presumably will
+ * always look up the key in a local database. For public signing keys, the {@link VerifierProvider}
+ * implementation may fetch the public verification keys when needed from the public internet.
+ */
 public interface VerifierProvider {
 
-  public Verifier findVerifier(String signerId, String keyId);
+  /**
+   * Returns the {@link Verifier} that represents a certain verification
+   * key, given the key's id and its issuer.
+   * @param issuer the id of the issuer that's using the key.
+   * @param keyId the id of the key.
+   * @return a {@link Verifier} object that represents the verification key.
+   */
+  public Verifier findVerifier(String issuer, String keyId);
 
 }

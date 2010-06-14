@@ -31,7 +31,7 @@ public interface Clock {
 
   /**
    * Determines whether the current time falls within the interval defined by the
-   * start and intervalLength parametets. Implementations are free to fudge this a
+   * start and intervalLength parameters. Implementations are free to fudge this a
    * little bit to take into account possible clock skew.
    */
   public boolean isCurrentTimeInInterval(Instant start, Duration intervalLength);

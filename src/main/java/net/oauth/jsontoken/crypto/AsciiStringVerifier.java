@@ -16,19 +16,33 @@
  */
 package net.oauth.jsontoken.crypto;
 
-
 import org.apache.commons.codec.binary.StringUtils;
 
 import java.security.SignatureException;
 
+/**
+ * A Verifier that can verify Strings (as opposed to byte arrays), assuming
+ * that the String contains characters in the US-ASCII charset.
+ */
 public class AsciiStringVerifier {
 
   private final Verifier verifier;
 
+  /**
+   * Public constructor.
+   *
+   * @param verifier A {@link Verifier} that can verify signatures on byte arrays.
+   */
   public AsciiStringVerifier(Verifier verifier) {
     this.verifier = verifier;
   }
 
+  /**
+   * Verifies a signature on an ASCII string.
+   * @param source the source that was signed.
+   * @param signature the signature on the source.
+   * @throws SignatureException if the signature doesn't verify.
+   */
   public void verifySignature(String source, byte[] signature) throws SignatureException {
     verifier.verifySignature(StringUtils.getBytesUsAscii(source), signature);
   }

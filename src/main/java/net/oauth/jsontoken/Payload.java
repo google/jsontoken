@@ -16,9 +16,13 @@
  */
 package net.oauth.jsontoken;
 
-
+/**
+ * Payload of a JSON token. You can use anything as a payload, as long as it can be converted into JSON.
+ */
 public interface Payload {
 
+  /**
+   * Returns the JSON representation of this object.
+   */
   public String toJson();
-
 }

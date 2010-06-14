@@ -18,8 +18,22 @@ package net.oauth.jsontoken.discovery;
 
 import java.net.URI;
 
+/**
+ * Interface that a JSON Token verifier can implement to help
+ * with locating public verification keys. If a JSON Token verifier
+ * wants to take advantage of the {@link DefaultPublicKeyLocator} implementation,
+ * it needs to provide an implementation of this interface to fetch and parse
+ * server info documents. The implementation should if possible recognize
+ * different encodings of the server info document (e.g., JSON and XML).
+ */
 public interface ServerInfoResolver {
 
+  /**
+   * Fetches and parses a server info document.
+   * @param serverDescriptor the URL from which the server info document
+   *   should be fetched.
+   * @return an object representing the server info document.
+   */
   public ServerInfo resolve(URI serverDescriptor);
 
 }

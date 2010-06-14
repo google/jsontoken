@@ -23,7 +23,7 @@ import net.oauth.jsontoken.crypto.HmacSHA256Verifier;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
-import net.oauth.jsontoken.discovery.DefaultPublickeyLocator;
+import net.oauth.jsontoken.discovery.DefaultPublicKeyLocator;
 import net.oauth.jsontoken.discovery.IdentityServerDescriptorProvider;
 import net.oauth.jsontoken.discovery.JsonServerInfo;
 import net.oauth.jsontoken.discovery.ServerInfo;
@@ -73,7 +73,9 @@ public class JsonTokenTest extends TestCase {
   private static final String SERVER_INFO_DOCUMENT = "{ \"verification_keys\": {" +
       // this is the public key that goes with the above private key
       "\"key1\":\"RSA.ALqcwRcW7FOczn7IzgB-eDJt_lnz0nGVyEEDc2L_8abX_bkx63N8h3YmDw2S2GZEPMfqwVqg1LufpnonI0kWzNvY9coGRl16bbX0XmSNrCget8DUu7x8GYZBgb9obvRo9-3Z4Rltj5epblZSUyTu8VbsEOKTAFfK__musVqwF89Z3XfGjND3rXYgStYaUYyDGYHriNxNsZYzMODMT-xxKbJ5DS9BAxbwn42dv_IOljuWhetWsCBnHwgG_V_0W_enu2KtMP-8WDPETasgBq4z9pTzMEcTJcvU1I2rQjrY4AXgMuIOVwQU69iOqiII9AiHQ1edDLwNyznEcKPR7Vvdf8s.AQAB\"" +
-      "}}";
+      "}, " +
+      // some other information that might be in the server info document.
+      "\"foo\": \"bar\"}";
 
   private VerifierProviders locators;
 
@@ -88,7 +90,7 @@ public class JsonTokenTest extends TestCase {
       }
     };
 
-    VerifierProvider rsaLocator = new DefaultPublickeyLocator(
+    VerifierProvider rsaLocator = new DefaultPublicKeyLocator(
         new IdentityServerDescriptorProvider(),
         new ServerInfoResolver() {
           @Override
@@ -98,8 +100,8 @@ public class JsonTokenTest extends TestCase {
         });
 
     locators = new VerifierProviders();
-    locators.setKeyLocator(SignatureAlgorithm.HMAC_SHA256, hmacLocator);
-    locators.setKeyLocator(SignatureAlgorithm.RSA_SHA256, rsaLocator);
+    locators.setVerifierProvider(SignatureAlgorithm.HMAC_SHA256, hmacLocator);
+    locators.setVerifierProvider(SignatureAlgorithm.RSA_SHA256, rsaLocator);
   }
 
   public void testSignature() throws Exception {

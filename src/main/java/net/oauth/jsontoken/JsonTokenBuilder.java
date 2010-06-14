@@ -89,7 +89,7 @@ public class JsonTokenBuilder<T extends Payload> {
     if (signer.getKeyId() != null) {
       env.setKeyId(signer.getKeyId());
     }
-    env.setIssuer(signer.getSignerId());
+    env.setIssuer(signer.getIssuer());
     env.setNotBefore(notBefore);
     env.setTokenLifetime(duration);
     env.setSignatureAlgorithm(signer.getSignatureAlgorithm());

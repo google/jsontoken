@@ -16,18 +16,24 @@
  */
 package net.oauth.jsontoken.crypto;
 
-
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 
+/**
+ * A verifier that can verify signatures on byte arrays using RSA and SHA-256.
+ */
 public class RsaSHA256Verifier implements Verifier {
 
   private final PublicKey verificationKey;
   private final Signature signer;
 
+  /**
+   * Public Constructor.
+   * @param verificationKey the key used to verify the signature.
+   */
   public RsaSHA256Verifier(PublicKey verificationKey) {
     this.verificationKey = verificationKey;
     try {
@@ -40,6 +46,10 @@ public class RsaSHA256Verifier implements Verifier {
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Verifier#verifySignature(byte[], byte[])
+   */
   @Override
   public void verifySignature(byte[] source, byte[] signature) throws SignatureException {
     try {

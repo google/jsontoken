@@ -80,7 +80,7 @@ public class JsonTokenParser {
     Envelope env = Envelope.fromJson(fromBase64ToJsonString(envelopeString));
 
     String baseString = JsonTokenUtil.getBaseString(payloadString, envelopeString);
-    Verifier verifier = locators.getKeyLocator(env.getSignatureAlgorithm()).findVerifier(env.getIssuer(), env.getKeyId());
+    Verifier verifier = locators.getVerifierProvider(env.getSignatureAlgorithm()).findVerifier(env.getIssuer(), env.getKeyId());
     AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
     asciiVerifier.verifySignature(baseString, Base64.decodeBase64(signature));
 

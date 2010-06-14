@@ -18,8 +18,17 @@ package net.oauth.jsontoken.discovery;
 
 import java.security.PublicKey;
 
+/**
+ * Represents the document located at a server's "server descriptor" URL.
+ * Such a "server info" document contains, among other things, the public
+ * verification keys that can be used to verify JSON Tokens issued by this
+ * server.
+ */
 public interface ServerInfo {
 
+  /**
+   * Returns the verification key with the given key id.
+   */
   public PublicKey getVerificationKey(String keyId);
 
 }
