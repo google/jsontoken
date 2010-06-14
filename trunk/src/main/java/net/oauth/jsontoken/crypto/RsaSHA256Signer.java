@@ -23,14 +23,23 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 
-
+/**
+ * Signer that can sign byte arrays using RSA and SHA-256.
+ */
 public class RsaSHA256Signer extends AbstractSigner {
 
   private final Signature signature;
   private final PrivateKey signingKey;
 
-  public RsaSHA256Signer(String signerId, String keyId, RSAPrivateKey key) throws InvalidKeyException {
-    super(signerId, keyId);
+  /**
+   * Public constructor.
+   * @param issuer The id of this signer, to be included in the JSON Token's envelope.
+   * @param keyId The id of the key used by this signer, to be included in the JSON Token's envelope.
+   * @param key the private key to be used for signing.
+   * @throws InvalidKeyException if the key is unsuitable for RSA signing.
+   */
+  public RsaSHA256Signer(String issuer, String keyId, RSAPrivateKey key) throws InvalidKeyException {
+    super(issuer, keyId);
 
     this.signingKey = key;
 
@@ -42,11 +51,19 @@ public class RsaSHA256Signer extends AbstractSigner {
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Signer#getSignatureAlgorithm()
+   */
   @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
     return SignatureAlgorithm.RSA_SHA256;
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Signer#sign(byte[])
+   */
   @Override
   public byte[] sign(byte[] source) throws SignatureException {
     try {

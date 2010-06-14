@@ -18,15 +18,40 @@ package net.oauth.jsontoken.crypto;
 
 import java.security.SignatureException;
 
-
+/**
+ * Interface that a token signer has to implement. A Signer represents a specific
+ * signing key, and knows the id of this key. (The key id is an identifier by
+ * which a verifier can find this particular key. It does not need to be
+ * globally unique, but must be unique for per token issuer.) A Signer also
+ * belongs to a certain issuer: An issuer is the entity that issues tokens, and
+ * uses signers to sign them.
+ */
 public interface Signer {
 
+  /**
+   * Returns the id of this signing key. If not null, this will be included in
+   * the JSON Token's envelope as the key_id parameter.
+   */
   public String getKeyId();
 
-  public String getSignerId();
+  /**
+   * The issuer of the JSON Token. Each signer belongs to an issuer, and an issuer
+   * may have one or more signers, each with a distinct key id.
+   * @return
+   */
+  public String getIssuer();
 
+  /**
+   * Returns the signature algorithm used by this signer.
+   */
   public SignatureAlgorithm getSignatureAlgorithm();
 
+  /**
+   * Signs an array of bytes.
+   * @param source The bytes that should be signed.
+   * @return The signature on the bytes.
+   * @throws SignatureException if the signer could not create the signature.
+   */
   public byte[] sign(byte[] source) throws SignatureException;
 
 }

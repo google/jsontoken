@@ -16,24 +16,34 @@
  */
 package net.oauth.jsontoken.crypto;
 
-
+/**
+ * Superclass for {@link Signer}s.
+ */
 public abstract class AbstractSigner implements Signer {
 
-  private final String signerId;
+  private final String issuer;
   private final String keyId;
 
-  protected AbstractSigner(String signerId, String keyId) {
-    this.signerId = signerId;
+  protected AbstractSigner(String issuer, String keyId) {
+    this.issuer = issuer;
     this.keyId = keyId;
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Signer#getKeyId()
+   */
   @Override
   public String getKeyId() {
     return keyId;
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.crypto.Signer#getIssuer()
+   */
   @Override
-  public String getSignerId() {
-    return signerId;
+  public String getIssuer() {
+    return issuer;
   }
 }

@@ -16,14 +16,23 @@
  */
 package net.oauth.jsontoken.crypto;
 
+/**
+ * Enum of the signature algorithms supported by this package.
+ */
 public enum SignatureAlgorithm {
   HMAC_SHA256,
   RSA_SHA256;
 
+  /**
+   * What the signature algorithm is named in the "alg" parameter in a JSON Token's envelope.
+   */
   public String getNameForJson() {
     return name().replace('_', '-');
   }
 
+  /**
+   * Given the name of the algorithm in the envelope, returns the corresponding enum instance.
+   */
   public static SignatureAlgorithm getFromJsonName(String name) {
     return SignatureAlgorithm.valueOf(name.replace('-', '_'));
   }

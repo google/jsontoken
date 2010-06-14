@@ -26,14 +26,25 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.regex.Pattern;
 
+/**
+ * Class that can parse "magic key" RSA public key representations, which are of the form
+ * RSA.<base64(big-endian(modulus))>.<base64(big-endian(exponent))>.
+ */
 public class MagicRsaPublicKey {
 
   private final PublicKey publicKey;
 
+  /**
+   * Public constructor.
+   * @param magicKey the serialized key (of the form RSA.modulus.exponent).
+   */
   public MagicRsaPublicKey(String magicKey) {
     this.publicKey = parseKey(magicKey);
   }
 
+  /**
+   * Returns the public key represented by the "magic" serialized key.
+   */
   public PublicKey getKey() {
     return publicKey;
   }

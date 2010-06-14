@@ -21,20 +21,42 @@ import net.oauth.jsontoken.crypto.Verifier;
 
 import java.net.URI;
 
-public class DefaultPublickeyLocator implements VerifierProvider {
+/**
+ * Default strategy for locating public verification keys. Unlike secret (symmetric)
+ * verification keys, public verification keys can be published by token issuers
+ * at URLs called "server descriptors".
+ *
+ * The default strategy to find a public verification key consists of first mapping
+ * an issuer id to a server descriptor, and then fetching the ServerInfo document from
+ * the server descriptor URL. Finally, the key is looked up int the ServerInfo document
+ * by key id.
+ */
+public class DefaultPublicKeyLocator implements VerifierProvider {
 
-  private final ServerDescriptorProvider issuerToDescriptorMap;
+  private final ServerDescriptorProvider descriptorProvider;
   private final ServerInfoResolver descriptorResolver;
 
-  public DefaultPublickeyLocator(ServerDescriptorProvider issuerToServerDescriptor,
+  /**
+   * Public constructor.
+   *
+   * @param descriptorProvider A {@link ServerDescriptorProvider} that maps
+   *   issuer ids to server descriptors (URLs).
+   * @param resolver A {@link ServerInfoResolver}, i.e., an object that can fetch
+   *   and parse a server info document, given a server descriptor.
+   */
+  public DefaultPublicKeyLocator(ServerDescriptorProvider descriptorProvider,
       ServerInfoResolver resolver) {
-    this.issuerToDescriptorMap = issuerToServerDescriptor;
+    this.descriptorProvider = descriptorProvider;
     this.descriptorResolver = resolver;
   }
 
+  /*
+   * (non-Javadoc)
+   * @see net.oauth.jsontoken.discovery.VerifierProvider#findVerifier(java.lang.String, java.lang.String)
+   */
   @Override
-  public Verifier findVerifier(String signerId, String keyId) {
-    URI serverDescriptor = issuerToDescriptorMap.getServerDescriptor(signerId);
+  public Verifier findVerifier(String issuer, String keyId) {
+    URI serverDescriptor = descriptorProvider.getServerDescriptor(issuer);
     return new RsaSHA256Verifier(descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
   }
 }
