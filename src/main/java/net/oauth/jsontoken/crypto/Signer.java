@@ -37,7 +37,6 @@ public interface Signer {
   /**
    * The issuer of the JSON Token. Each signer belongs to an issuer, and an issuer
    * may have one or more signers, each with a distinct key id.
-   * @return
    */
   public String getIssuer();
 
