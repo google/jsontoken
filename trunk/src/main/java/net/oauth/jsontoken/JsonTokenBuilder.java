@@ -38,16 +38,26 @@ public class JsonTokenBuilder<T extends Payload> {
    * Returns a new {@link JsonTokenBuilder} for the specified payload type.
    */
   public static <V extends Payload> JsonTokenBuilder<V> newBuilder() {
-    return new JsonTokenBuilder<V>();
+    return new JsonTokenBuilder<V>(new SystemClock());
   }
+
+  /**
+   * Returns a new {@link JsonTokenBuilder} for the specified payload type.
+   *
+   * @param clock clock that knows what time it currently is.
+   */
+  public static <V extends Payload> JsonTokenBuilder<V> newBuilder(Clock clock) {
+    return new JsonTokenBuilder<V>(clock);
+  }
+
+  private final Clock clock;
 
   private Signer signer;
   private Instant notBefore;
   private Duration duration;
 
-  private JsonTokenBuilder() {
-    // By default, the token starts now
-    notBefore = new Instant();
+  private JsonTokenBuilder(Clock clock) {
+    this.clock = clock;
   }
 
   /**
@@ -84,6 +94,10 @@ public class JsonTokenBuilder<T extends Payload> {
     Preconditions.checkNotNull(signer, "signer must not be null");
     Preconditions.checkNotNull(notBefore, "notBefore must not be null");
     Preconditions.checkNotNull(duration, "duration must not be null");
+
+    if (notBefore == null) {
+      notBefore = clock.now();
+    }
 
     Envelope env = new Envelope();
     if (signer.getKeyId() != null) {

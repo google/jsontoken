@@ -27,7 +27,7 @@ public class JsonToken<T extends Payload> {
   private final Envelope envelope;
   private final String signature;
 
-  JsonToken(T payload, Envelope envelope, String signature) {
+  protected JsonToken(T payload, Envelope envelope, String signature) {
     this.payload = payload;
     this.envelope = envelope;
     this.signature = signature;
