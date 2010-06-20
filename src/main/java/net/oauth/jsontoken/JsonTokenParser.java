@@ -16,6 +16,9 @@
  */
 package net.oauth.jsontoken;
 
+import java.security.SignatureException;
+import java.util.regex.Pattern;
+
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
@@ -23,8 +26,8 @@ import net.oauth.jsontoken.discovery.VerifierProviders;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 
-import java.security.SignatureException;
-import java.util.regex.Pattern;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Class that parses and verifies JSON Tokens.
@@ -66,30 +69,30 @@ public class JsonTokenParser {
    * @return the deserialized {@link JsonToken}.
    * @throws SignatureException if the signature doesn't check out, or if the token is oterwise invalid.
    */
-  public <V extends Payload> JsonToken<V> parseToken(String tokenString, PayloadDeserializer<V> deserializer)
+  public JsonObject verifyAndDeserialize(String tokenString)
       throws SignatureException {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
-    if (pieces.length != 3) {
-      throw new IllegalArgumentException("token did not have three separate parts");
+    if (pieces.length != 2) {
+      throw new IllegalArgumentException("token did not have two separate parts");
     }
     String payloadString = pieces[0];
-    String envelopeString = pieces[1];
-    String signature = pieces[2];
+    String signature = pieces[1];
 
-    V payload = deserializer.fromJson(fromBase64ToJsonString(payloadString));
-    Envelope env = Envelope.fromJson(fromBase64ToJsonString(envelopeString));
+    JsonObject json = new JsonParser().parse(fromBase64ToJsonString(payloadString)).getAsJsonObject();
+    JsonToken payload = new JsonToken(json);
 
-    String baseString = JsonTokenUtil.getBaseString(payloadString, envelopeString);
-    Verifier verifier = locators.getVerifierProvider(env.getSignatureAlgorithm()).findVerifier(env.getIssuer(), env.getKeyId());
+    String baseString = payloadString;
+    Verifier verifier = locators.getVerifierProvider(payload.getSignatureAlgorithm())
+        .findVerifier(payload.getIssuer(), payload.getKeyId());
     AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
     asciiVerifier.verifySignature(baseString, Base64.decodeBase64(signature));
 
-    if (!clock.isCurrentTimeInInterval(env.getNotBefore(), env.getTokenLifetime())) {
+    if (!clock.isCurrentTimeInInterval(payload.getNotBefore(), payload.getTokenLifetime())) {
       throw new SignatureException("token is not yet or no longer valid. " +
-          "Token start time: " + env.getNotBefore() + ". duration: " + env.getTokenLifetime());
+          "Token start time: " + payload.getNotBefore() + ". duration: " + payload.getTokenLifetime());
     }
 
-    return new JsonToken<V>(payload, env, signature);
+    return json;
   }
 
   private static String fromBase64ToJsonString(String source) {
