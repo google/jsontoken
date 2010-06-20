@@ -16,112 +16,92 @@
  */
 package net.oauth.jsontoken;
 
+import java.security.SignatureException;
+import java.util.regex.Pattern;
+
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.StringUtils;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
-import java.security.SignatureException;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class JsonTokenTest extends JsonTokenTestBase {
 
   public void testSignature() throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
 
-    SamplePayload payload = new SamplePayload();
-    payload.setBar(15);
-    payload.setFoo("some value");
-
-    JsonTokenBuilder<SamplePayload> builder = JsonTokenBuilder.newBuilder();
-    JsonToken<SamplePayload> token = builder
-        .setDuration(Duration.standardMinutes(1))
-        .setNotBefore(new Instant())
-        .setSigner(signer)
-        .create(payload);
+    JsonToken token = new JsonToken(signer);
+    token.setTokenLifetime(Duration.standardMinutes(2));
+    token.setParam("bar", 15);
+    token.setParam("foo", "some value");
 
     System.out.println(token.toString());
-    System.out.println(token.getToken());
+    System.out.println(token.serializeAndSign());
 
     assertNotNull(token.toString());
+
+    assertEquals("google.com", token.getIssuer());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 
   public void testVerification() throws Exception {
-    String tokenString = "eyJmb28iOiJzb21lIHZhbHVlIiwiYmFyIjoxNX0.eyJpc3N1ZXIiOiJnb29nbGUuY29tIiwia2V5X2lkIjoia2V5MiIsImFsZyI6IkhNQUMtU0hBMjU2Iiwibm90X2JlZm9yZSI6MTI3NjIzMzg4NjMwMiwidG9rZW5fbGlmZXRpbWUiOjYwMDAwfQ.9pupBctiHO3oFigwYCDahexJT7U6sckf-oQVQeUiqhk";
-    PayloadDeserializer<SamplePayload> deserializer =
-        DefaultPayloadDeserializer.newDeserializer(SamplePayload.class);
+    String tokenString = "eyJ0b2tlbl9saWZldGltZSI6MTIwMDAwLCJiYXIiOjE1LCJmb28iOiJzb21lIHZhbHVlIiwiaXNzdWVyIjoiZ29vZ2xlLmNvbSIsImtleV9pZCI6ImtleTIiLCJhbGciOiJITUFDLVNIQTI1NiIsIm5vdF9iZWZvcmUiOjEyNzY2Njk3MjEzNDZ9.2ULsBMoQKmdH4PlDkiP2hm_cH0JldIoA9jsEXLt7UfA";
 
     FakeClock clock = new FakeClock();
-    clock.setNow(new Instant(1276233887000L));
+    clock.setNow(new Instant(1276669722000L));
     JsonTokenParser parser = new JsonTokenParser(clock, locators);
-    JsonToken<SamplePayload> token = parser.parseToken(tokenString, deserializer);
+    JsonToken token = new JsonToken(parser.verifyAndDeserialize(tokenString));
 
-    assertEquals("google.com", token.getEnvelope().getIssuer());
-    assertEquals(15, token.getPayload().getBar());
-    assertEquals("some value", token.getPayload().getFoo());
+    assertEquals("google.com", token.getIssuer());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 
   public void testPublicKey() throws Exception {
 
     RsaSHA256Signer signer = new RsaSHA256Signer("google.com", "key1", privateKey);
 
-    SamplePayload payload = new SamplePayload();
-    payload.setBar(15);
-    payload.setFoo("some value");
+    JsonToken token = new JsonToken(signer);
+    token.setParam("bar", 15);
+    token.setParam("foo", "some value");
+    token.setTokenLifetime(Duration.standardMinutes(1));
+    token.setNotBefore(new Instant());
 
-    JsonTokenBuilder<SamplePayload> builder = JsonTokenBuilder.newBuilder();
-    JsonToken<SamplePayload> token = builder
-        .setDuration(Duration.standardMinutes(1))
-        .setNotBefore(new Instant())
-        .setSigner(signer)
-        .create(payload);
-
-    String tokenString = token.getToken();
+    String tokenString = token.serializeAndSign();
 
     System.out.println(token.toString());
     System.out.println(tokenString);
 
     assertNotNull(token.toString());
 
-    PayloadDeserializer<SamplePayload> deserializer =
-        DefaultPayloadDeserializer.newDeserializer(SamplePayload.class);
     JsonTokenParser parser = new JsonTokenParser(locators);
-    token = parser.parseToken(tokenString, deserializer);
+    token = new JsonToken(parser.verifyAndDeserialize(tokenString));
 
-    assertEquals("google.com", token.getEnvelope().getIssuer());
-    assertEquals(15, token.getPayload().getBar());
-    assertEquals("some value", token.getPayload().getFoo());
+    assertEquals("google.com", token.getIssuer());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
 
     // now test what happens if we tamper with the token
-    payload.setBar(14);
-    String payloadString = payload.toJson();
+    JsonObject payload = new JsonParser().parse(
+        StringUtils.newStringUsAscii(Base64.decodeBase64(tokenString.split(Pattern.quote("."))[0]))).getAsJsonObject();
+    payload.remove("bar");
+    payload.addProperty("bar", 14);
+    String payloadString = new Gson().toJson(payload);
     String tamperedToken = tokenString.replaceFirst("[^.]+", Base64.encodeBase64URLSafeString(payloadString.getBytes()));
 
     System.out.println(tamperedToken);
     try {
-      token = parser.parseToken(tamperedToken, deserializer);
+      token = new JsonToken(parser.verifyAndDeserialize(tamperedToken));
       fail("verification should have failed");
     } catch (SignatureException e) {
       // expected
-    }
-  }
-
-  private static class SamplePayload extends DefaultPayloadImpl {
-    private String foo;
-    private int bar;
-
-    public String getFoo() {
-      return foo;
-    }
-    public void setFoo(String foo) {
-      this.foo = foo;
-    }
-    public int getBar() {
-      return bar;
-    }
-    public void setBar(int bar) {
-      this.bar = bar;
     }
   }
 }

@@ -16,33 +16,117 @@
  */
 package net.oauth.signatures;
 
-import net.oauth.jsontoken.Clock;
-import net.oauth.jsontoken.DefaultPayloadDeserializer;
-import net.oauth.jsontoken.JsonToken;
-import net.oauth.jsontoken.JsonTokenParser;
-import net.oauth.jsontoken.PayloadDeserializer;
-import net.oauth.jsontoken.discovery.VerifierProviders;
-
+import java.net.URI;
 import java.security.SignatureException;
+import java.util.Enumeration;
 
-public class SignedOAuthTokenParser extends JsonTokenParser {
+import javax.servlet.http.HttpServletRequest;
 
-  private final PayloadDeserializer<SignedOAuthTokenPayload> deserializer =
-      DefaultPayloadDeserializer.newDeserializer(SignedOAuthTokenPayload.class);
+import net.oauth.jsontoken.JsonTokenParser;
 
-  public SignedOAuthTokenParser(Clock clock, VerifierProviders locators) {
-    super(clock, locators);
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicHeaderValueParser;
+
+import com.google.common.base.Objects;
+
+public class SignedOAuthTokenParser {
+
+  private final JsonTokenParser parser;
+  private final NonceChecker nonceChecker;
+
+  public SignedOAuthTokenParser(JsonTokenParser parser, NonceChecker nonceChecker) {
+    this.parser = parser;
+    this.nonceChecker = nonceChecker;
   }
 
-  public SignedOAuthTokenParser(VerifierProviders locators) {
-    super(locators);
+  public SignedOAuthToken parseToken(HttpServletRequest request) throws SignatureException {
+
+    // this guaranteed to return a string starting with "Token", or null
+    String header = getAuthHeader(request);
+
+    if (header == null) {
+       throw new SignatureException("missing Authorization header of type 'Token'");
+    }
+
+    String postFix = header.substring(0, SignedOAuthToken.AUTH_METHOD.length()); // read past "Token"
+    NameValuePair nvp = BasicHeaderValueParser.parseNameValuePair(postFix.trim(), null);
+
+    if (nvp == null) {
+      throw new SignatureException("missing signed_token in Authorization header: " + header);
+    }
+
+    if (!SignedOAuthToken.SIGNED_TOKEN_PARAM.equals(nvp.getName())) {
+      // Not logging the header in this case. maybe they just mis-spelled "token", but did send the
+      // actual OAuth token. We don't want to log that.
+      throw new SignatureException("missing signed_token in Authorization header");
+    }
+
+    String token = nvp.getValue().trim();
+
+    String method = request.getMethod();
+
+    StringBuffer uri = request.getRequestURL();
+
+    if (request.getQueryString() != null) {
+      uri.append("?");
+      uri.append(request.getQueryString());
+    }
+
+    return parseToken(token, method, uri.toString());
   }
 
-  public JsonToken<SignedOAuthTokenPayload> parseToken(String tokenString) throws SignatureException {
-    JsonToken<SignedOAuthTokenPayload> token = super.parseToken(tokenString, deserializer);
+  public SignedOAuthToken parseToken(String tokenString, String method, String uri) throws SignatureException {
+    SignedOAuthToken token = new SignedOAuthToken(parser.verifyAndDeserialize(tokenString));
 
-    // TODO: check method, URI, nonce.
+    if (!method.equalsIgnoreCase(token.getMethod())) {
+      throw new SignatureException("method does not equal in token (" + token.getMethod() + ")");
+    }
+
+    checkUri(uri, token.getUri());
+
+    if (nonceChecker != null) {
+      nonceChecker.checkNonce(token);
+    }
 
     return token;
+  }
+
+  private void checkUri(String ourUriString, String tokenUriString) throws SignatureException {
+    URI ourUri = URI.create(ourUriString);
+    URI tokenUri = URI.create(tokenUriString);
+
+    if (!ourUri.getScheme().equalsIgnoreCase(tokenUri.getScheme())) {
+      throw new SignatureException("scheme in token URI (" + tokenUri.getScheme() + ") is wrong");
+    }
+
+    if (!ourUri.getAuthority().equalsIgnoreCase(tokenUri.getAuthority())) {
+      throw new SignatureException("authority in token URI (" + tokenUri.getAuthority() + ") is wrong");
+    }
+
+    if (!Objects.equal(ourUri.getPath(), tokenUri.getPath())) {
+      throw new SignatureException("path in token URI (" + tokenUri.getAuthority() + ") is wrong");
+    }
+
+    if (!Objects.equal(ourUri.getQuery(), tokenUri.getQuery())) {
+      throw new SignatureException("query string in URI (" + tokenUri.getQuery() + ") is wrong");
+    }
+  }
+
+  private String getAuthHeader(HttpServletRequest request) {
+    @SuppressWarnings("unchecked")
+    Enumeration<String> authHeaders = request.getHeaders("Authorization");
+
+    if (authHeaders == null) {
+      return null;
+    }
+
+    while (authHeaders.hasMoreElements()) {
+      String header = (String) authHeaders.nextElement();
+      if (header.trim().startsWith(SignedOAuthToken.AUTH_METHOD)) {
+        return header.trim();
+      }
+    }
+
+    return null;
   }
 }

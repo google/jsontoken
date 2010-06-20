@@ -16,7 +16,9 @@
  */
 package net.oauth.signatures;
 
-import net.oauth.jsontoken.JsonToken;
+import org.joda.time.Instant;
+
+import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.JsonTokenTestBase;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.Signer;
@@ -27,29 +29,29 @@ public class SignedTokenBuilderTest extends JsonTokenTestBase {
 
     Signer signer = new RsaSHA256Signer("google.com", "key1", privateKey);
 
-    SignedOAuthTokenBuilder builder = new SignedOAuthTokenBuilder(signer);
-    JsonToken<SignedOAuthTokenPayload> token = builder
-        .setMethod("GET")
-        .setNonce("nonce")
-        .setOAuthToken("token")
-        .setUri("http://www.example.com/api")
-        .build();
+    SignedOAuthToken token = new SignedOAuthToken(signer);
+    token.setMethod("GET");
+    token.setNonce("nonce");
+    token.setOAuthToken("token");
+    token.setUri("http://www.example.com/api");
+    token.setNotBefore(new Instant());
 
     System.out.println(token.toString());
-    System.out.println(token.getToken());
+    System.out.println(token.serializeAndSign());
 
-    assertEquals("GET", token.getPayload().getMethod());
-    assertEquals("nonce", token.getPayload().getNonce());
-    assertEquals("token", token.getPayload().getOAuthToken());
-    assertEquals("http://www.example.com/api", token.getPayload().getUri());
+    assertEquals("GET", token.getMethod());
+    assertEquals("nonce", token.getNonce());
+    assertEquals("token", token.getOAuthToken());
+    assertEquals("http://www.example.com/api", token.getUri());
 
-    SignedOAuthTokenParser parser = new SignedOAuthTokenParser(locators);
+    JsonTokenParser jsonParser = new JsonTokenParser(locators);
+    SignedOAuthTokenParser parser = new SignedOAuthTokenParser(jsonParser, null);
 
-    JsonToken<SignedOAuthTokenPayload> compare = parser.parseToken(token.getToken());
+    SignedOAuthToken compare = parser.parseToken(token.serializeAndSign(), "GET", "HTTP://www.Example.Com/api");
 
-    assertEquals("GET", compare.getPayload().getMethod());
-    assertEquals("nonce", compare.getPayload().getNonce());
-    assertEquals("token", compare.getPayload().getOAuthToken());
-    assertEquals("http://www.example.com/api", compare.getPayload().getUri());
+    assertEquals("GET", compare.getMethod());
+    assertEquals("nonce", compare.getNonce());
+    assertEquals("token", compare.getOAuthToken());
+    assertEquals("http://www.example.com/api", compare.getUri());
   }
 }

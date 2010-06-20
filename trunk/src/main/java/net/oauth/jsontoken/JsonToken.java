@@ -16,35 +16,61 @@
  */
 package net.oauth.jsontoken;
 
+import java.security.SignatureException;
+
+import org.apache.commons.codec.binary.Base64;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
+
+import net.oauth.jsontoken.crypto.AsciiStringSigner;
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+import net.oauth.jsontoken.crypto.Signer;
+
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
+
 /**
  * A JSON Token.
  *
  * @param <T> type of the payload object that is embedded in this JSON Token.
  */
-public class JsonToken<T extends Payload> {
+public class JsonToken {
 
-  private final T payload;
-  private final Envelope envelope;
-  private final String signature;
+  public final static String ISSUER = "issuer";
+  public final static String KEY_ID = "key_id";
+  public final static String SIGNATURE_ALG = "alg";
+  public final static String NOT_BEFORE = "not_before";
+  public final static String LIFETIME = "token_lifetime";
 
-  protected JsonToken(T payload, Envelope envelope, String signature) {
-    this.payload = payload;
-    this.envelope = envelope;
-    this.signature = signature;
+  private final JsonObject json;
+  private final Signer signer;
+  private final Clock clock;
+  private String signature;
+
+  public JsonToken(Signer signer) {
+    this(signer, new SystemClock());
   }
 
-  /**
-   * Returns the payload of this token.
-   */
-  public T getPayload() {
-    return payload;
+  public JsonToken(Signer signer, Clock clock) {
+    Preconditions.checkNotNull(signer);
+    Preconditions.checkNotNull(clock);
+    this.json = new JsonObject();
+    this.signer = signer;
+    this.clock = clock;
+    this.signature = null;
+
+    json.addProperty(JsonToken.ISSUER, signer.getIssuer());
+    json.addProperty(JsonToken.KEY_ID, signer.getKeyId());
+    json.addProperty(JsonToken.SIGNATURE_ALG, signer.getSignatureAlgorithm().getNameForJson());
   }
 
-  /**
-   * Returns the envelope for this token.
-   */
-  public Envelope getEnvelope() {
-    return envelope;
+  public JsonToken(JsonObject json) {
+    this.json = json;
+    this.signer = null;
+    this.clock = null;
+    this.signature = null;
   }
 
   /**
@@ -53,9 +79,13 @@ public class JsonToken<T extends Payload> {
    *
    * This is what a client (token issuer) would send to a token verifier over the
    * wire.
+   * @throws SignatureException
    */
-  public String getToken() {
-   return JsonTokenUtil.getBaseString(payload, envelope) + signature;
+  public String serializeAndSign() throws SignatureException {
+   return
+       JsonTokenUtil.toBase64(json)
+       + JsonTokenUtil.DELIMITER
+       + getSignature();
   }
 
   /**
@@ -64,10 +94,80 @@ public class JsonToken<T extends Payload> {
   @Override
   public String toString() {
     return
-        payload.toJson()
-        + JsonTokenUtil.DELIMITER
-        + envelope.toJson()
+        JsonTokenUtil.toJson(json)
         + JsonTokenUtil.DELIMITER
         + signature;
+  }
+
+  public String getIssuer() {
+    return json.getAsJsonPrimitive(ISSUER).getAsString();
+  }
+
+  public String getKeyId() {
+    return json.getAsJsonPrimitive(KEY_ID).getAsString();
+  }
+
+  public SignatureAlgorithm getSignatureAlgorithm() {
+    String sigAlg = json.getAsJsonPrimitive(SIGNATURE_ALG).getAsString();
+    return SignatureAlgorithm.getFromJsonName(sigAlg);
+  }
+
+  public Instant getNotBefore() {
+    long notBefore = json.getAsJsonPrimitive(NOT_BEFORE).getAsLong();
+    return new Instant(notBefore);
+  }
+
+  public void setNotBefore(Instant instant) {
+    setParam(JsonToken.NOT_BEFORE, instant.getMillis());
+  }
+
+  public Duration getTokenLifetime() {
+    long lifetime = json.getAsJsonPrimitive(LIFETIME).getAsLong();
+    return new Duration(lifetime);
+  }
+
+  public void setTokenLifetime(Duration duration) {
+    setParam(JsonToken.LIFETIME, duration.getMillis());
+  }
+
+  public void setParam(String name, String value) {
+    json.addProperty(name, value);
+  }
+
+  public void setParam(String name, Number value) {
+    json.addProperty(name, value);
+  }
+
+  public JsonPrimitive getParamAsPrimitive(String param) {
+    return json.getAsJsonPrimitive(param);
+  }
+
+  public JsonObject getPayloadAsJsonObject() {
+    return json;
+  }
+
+  private String getSignature() throws SignatureException {
+    if (signer == null) {
+      throw new SignatureException("can't sign JsonToken with signer.");
+    }
+
+    if (signature == null) {
+      if (!json.has(JsonToken.NOT_BEFORE)) {
+
+        // Signer and clock are either both null or both not-null
+        // so there is no need to check whether clock is not-null.
+        setNotBefore(clock.now());
+      }
+
+      if (!json.has(JsonToken.LIFETIME)) {
+        setTokenLifetime(Duration.standardMinutes(1));
+      }
+
+      // now, generate the signature
+      String baseString = JsonTokenUtil.toBase64(json);
+      AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);
+      signature = Base64.encodeBase64URLSafeString(asciiSigner.sign(baseString));
+    }
+    return signature;
   }
 }

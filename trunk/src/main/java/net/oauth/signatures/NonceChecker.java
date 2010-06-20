@@ -14,17 +14,15 @@
  * limitations under the License.
  *
  */
-package net.oauth.jsontoken;
+package net.oauth.signatures;
+
+import java.security.SignatureException;
 
 /**
- * Deserializer for JSON Token payloads.
- *
- * @param <T> type of the object that serialization will produce.
+ * Receivers of signed OAuth Tokens may implement this interface.
  */
-public interface PayloadDeserializer<T extends Payload> {
+public interface NonceChecker {
 
-  /**
-   * Converts a JSON string into a Java object.
-   */
-  public T fromJson(String json);
+  public void checkNonce(SignedOAuthToken token) throws SignatureException;
+
 }

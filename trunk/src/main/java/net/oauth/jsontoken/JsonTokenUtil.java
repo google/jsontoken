@@ -19,6 +19,10 @@ package net.oauth.jsontoken;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+
 /**
  * Some utility functions for {@link JsonToken}s.
  */
@@ -26,24 +30,12 @@ class JsonTokenUtil {
 
   static public final String DELIMITER = ".";
 
-  /**
-   * Returns the base string for a given payload and envelope. Note that the
-   * returned string is guaranteed to only contain ASCII characters, so can safely
-   * be converted into a byte array of equal length.
-   */
-  static String getBaseString(Payload payload, Envelope envelope) {
-    return getBaseString(jsonToBase64(payload.toJson()), jsonToBase64(envelope.toJson()));
+  public static String toBase64(JsonObject json) {
+    return jsonToBase64(toJson(json));
   }
 
-  /**
-   * Returns the base string for a given serialized payload and envelope. Note that the
-   * returned string is guaranteed to only contain ASCII characters, so can safely
-   * be converted into a byte array of equal length.
-   * @param payload The serialized payload. MUST only contain characters from the ASCII set.
-   * @param envelope The serialized envelope. MUST only contain characters from the ASCII set.
-   */
-  static String getBaseString(String payload, String envelope) {
-    return payload + DELIMITER + envelope + DELIMITER;
+  public static String toJson(JsonObject json) {
+    return new Gson().toJson(json);
   }
 
   private static String jsonToBase64(String source) {
