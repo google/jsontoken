@@ -29,12 +29,15 @@ import net.oauth.jsontoken.crypto.Signer;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 
+/**
+ * A signed OAuth token.
+ */
 public class SignedOAuthToken extends JsonToken {
 
   public static final String AUTH_METHOD = "Token";
   public static final String SIGNED_TOKEN_PARAM = "signed_token";
 
-  public static final String URI = "uri";
+  // addition JSON token payload fields for signed OAuth tokens
   public static final String METHOD = "method";
   public static final String BODY_HASH = "body_hash";
   public static final String OAUTH_TOKEN = "token";
@@ -50,14 +53,6 @@ public class SignedOAuthToken extends JsonToken {
 
   public SignedOAuthToken(Signer signer) {
     super(signer);
-  }
-
-  public String getUri() {
-    return getParamAsPrimitive(URI).getAsString();
-  }
-
-  public void setUri(String audience) {
-    setParam(URI, audience);
   }
 
   public String getMethod() {
@@ -100,7 +95,7 @@ public class SignedOAuthToken extends JsonToken {
   public String serializeAndSign() throws SignatureException {
     Preconditions.checkNotNull(getOAuthToken(), "must set OAuth token");
     Preconditions.checkNotNull(getNonce(), "must set nonce");
-    Preconditions.checkNotNull(getUri(), "must set URI");
+    Preconditions.checkNotNull(getAudience(), "must set Audience");
     Preconditions.checkNotNull(getMethod(), "must set method");
     return super.serializeAndSign();
   }

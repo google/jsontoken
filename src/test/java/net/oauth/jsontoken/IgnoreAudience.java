@@ -14,19 +14,17 @@
  * limitations under the License.
  *
  */
-package net.oauth.signatures;
+package net.oauth.jsontoken;
 
 import java.security.SignatureException;
 
 /**
- * Receivers of signed OAuth Tokens may implement this interface.
+ * Allows any audience (even null).
  */
-public interface NonceChecker {
+public class IgnoreAudience implements AudienceChecker {
 
-  /**
-   * Throws if the nonce in the {@link SignedOAuthToken} has previously been
-   * used by the same token issuer.
-   */
-  public void checkNonce(SignedOAuthToken token) throws SignatureException;
-
+  @Override
+  public void checkAudience(String audience) throws SignatureException {
+    // don't throw - allow anything
+  }
 }

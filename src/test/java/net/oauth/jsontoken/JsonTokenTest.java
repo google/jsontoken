@@ -56,7 +56,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
     FakeClock clock = new FakeClock();
     clock.setNow(new Instant(1276669722000L));
-    JsonTokenParser parser = new JsonTokenParser(clock, locators);
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken token = new JsonToken(parser.verifyAndDeserialize(tokenString));
 
     assertEquals("google.com", token.getIssuer());
@@ -81,7 +81,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
     assertNotNull(token.toString());
 
-    JsonTokenParser parser = new JsonTokenParser(locators);
+    JsonTokenParser parser = new JsonTokenParser(locators, new IgnoreAudience());
     token = new JsonToken(parser.verifyAndDeserialize(tokenString));
 
     assertEquals("google.com", token.getIssuer());
