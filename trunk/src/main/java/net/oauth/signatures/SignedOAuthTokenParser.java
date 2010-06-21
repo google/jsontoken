@@ -16,29 +16,65 @@
  */
 package net.oauth.signatures;
 
-import java.net.URI;
 import java.security.SignatureException;
 import java.util.Enumeration;
 
 import javax.servlet.http.HttpServletRequest;
 
+import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonTokenParser;
+import net.oauth.jsontoken.SystemClock;
+import net.oauth.jsontoken.discovery.VerifierProviders;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 
-import com.google.common.base.Objects;
-
+/**
+ * Parses signed OAuth tokens.
+ */
 public class SignedOAuthTokenParser {
 
-  private final JsonTokenParser parser;
+  private final VerifierProviders locators;
   private final NonceChecker nonceChecker;
+  private final Clock clock;
 
-  public SignedOAuthTokenParser(JsonTokenParser parser, NonceChecker nonceChecker) {
-    this.parser = parser;
-    this.nonceChecker = nonceChecker;
+  /**
+   * Public constructor.
+   *
+   * @param locators an object that provides signature verifiers, based signature algorithm,
+   *   as well as on the signer and key ids.
+   * @param nonceChecker An optional nonce checker. If not null, then the parser will
+   *   call the nonce checker to make sure that the nonce has not been re-used.
+   */
+  public SignedOAuthTokenParser(VerifierProviders locators, NonceChecker nonceChecker) {
+    this(locators, nonceChecker, new SystemClock());
   }
 
+  /**
+   * Public constructor.
+   *
+   * @param locators an object that provides signature verifiers, based signature algorithm,
+   *   as well as on the signer and key ids.
+   * @param nonceChecker An optional nonce checker. If not null, then the parser will
+   *   call the nonce checker to make sure that the nonce has not been re-used.
+   * @param clock a clock that has implemented the
+   *   {@link Clock#isCurrentTimeInInterval(org.joda.time.Instant, org.joda.time.Duration)} method
+   *   with a suitable slack to account for clock skew when checking token validity.
+   */
+  public SignedOAuthTokenParser(VerifierProviders locators, NonceChecker nonceChecker, Clock clock) {
+    this.locators = locators;
+    this.nonceChecker = nonceChecker;
+    this.clock = clock;
+  }
+
+  /**
+   * Extracts the signed OAuth token from the Authorization header and then verifies it.
+   * @param request the {@link HttpServletRequest} that contains the signed OAuth token in the
+   *   Authorization header.
+   * @return the signed OAuth token.
+   * @throws SignatureException if the signature doesn't check out, or if authentication fails
+   *   for other reason (missing Authorization header, etc.).
+   */
   public SignedOAuthToken parseToken(HttpServletRequest request) throws SignatureException {
 
     // this guaranteed to return a string starting with "Token", or null
@@ -75,41 +111,29 @@ public class SignedOAuthTokenParser {
     return parseToken(token, method, uri.toString());
   }
 
+  /**
+   * Parses the provided signed OAuth token, and then verifies it against the provided HTTP method
+   * and audience URI (in addition to checking the signature, and validity period).
+   * @param tokenString the signed OAuth token (in serialized form).
+   * @param method the HTTP method that was used when the token was exercised.
+   * @param uri the URI against which the token was exercised.
+   * @return the signed OAuth token (deserialized)
+   * @throws SignatureException if the signature (or anything else) doesn't check out.
+   */
   public SignedOAuthToken parseToken(String tokenString, String method, String uri) throws SignatureException {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new SignedTokenAudienceChecker(uri));
+
     SignedOAuthToken token = new SignedOAuthToken(parser.verifyAndDeserialize(tokenString));
 
     if (!method.equalsIgnoreCase(token.getMethod())) {
       throw new SignatureException("method does not equal in token (" + token.getMethod() + ")");
     }
 
-    checkUri(uri, token.getUri());
-
     if (nonceChecker != null) {
       nonceChecker.checkNonce(token);
     }
 
     return token;
-  }
-
-  private void checkUri(String ourUriString, String tokenUriString) throws SignatureException {
-    URI ourUri = URI.create(ourUriString);
-    URI tokenUri = URI.create(tokenUriString);
-
-    if (!ourUri.getScheme().equalsIgnoreCase(tokenUri.getScheme())) {
-      throw new SignatureException("scheme in token URI (" + tokenUri.getScheme() + ") is wrong");
-    }
-
-    if (!ourUri.getAuthority().equalsIgnoreCase(tokenUri.getAuthority())) {
-      throw new SignatureException("authority in token URI (" + tokenUri.getAuthority() + ") is wrong");
-    }
-
-    if (!Objects.equal(ourUri.getPath(), tokenUri.getPath())) {
-      throw new SignatureException("path in token URI (" + tokenUri.getAuthority() + ") is wrong");
-    }
-
-    if (!Objects.equal(ourUri.getQuery(), tokenUri.getQuery())) {
-      throw new SignatureException("query string in URI (" + tokenUri.getQuery() + ") is wrong");
-    }
   }
 
   private String getAuthHeader(HttpServletRequest request) {

@@ -16,12 +16,11 @@
  */
 package net.oauth.signatures;
 
-import org.joda.time.Instant;
-
-import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.JsonTokenTestBase;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.Signer;
+
+import org.joda.time.Instant;
 
 public class SignedTokenBuilderTest extends JsonTokenTestBase {
 
@@ -33,7 +32,7 @@ public class SignedTokenBuilderTest extends JsonTokenTestBase {
     token.setMethod("GET");
     token.setNonce("nonce");
     token.setOAuthToken("token");
-    token.setUri("http://www.example.com/api");
+    token.setAudience("http://www.example.com/api");
     token.setNotBefore(new Instant());
 
     System.out.println(token.toString());
@@ -42,16 +41,14 @@ public class SignedTokenBuilderTest extends JsonTokenTestBase {
     assertEquals("GET", token.getMethod());
     assertEquals("nonce", token.getNonce());
     assertEquals("token", token.getOAuthToken());
-    assertEquals("http://www.example.com/api", token.getUri());
+    assertEquals("http://www.example.com/api", token.getAudience());
 
-    JsonTokenParser jsonParser = new JsonTokenParser(locators);
-    SignedOAuthTokenParser parser = new SignedOAuthTokenParser(jsonParser, null);
-
+    SignedOAuthTokenParser parser = new SignedOAuthTokenParser(locators, null);
     SignedOAuthToken compare = parser.parseToken(token.serializeAndSign(), "GET", "HTTP://www.Example.Com/api");
 
     assertEquals("GET", compare.getMethod());
     assertEquals("nonce", compare.getNonce());
     assertEquals("token", compare.getOAuthToken());
-    assertEquals("http://www.example.com/api", compare.getUri());
+    assertEquals("http://www.example.com/api", compare.getAudience());
   }
 }
