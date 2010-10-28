@@ -27,7 +27,6 @@ import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.crypto.Signer;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonObject;
 
 /**
  * A signed OAuth token.
@@ -42,17 +41,19 @@ public class SignedOAuthToken extends JsonToken {
   public static final String BODY_HASH = "body_hash";
   public static final String OAUTH_TOKEN = "token";
   public static final String NONCE = "nonce";
-
-  public SignedOAuthToken(JsonObject json) {
-    super(json);
-  }
+  
+  public static final String OAUTH_TOKEN_DATA_TYPE = "application/oauth-token+json";
 
   public SignedOAuthToken(Signer signer, Clock clock) {
-    super(signer, clock);
+    super(signer, clock, OAUTH_TOKEN_DATA_TYPE);
   }
 
   public SignedOAuthToken(Signer signer) {
     super(signer);
+  }
+  
+  public SignedOAuthToken(JsonToken token) {
+    super(token.getPayloadAsJsonObject());
   }
 
   public String getMethod() {

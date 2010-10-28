@@ -19,6 +19,7 @@ package net.oauth.jsontoken;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 
+import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -31,16 +32,28 @@ class JsonTokenUtil {
   static public final String DELIMITER = ".";
 
   public static String toBase64(JsonObject json) {
-    return jsonToBase64(toJson(json));
+    return convertToBase64(toJson(json));
   }
 
   public static String toJson(JsonObject json) {
     return new Gson().toJson(json);
   }
 
-  private static String jsonToBase64(String source) {
+  public static String convertToBase64(String source) {
     return Base64.encodeBase64URLSafeString(StringUtils.getBytesUtf8(source));
   }
-
+  
+  public static String decodeFromBase64String(String encoded) {
+    return new String(Base64.decodeBase64(encoded));
+  }
+  
+  public static String fromBase64ToJsonString(String source) {
+    return StringUtils.newStringUtf8(Base64.decodeBase64(source));
+  }
+  
+  public static String toDotFormat(String... parts) {
+    return Joiner.on('.').useForNull("").join(parts);
+  }
+  
   private JsonTokenUtil() { }
 }

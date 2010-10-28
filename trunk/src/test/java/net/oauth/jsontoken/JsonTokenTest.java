@@ -32,32 +32,34 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class JsonTokenTest extends JsonTokenTestBase {
+  
+  public static String TOKEN_STRING =
+    "key2.LFRh8rIGUGPXpX2KxRet7gcqLkHMFQqQRSomLfdzeEk.eyJpc3N1ZXIiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZGllbmNlIjoiaHR0cDovL3d3dy5nb29nbGUuY29tIiwibm90X2JlZm9yZSI6MTI3NjY2OTcyMjAwMCwibm90X2FmdGVyIjoxMjc2NjY5ODQyMDAwfQ..YmFzZTY0dXJs.SE1BQy1TSEEyNTY";
+  
+  public FakeClock clock = new FakeClock(Duration.standardMinutes(1));
 
-  public void testSignature() throws Exception {
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    clock.setNow(new Instant(1276669722000L));
+  }
+
+  public void testCreateJsonToken() throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
 
     JsonToken token = new JsonToken(signer);
-    token.setTokenLifetime(Duration.standardMinutes(2));
     token.setParam("bar", 15);
     token.setParam("foo", "some value");
-
-    System.out.println(token.toString());
+    token.setAudience("http://www.google.com");
+    token.setNotBefore(clock.now());
+    
     System.out.println(token.serializeAndSign());
-
-    assertNotNull(token.toString());
-
-    assertEquals("google.com", token.getIssuer());
-    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
-    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+    assertEquals(TOKEN_STRING, token.serializeAndSign());
   }
-
+  
   public void testVerification() throws Exception {
-    String tokenString = "eyJ0b2tlbl9saWZldGltZSI6MTIwMDAwLCJiYXIiOjE1LCJmb28iOiJzb21lIHZhbHVlIiwiaXNzdWVyIjoiZ29vZ2xlLmNvbSIsImtleV9pZCI6ImtleTIiLCJhbGciOiJITUFDLVNIQTI1NiIsIm5vdF9iZWZvcmUiOjEyNzY2Njk3MjEzNDZ9.2ULsBMoQKmdH4PlDkiP2hm_cH0JldIoA9jsEXLt7UfA";
-
-    FakeClock clock = new FakeClock();
-    clock.setNow(new Instant(1276669722000L));
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    JsonToken token = new JsonToken(parser.verifyAndDeserialize(tokenString));
+    JsonToken token = parser.verifyAndDeserialize(TOKEN_STRING);
 
     assertEquals("google.com", token.getIssuer());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
@@ -71,18 +73,13 @@ public class JsonTokenTest extends JsonTokenTestBase {
     JsonToken token = new JsonToken(signer);
     token.setParam("bar", 15);
     token.setParam("foo", "some value");
-    token.setTokenLifetime(Duration.standardMinutes(1));
-    token.setNotBefore(new Instant());
 
     String tokenString = token.serializeAndSign();
-
-    System.out.println(token.toString());
-    System.out.println(tokenString);
 
     assertNotNull(token.toString());
 
     JsonTokenParser parser = new JsonTokenParser(locators, new IgnoreAudience());
-    token = new JsonToken(parser.verifyAndDeserialize(tokenString));
+    token = parser.verifyAndDeserialize(tokenString);
 
     assertEquals("google.com", token.getIssuer());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
@@ -90,15 +87,18 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
     // now test what happens if we tamper with the token
     JsonObject payload = new JsonParser().parse(
-        StringUtils.newStringUsAscii(Base64.decodeBase64(tokenString.split(Pattern.quote("."))[0]))).getAsJsonObject();
+        StringUtils.newStringUsAscii(Base64.decodeBase64(tokenString.split(Pattern.quote("."))[2]))).getAsJsonObject();
     payload.remove("bar");
     payload.addProperty("bar", 14);
     String payloadString = new Gson().toJson(payload);
-    String tamperedToken = tokenString.replaceFirst("[^.]+", Base64.encodeBase64URLSafeString(payloadString.getBytes()));
+    String[] parts = tokenString.split("\\.");
+    parts[2] = Base64.encodeBase64URLSafeString(payloadString.getBytes());
+    assertEquals(6, parts.length);
 
-    System.out.println(tamperedToken);
+    String tamperedToken = parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3] + "." + parts[4] + "." + parts[5];
+      
     try {
-      token = new JsonToken(parser.verifyAndDeserialize(tamperedToken));
+      token = parser.verifyAndDeserialize(tamperedToken);
       fail("verification should have failed");
     } catch (SignatureException e) {
       // expected
