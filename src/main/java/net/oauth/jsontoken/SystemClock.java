@@ -61,8 +61,8 @@ public class SystemClock implements Clock {
    * interval defined by the start and intervalLength parameters.
    */
   @Override
-  public boolean isCurrentTimeInInterval(Instant start, Duration intervalLength) {
-    Interval interval = new Interval(start, intervalLength);
+  public boolean isCurrentTimeInInterval(Instant start, Instant end) {
+    Interval interval = new Interval(start, end);
     Instant now = now();
     Interval currentTimeWithSkew =
         new Interval(now.minus(acceptableClockSkew), now.plus(acceptableClockSkew));

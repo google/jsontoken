@@ -130,7 +130,7 @@ public class SignedOAuthTokenParser {
     }
 
     if (nonceChecker != null) {
-      nonceChecker.checkNonce(token);
+      nonceChecker.checkNonce(token.getNonce());
     }
 
     return token;

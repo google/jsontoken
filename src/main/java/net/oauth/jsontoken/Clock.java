@@ -16,7 +16,6 @@
  */
 package net.oauth.jsontoken;
 
-import org.joda.time.Duration;
 import org.joda.time.Instant;
 
 /**
@@ -34,6 +33,5 @@ public interface Clock {
    * start and intervalLength parameters. Implementations are free to fudge this a
    * little bit to take into account possible clock skew.
    */
-  public boolean isCurrentTimeInInterval(Instant start, Duration intervalLength);
-
+  public boolean isCurrentTimeInInterval(Instant start, Instant end);
 }
