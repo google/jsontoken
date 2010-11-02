@@ -32,7 +32,7 @@ import com.google.common.base.Preconditions;
 public class SignedJsonAssertionToken extends JsonToken {
   
   public static final String ASSERTION_TYPE = "assertion_type";
-  public static final String ASSERTION_TYPE_VALUE = "tbd???";
+  public static final String ASSERTION_TYPE_VALUE = "http://oauth.net/json-assertion";
   
   public static final String ASSERTION = "assertion";
   
