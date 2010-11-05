@@ -39,7 +39,8 @@ public class SignedJsonAssertionBuilderTest extends JsonTokenTestBase {
     assertEquals("nonce", token.getNonce());
     assertEquals("http://www.example.com/api", token.getAudience());
 
-    SignedJsonAssertionTokenParser parser = new SignedJsonAssertionTokenParser(locators, null);
+    SignedJsonAssertionTokenParser parser = new SignedJsonAssertionTokenParser(
+        locators, null);
     SignedJsonAssertionToken compare = parser.parseToken(token.serializeAndSign(), "HTTP://www.Example.Com/api");
 
     assertEquals("nonce", compare.getNonce());

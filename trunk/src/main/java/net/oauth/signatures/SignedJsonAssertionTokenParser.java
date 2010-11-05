@@ -20,6 +20,7 @@ import java.security.SignatureException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import net.oauth.jsontoken.AudienceChecker;
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.SystemClock;
@@ -54,12 +55,13 @@ public class  SignedJsonAssertionTokenParser {
    * @param locators an object that provides signature verifiers, based signature algorithm,
    *   as well as on the signer and key ids.
    * @param nonceChecker An optional nonce checker. If not null, then the parser will
-   *   call the nonce checker to make sure that the nonce has not been re-used.
+   *   call the nonce checker to make sure that the nonce has not been re-used.JsonTokenParser
    * @param clock a clock that has implemented the
    *   {@link Clock#isCurrentTimeInInterval(org.joda.time.Instant, org.joda.time.Duration)} method
    *   with a suitable slack to account for clock skew when checking token validity.
    */
-  public SignedJsonAssertionTokenParser(VerifierProviders locators, NonceChecker nonceChecker, Clock clock) {
+  public SignedJsonAssertionTokenParser(VerifierProviders locators, NonceChecker nonceChecker,
+      Clock clock) {
     this.locators = locators;
     this.nonceChecker = nonceChecker;
     this.clock = clock;
@@ -111,7 +113,7 @@ public class  SignedJsonAssertionTokenParser {
    * @throws SignatureException if the signature (or anything else) doesn't check out.
    */
   public SignedJsonAssertionToken parseToken(String jsonAssertion, String uri) throws SignatureException {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new SignedTokenAudienceChecker(uri));
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new SignedJsonAssertionAudienceChecker(uri));
 
     SignedJsonAssertionToken token = new SignedJsonAssertionToken(parser.verifyAndDeserialize(jsonAssertion));
 
