@@ -101,6 +101,9 @@ public class JsonTokenParser {
     
     Verifier verifier = locators.getVerifierProvider(sigAlg)
         .findVerifier(jsonToken.getIssuer(), keyId);
+    if (verifier == null) {
+      throw new SignatureException("Can not find verifier");
+    }
     AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
     asciiVerifier.verifySignature(baseString, signature);
     
