@@ -25,6 +25,7 @@ import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.crypto.Signer;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonPrimitive;
 
 /**
  * A signed Json Assertion
@@ -41,6 +42,7 @@ public class SignedJsonAssertionToken extends JsonToken {
   
   // addition JSON token payload fields for signed json assertion
   public static final String SUBJECT = "subject";
+  public static final String SCOPE = "scope";
   public static final String NONCE = "nonce";
   
   public static final String SIGNED_JSON_ASSERTION_DATA_TYPE = "application/oauth-assertion+json";
@@ -58,11 +60,21 @@ public class SignedJsonAssertionToken extends JsonToken {
   }
 
   public String getSubject() {
-    return getParamAsPrimitive(SUBJECT).getAsString();
+    JsonPrimitive subjectJson = getParamAsPrimitive(SUBJECT);
+    return subjectJson == null ? null : subjectJson.getAsString();
   }
 
   public void setSubject(String m) {
     setParam(SUBJECT, m);
+  }
+  
+  public String getScope() {
+    JsonPrimitive scopeJson = getParamAsPrimitive(SCOPE);
+    return scopeJson == null ? null : scopeJson.getAsString();
+  }
+  
+  public void setScope(String scope) {
+    setParam(SCOPE, scope);
   }
 
   public String getNonce() {
