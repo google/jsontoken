@@ -16,10 +16,13 @@
  */
 package net.oauth.jsontoken.discovery;
 
+import com.google.common.collect.Lists;
+
 import net.oauth.jsontoken.crypto.RsaSHA256Verifier;
 import net.oauth.jsontoken.crypto.Verifier;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * Default strategy for locating public verification keys. Unlike secret (symmetric)
@@ -55,8 +58,10 @@ public class DefaultPublicKeyLocator implements VerifierProvider {
    * @see net.oauth.jsontoken.discovery.VerifierProvider#findVerifier(java.lang.String, java.lang.String)
    */
   @Override
-  public Verifier findVerifier(String issuer, String keyId) {
+  public List<Verifier> findVerifier(String issuer, String keyId) {
     URI serverDescriptor = descriptorProvider.getServerDescriptor(issuer);
-    return new RsaSHA256Verifier(descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
+    Verifier rsaVerifier = 
+      new RsaSHA256Verifier(descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
+    return Lists.newArrayList(rsaVerifier);
   }
 }
