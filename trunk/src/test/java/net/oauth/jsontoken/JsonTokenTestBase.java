@@ -16,6 +16,8 @@
  */
 package net.oauth.jsontoken;
 
+import com.google.common.collect.Lists;
+
 import junit.framework.TestCase;
 
 import net.oauth.jsontoken.crypto.HmacSHA256Verifier;
@@ -36,6 +38,7 @@ import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.List;
 
 public class JsonTokenTestBase extends TestCase {
 
@@ -78,12 +81,12 @@ public class JsonTokenTestBase extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    final HmacSHA256Verifier hmacVerifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
+    final Verifier hmacVerifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
 
     VerifierProvider hmacLocator = new VerifierProvider() {
       @Override
-      public Verifier findVerifier(String signerId, String keyId) {
-        return hmacVerifier;
+      public List<Verifier> findVerifier(String signerId, String keyId) {
+        return Lists.newArrayList(hmacVerifier);
       }
     };
 

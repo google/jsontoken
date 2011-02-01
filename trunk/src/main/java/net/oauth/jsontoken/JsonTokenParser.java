@@ -17,6 +17,7 @@
 package net.oauth.jsontoken;
 
 import java.security.SignatureException;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
@@ -76,11 +77,9 @@ public class JsonTokenParser {
    * @param tokenString the serialized token that is to parsed and verified.
    * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
    *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
-   * @throws SignatureException if the signature doesn't check out, or if the token is otherwise invalid.
+   * @throws SignatureException 
    */
-  public JsonToken verifyAndDeserialize(String tokenString)
-      throws SignatureException {
-    
+  public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
     if (pieces.length != 6) {
       throw new IllegalArgumentException("token did not have six separate parts");
@@ -99,13 +98,26 @@ public class JsonTokenParser {
     String baseString = JsonTokenUtil.toDotFormat(pieces[2], pieces[3], pieces[4], pieces[5]);
     JsonToken jsonToken = new JsonToken((new JsonParser().parse(payloadString)).getAsJsonObject());
     
-    Verifier verifier = locators.getVerifierProvider(sigAlg)
+    List<Verifier> verifiers = locators.getVerifierProvider(sigAlg)
         .findVerifier(jsonToken.getIssuer(), keyId);
-    if (verifier == null) {
-      throw new SignatureException("Can not find verifier");
+    if (verifiers == null) {
+      throw new SignatureException("Can not find valid verifier for: " + jsonToken.getIssuer());
     }
-    AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
-    asciiVerifier.verifySignature(baseString, signature);
+    
+    boolean sigVerified = false;
+    for (Verifier verifier : verifiers) {
+      AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
+      try {
+        asciiVerifier.verifySignature(baseString, signature);
+        sigVerified = true;
+        break;
+      } catch (SignatureException e) {
+        continue;
+      }
+    }
+    if (!sigVerified) {
+      throw new SignatureException("fail to verify signature: " + jsonToken.getIssuer());
+    }
     
     if (!clock.isCurrentTimeInInterval(jsonToken.getNotBefore(), jsonToken.getNotAfter())) {
       throw new SignatureException("token is not yet or no longer valid. " +
