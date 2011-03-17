@@ -22,10 +22,22 @@ package net.oauth.jsontoken.crypto;
 public abstract class AbstractSigner implements Signer {
 
   private final String issuer;
-  private final String keyId;
+  private String keyId;
 
-  protected AbstractSigner(String issuer, String keyId) {
+  /**
+   * Caller can suggest which key should be used for signing by passing 'suggestedKeyId' to signer.
+   * It's up to signer whether to use the suggestedKeyId or not. The final signing key id can be
+   * retrieved by calling getKeyId().
+   * 
+   * @param issuer
+   * @param suggestedKeyId
+   */
+  protected AbstractSigner(String issuer, String suggestedKeyId) {
     this.issuer = issuer;
+    this.keyId = suggestedKeyId;
+  }
+  
+  protected void setSigningKeyId(String keyId) {
     this.keyId = keyId;
   }
 

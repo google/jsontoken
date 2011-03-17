@@ -78,7 +78,8 @@ public class SignedJsonAssertionToken extends JsonToken {
   }
 
   public String getNonce() {
-    return getParamAsPrimitive(NONCE).getAsString();
+    JsonPrimitive nonceJson = getParamAsPrimitive(NONCE);
+    return nonceJson == null ? null : nonceJson.getAsString();
   }
 
   public void setNonce(String n) {
