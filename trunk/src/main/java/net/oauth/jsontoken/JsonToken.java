@@ -54,7 +54,6 @@ public class JsonToken {
   private final Clock clock;
   private final String dataType;
   private final SignatureAlgorithm sigAlg;
-  private final String keyIdEncoded;
   private String signature;
   private String baseString;
   
@@ -80,7 +79,6 @@ public class JsonToken {
     this.payload = new JsonObject();
     this.signer = signer;
     this.clock = clock;
-    this.keyIdEncoded = signer.getKeyId();
     this.sigAlg = signer.getSignatureAlgorithm();
     this.dataType = dataType;
     this.signature = null;
@@ -102,7 +100,6 @@ public class JsonToken {
     this.signature = null;
     this.dataType = null;
     this.sigAlg = null;
-    this.keyIdEncoded = null;
     this.signer = null;
     this.clock = null;
   }
@@ -118,7 +115,7 @@ public class JsonToken {
   public String serializeAndSign() throws SignatureException {
     computeSignatureBaseString();
     String sig = getSignature();
-    return JsonTokenUtil.toDotFormat(keyIdEncoded, sig, baseString);
+    return JsonTokenUtil.toDotFormat(signer.getKeyId(), sig, baseString);
   }
 
   /**
@@ -176,7 +173,7 @@ public class JsonToken {
   }
   
   public String getKeyId() {
-    return keyIdEncoded;
+    return signer.getKeyId();
   }
 
   public SignatureAlgorithm getSignatureAlgorithm() {
