@@ -33,10 +33,6 @@ public class SignedTokenBuilderTest extends JsonTokenTestBase {
     token.setNonce("nonce");
     token.setOAuthToken("token");
     token.setAudience("http://www.example.com/api");
-    token.setNotBefore(new Instant());
-
-    System.out.println(token.toString());
-    System.out.println(token.serializeAndSign());
 
     assertEquals("GET", token.getMethod());
     assertEquals("nonce", token.getNonce());
