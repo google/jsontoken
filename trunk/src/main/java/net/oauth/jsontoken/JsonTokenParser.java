@@ -27,8 +27,11 @@ import net.oauth.jsontoken.discovery.VerifierProviders;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -81,27 +84,37 @@ public class JsonTokenParser {
    */
   public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
-    if (pieces.length != 6) {
-      throw new IllegalArgumentException("token did not have six separate parts");
+    if (pieces.length != 3) {
+      throw new IllegalArgumentException("Expected JWT to have 3 segments separated by '" + 
+          JsonTokenUtil.DELIMITER + "', but it has " + pieces.length + " segments");
     }
+    String jwtHeaderSegment = pieces[0];
+    String jwtPayloadSegment = pieces[1];
+    byte[] signature = Base64.decodeBase64(pieces[2]);
+    JsonParser parser = new JsonParser();
+    JsonObject header = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment))
+        .getAsJsonObject();
+    JsonObject payload = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtPayloadSegment))
+        .getAsJsonObject();
     
-    String keyId = pieces[0];
-    byte[] signature = Base64.decodeBase64(pieces[1]);
-    String payloadString = JsonTokenUtil.fromBase64ToJsonString(pieces[2]);
-    String dataType = JsonTokenUtil.fromBase64ToJsonString(pieces[3]);
-    String encoding = JsonTokenUtil.fromBase64ToJsonString(pieces[4]);
-    if (!encoding.equalsIgnoreCase(JsonToken.BASE64URL_ENCODING)) {
-      throw new IllegalArgumentException("encoding should always be 'base64url'");
+    JsonElement algorithmName = header.get(JsonToken.ALGORITHM_HEADER);
+    if (algorithmName == null) {
+      throw new SignatureException("JWT header is missing the required '" +
+          JsonToken.ALGORITHM_HEADER + "' parameter");
     }
-    String sigAlgName = JsonTokenUtil.fromBase64ToJsonString(pieces[5]);
-    SignatureAlgorithm sigAlg = SignatureAlgorithm.getFromJsonName(sigAlgName);
-    String baseString = JsonTokenUtil.toDotFormat(pieces[2], pieces[3], pieces[4], pieces[5]);
-    JsonToken jsonToken = new JsonToken((new JsonParser().parse(payloadString)).getAsJsonObject());
+    SignatureAlgorithm sigAlg = SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
+    
+    JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
+    
+    String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
+    String baseString = JsonTokenUtil.toDotFormat(jwtHeaderSegment, jwtPayloadSegment);
+    
+    JsonToken jsonToken = new JsonToken(payload, clock);
     
     List<Verifier> verifiers = locators.getVerifierProvider(sigAlg)
         .findVerifier(jsonToken.getIssuer(), keyId);
     if (verifiers == null) {
-      throw new SignatureException("Can not find valid verifier for: " + jsonToken.getIssuer());
+      throw new SignatureException("No valid verifier for issuer: " + jsonToken.getIssuer());
     }
     
     boolean sigVerified = false;
@@ -116,17 +129,22 @@ public class JsonTokenParser {
       }
     }
     if (!sigVerified) {
-      throw new SignatureException("fail to verify signature: " + jsonToken.getIssuer());
+      throw new SignatureException("Signature verification failed for issuer: " +
+          jsonToken.getIssuer());
     }
-    
-    if (!clock.isCurrentTimeInInterval(jsonToken.getNotBefore(), jsonToken.getNotAfter())) {
-      throw new SignatureException("token is not yet or no longer valid. " +
-          "Token start time: " + jsonToken.getNotBefore() + ". duration: " +
-          new Duration(jsonToken.getNotBefore(), jsonToken.getNotAfter()));
+    Instant now = clock.now();
+    Instant expiration = jsonToken.getExpiration();
+    if ((expiration != null) && now.isAfter(expiration)) {
+      throw new SignatureException("token expired at " + expiration + ", now is " + now);
     }
-
+    Instant issuedAt = jsonToken.getIssuedAt();
+    if ((issuedAt != null) && now.isBefore(issuedAt)) {
+      throw new SignatureException("token claims it was issued in the future at " + issuedAt + 
+          ", now is " + now);
+    }
     audienceChecker.checkAudience(jsonToken.getAudience());
 
     return jsonToken;
   }
+  
 }

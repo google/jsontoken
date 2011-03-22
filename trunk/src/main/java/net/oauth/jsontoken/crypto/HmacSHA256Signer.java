@@ -76,6 +76,6 @@ public class HmacSHA256Signer extends AbstractSigner {
    */
   @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
-    return SignatureAlgorithm.HMAC_SHA256;
+    return SignatureAlgorithm.HS256;
   }
 }

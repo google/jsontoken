@@ -23,6 +23,7 @@ import java.security.SignatureException;
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.crypto.Signer;
+import org.joda.time.Duration;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonPrimitive;
@@ -104,5 +105,16 @@ public class SignedJsonAssertionToken extends JsonToken {
   public String serializeAndSign() throws SignatureException {
     Preconditions.checkNotNull(getNonce(), "must set nonce");
     return super.serializeAndSign();
+  }
+  
+  @Override
+  protected String computeSignatureBaseString() {
+    if (getIssuedAt() == null) {
+      setIssuedAt(clock.now());
+    }
+    if (getExpiration() == null) {
+      setExpiration(getIssuedAt().plus(Duration.standardMinutes(DEFAULT_LIFETIME_IN_MINS)));
+    }
+    return super.computeSignatureBaseString();
   }
 }

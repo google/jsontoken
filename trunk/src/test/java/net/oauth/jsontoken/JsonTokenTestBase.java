@@ -39,6 +39,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class JsonTokenTestBase extends TestCase {
 
@@ -77,7 +78,23 @@ public class JsonTokenTestBase extends TestCase {
       "\"foo\": \"bar\"}";
 
   protected VerifierProviders locators;
+  protected VerifierProviders locatorsFromRuby;
   protected RSAPrivateKey privateKey;
+
+  /**
+   * Convert encoded tokens into a more human-readable form without verifying.
+   * Useful for logging.
+   */
+  protected static String decodeTokenForHumans(String encodedToken) {
+    String[] pieces = encodedToken.split(Pattern.quote("."));
+    if (pieces.length != 3) {
+      return "invalid token (3 segments expected): " + encodedToken;
+    }
+    for (int i = 0; i < 3; i++) {
+      pieces[i] = new String(Base64.decodeBase64(pieces[i].getBytes()));
+    }
+    return pieces[0] + "." + pieces[1] + "." + pieces[2];
+  }
 
   @Override
   protected void setUp() throws Exception {
@@ -100,11 +117,24 @@ public class JsonTokenTestBase extends TestCase {
         });
 
     locators = new VerifierProviders();
-    locators.setVerifierProvider(SignatureAlgorithm.HMAC_SHA256, hmacLocator);
-    locators.setVerifierProvider(SignatureAlgorithm.RSA_SHA256, rsaLocator);
+    locators.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocator);
+    locators.setVerifierProvider(SignatureAlgorithm.RS256, rsaLocator);
 
     EncodedKeySpec spec = new PKCS8EncodedKeySpec(Base64.decodeBase64(PRIVATE_KEY));
     KeyFactory fac = KeyFactory.getInstance("RSA");
     privateKey = (RSAPrivateKey) fac.generatePrivate(spec);
+
+
+    //final Verifier hmacVerifierFromRuby = new HmacSHA256Verifier("R9bPJ_QRlcgK_hDLgu1Klg".getBytes());
+    final Verifier hmacVerifierFromRuby = new HmacSHA256Verifier("secret".getBytes());
+    VerifierProvider hmacLocatorFromRuby = new VerifierProvider() {
+      @Override
+      public List<Verifier> findVerifier(String signerId, String keyId) {
+        return Lists.newArrayList(hmacVerifierFromRuby);
   }
+    };
+    locatorsFromRuby = new VerifierProviders();
+    locatorsFromRuby.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocatorFromRuby);
+  }
+  
 }

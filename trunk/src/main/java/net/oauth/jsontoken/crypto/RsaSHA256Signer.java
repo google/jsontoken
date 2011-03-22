@@ -57,7 +57,7 @@ public class RsaSHA256Signer extends AbstractSigner {
    */
   @Override
   public SignatureAlgorithm getSignatureAlgorithm() {
-    return SignatureAlgorithm.RSA_SHA256;
+    return SignatureAlgorithm.RS256;
   }
 
   /*
