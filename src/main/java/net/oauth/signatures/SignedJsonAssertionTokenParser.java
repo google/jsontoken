@@ -20,7 +20,6 @@ import java.security.SignatureException;
 
 import javax.servlet.http.HttpServletRequest;
 
-import net.oauth.jsontoken.AudienceChecker;
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.SystemClock;
@@ -85,12 +84,7 @@ public class  SignedJsonAssertionTokenParser {
       throw new SignatureException("bad grant_type: " + grantType);
     }
     
-    String assertionType = request.getParameter(SignedJsonAssertionToken.ASSERTION_TYPE);
-    if (assertionType == null || !assertionType.equalsIgnoreCase(SignedJsonAssertionToken.ASSERTION_TYPE_VALUE)) {
-      throw new SignatureException("bad assertion_type: " + assertionType);
-    }
-    
-    String assertion = request.getParameter(SignedJsonAssertionToken.ASSERTION);
+    String assertion = request.getParameter(SignedJsonAssertionToken.JWT);
     if (assertion == null) {
       throw new SignatureException("empty json assertion");
     }

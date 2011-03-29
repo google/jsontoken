@@ -33,23 +33,18 @@ import com.google.gson.JsonPrimitive;
  */
 public class SignedJsonAssertionToken extends JsonToken {
   
-  public static final String ASSERTION_TYPE = "assertion_type";
-  public static final String ASSERTION_TYPE_VALUE = "http://oauth.net/json-assertion";
-  
-  public static final String ASSERTION = "assertion";
+  public static final String JWT = "jwt";
   
   public static final String GRANT_TYPE = "grant_type";
-  public static final String GRANT_TYPE_VALUE = "assertion";
+  public static final String GRANT_TYPE_VALUE = "http://oauth.net/grant_type/jwt/1.0/bearer";
   
   // addition JSON token payload fields for signed json assertion
   public static final String SUBJECT = "subject";
   public static final String SCOPE = "scope";
   public static final String NONCE = "nonce";
   
-  public static final String SIGNED_JSON_ASSERTION_DATA_TYPE = "application/oauth-assertion+json";
-
   public SignedJsonAssertionToken(Signer signer, Clock clock) {
-    super(signer, clock, SIGNED_JSON_ASSERTION_DATA_TYPE);
+    super(signer, clock);
   }
 
   public SignedJsonAssertionToken(Signer signer) {
@@ -91,10 +86,8 @@ public class SignedJsonAssertionToken extends JsonToken {
     StringBuffer buffer = new StringBuffer();
     buffer.append(GRANT_TYPE).append("=").append(GRANT_TYPE_VALUE);
     buffer.append("&");
-    buffer.append(ASSERTION_TYPE).append("=").append(ASSERTION_TYPE_VALUE);
-    buffer.append("&");
     try {
-      buffer.append(ASSERTION).append("=").append(serializeAndSign());
+      buffer.append(JWT).append("=").append(serializeAndSign());
       return URLEncoder.encode(buffer.toString(), "UTF-8");
     } catch (UnsupportedEncodingException e) {
       throw new SignatureException("unsupported encoding");

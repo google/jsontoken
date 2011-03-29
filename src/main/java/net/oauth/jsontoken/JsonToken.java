@@ -57,7 +57,6 @@ public class JsonToken {
   
   // The following fields are only valid when signing the token.
   private final Signer signer;
-  private final String dataType;
   private final SignatureAlgorithm sigAlg;
   private String signature;
   private String baseString;
@@ -67,7 +66,7 @@ public class JsonToken {
    * @param signer the signer that will sign the token.
    */
   public JsonToken(Signer signer) {
-    this(signer, new SystemClock(), null);
+    this(signer, new SystemClock());
   }
 
   /**
@@ -75,9 +74,8 @@ public class JsonToken {
    * @param signer the signer that will sign the token
    * @param clock a clock whose notion of current time will determine the not-before timestamp
    *   of the token, if not explicitly set.
-   * @param dataType
    */
-  public JsonToken(Signer signer, Clock clock, String dataType) {
+  public JsonToken(Signer signer, Clock clock) {
     Preconditions.checkNotNull(signer);
     Preconditions.checkNotNull(clock);
     
@@ -85,7 +83,6 @@ public class JsonToken {
     this.signer = signer;
     this.clock = clock;
     this.sigAlg = signer.getSignatureAlgorithm();
-    this.dataType = dataType;
     this.signature = null;
     this.baseString = null;
     String issuer = signer.getIssuer();
@@ -106,7 +103,6 @@ public class JsonToken {
     // when parsing a token, payload is the only field we cares about.
     this.baseString = null;
     this.signature = null;
-    this.dataType = null;
     this.sigAlg = null;
     this.signer = null;
     this.clock = null;
@@ -127,7 +123,6 @@ public class JsonToken {
     // when parsing a token, payload is the only field we cares about.
     this.baseString = null;
     this.signature = null;
-    this.dataType = null;
     this.sigAlg = null;
     this.signer = null;
   }

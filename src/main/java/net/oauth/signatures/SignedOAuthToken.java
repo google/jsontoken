@@ -42,10 +42,8 @@ public class SignedOAuthToken extends JsonToken {
   public static final String OAUTH_TOKEN = "token";
   public static final String NONCE = "nonce";
   
-  public static final String OAUTH_TOKEN_DATA_TYPE = "application/oauth-token+json";
-
   public SignedOAuthToken(Signer signer, Clock clock) {
-    super(signer, clock, OAUTH_TOKEN_DATA_TYPE);
+    super(signer, clock);
   }
 
   public SignedOAuthToken(Signer signer) {
