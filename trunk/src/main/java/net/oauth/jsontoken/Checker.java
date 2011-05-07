@@ -16,17 +16,21 @@
  */
 package net.oauth.jsontoken;
 
+import com.google.gson.JsonObject;
+
 import java.security.SignatureException;
 
 /**
  * Token verifiers must implement this interface.
  */
-public interface AudienceChecker {
+public interface Checker {
 
   /**
-   * Checks that the given audience matches this token verifier.
+   * Checks that the given payload satisfies this token verifier.
+   *
+   * @param payload the payload component of a JsonToken (JWT)
    * @throws SignatureException if the audience doesn't match.
    */
-  public void checkAudience(String audience) throws SignatureException;
+  public void check(JsonObject payload) throws SignatureException;
 
 }
