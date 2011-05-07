@@ -16,15 +16,17 @@
  */
 package net.oauth.jsontoken;
 
+import com.google.gson.JsonObject;
+
 import java.security.SignatureException;
 
 /**
  * Allows any audience (even null).
  */
-public class IgnoreAudience implements AudienceChecker {
+public class IgnoreAudience implements Checker {
 
   @Override
-  public void checkAudience(String audience) throws SignatureException {
+  public void check(JsonObject payload) throws SignatureException {
     // don't throw - allow anything
   }
 }

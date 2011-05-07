@@ -26,11 +26,9 @@ import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
 
 import org.apache.commons.codec.binary.Base64;
-import org.joda.time.Duration;
 import org.joda.time.Instant;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -42,7 +40,7 @@ public class JsonTokenParser {
 
   private final Clock clock;
   private final VerifierProviders locators;
-  private final AudienceChecker audienceChecker;
+  private final Checker[] checkers;
 
   /**
    * Creates a new {@link JsonTokenParser} with a default system clock. The default
@@ -52,7 +50,7 @@ public class JsonTokenParser {
    *   as well as on the signer and key ids.
    * @param checker an audience checker that validates the audience in the JSON token.
    */
-  public JsonTokenParser(VerifierProviders locators, AudienceChecker checker) {
+  public JsonTokenParser(VerifierProviders locators, Checker checker) {
     this(new SystemClock(), locators, checker);
   }
 
@@ -63,16 +61,12 @@ public class JsonTokenParser {
    *   valid or not.
    * @param locators an object that provides signature verifiers, based signature algorithm,
    *   as well as on the signer and key ids.
-   * @param checker an audience checker that validates the audience in the JSON token.
+   * @param checkers an array of checkers that validates the parameters in the JSON token.
    */
-  public JsonTokenParser(Clock clock, VerifierProviders locators, AudienceChecker checker) {
-    Preconditions.checkNotNull(clock);
-    Preconditions.checkNotNull(locators);
-    Preconditions.checkNotNull(checker);
-
-    this.clock = clock;
-    this.locators = locators;
-    this.audienceChecker = checker;
+  public JsonTokenParser(Clock clock, VerifierProviders locators, Checker... checkers) {
+    this.clock = Preconditions.checkNotNull(clock);
+    this.locators = Preconditions.checkNotNull(locators);
+    this.checkers =     Preconditions.checkNotNull(checkers);
   }
 
   /**
@@ -142,7 +136,10 @@ public class JsonTokenParser {
       throw new SignatureException("token claims it was issued in the future at " + issuedAt + 
           ", now is " + now);
     }
-    audienceChecker.checkAudience(jsonToken.getAudience());
+
+    for (Checker checker : checkers) {
+      checker.check(payload);
+    }
 
     return jsonToken;
   }

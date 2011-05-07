@@ -16,15 +16,19 @@
  */
 package net.oauth.signatures;
 
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonObject;
+
 import java.net.URI;
 import java.security.SignatureException;
 
-import net.oauth.jsontoken.AudienceChecker;
+import net.oauth.jsontoken.Checker;
+import net.oauth.jsontoken.JsonToken;
 
 /**
  * Audience checker for signed Json Assertion.
  */
-public class SignedJsonAssertionAudienceChecker implements AudienceChecker {
+public class SignedJsonAssertionAudienceChecker implements Checker {
 
   // URI that the client is accessing, as seen by the server
   private final String tokenEndpointUri;
@@ -37,13 +41,15 @@ public class SignedJsonAssertionAudienceChecker implements AudienceChecker {
     this.tokenEndpointUri = uri;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see net.oauth.jsontoken.AudienceChecker#checkAudience(java.lang.String)
+  /**
+   * @see net.oauth.jsontoken.Checker#check(com.google.gson.JsonObject)
    */
   @Override
-  public void checkAudience(String tokenUri) throws SignatureException {
-    checkUri(tokenEndpointUri, tokenUri);
+  public void check(JsonObject payload) throws SignatureException {
+    checkUri(tokenEndpointUri,
+        Preconditions.checkNotNull(
+            payload.get(JsonToken.AUDIENCE).getAsString(),
+            "Audience cannot be null!"));
   }
 
   private static void checkUri(String ourUriString, String tokenUriString) throws SignatureException {
