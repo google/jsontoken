@@ -96,7 +96,6 @@ public class SignedJsonAssertionToken extends JsonToken {
 
   @Override
   public String serializeAndSign() throws SignatureException {
-    Preconditions.checkNotNull(getNonce(), "must set nonce");
     return super.serializeAndSign();
   }
   
