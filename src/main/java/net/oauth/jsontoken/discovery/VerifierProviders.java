@@ -41,8 +41,8 @@ public class VerifierProviders {
   /**
    * Sets a new {@link VerifierProvider} for the given {@link SignatureAlgorithm}.
    */
-  public void setVerifierProvider(SignatureAlgorithm alg, VerifierProvider locator) {
-    map.put(alg, locator);
+  public void setVerifierProvider(SignatureAlgorithm alg, VerifierProvider provider) {
+    map.put(alg, provider);
   }
 
   /**

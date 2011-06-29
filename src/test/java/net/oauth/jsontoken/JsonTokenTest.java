@@ -29,12 +29,17 @@ import org.joda.time.Instant;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 public class JsonTokenTest extends JsonTokenTestBase {
   
   public static String TOKEN_STRING = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
-  
+  public static String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_";
+  public static String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ";
+  public static String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.";
+  public static String TOKEN_STRING_CORRUPT_HEADER = "0yJ0bGci0iJIUzI0NiIsIm0pZCI60mtleT0ifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
+  public static String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&XtOiJnb290bGUuY20tIiwiYmFyIjoxNSwiZm9vIjoic290ZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
   public FakeClock clock = new FakeClock(Duration.standardMinutes(1));
 
   @Override
@@ -56,7 +61,52 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertEquals(TOKEN_STRING, token.serializeAndSign());
   }
   
-  public void testVerification() throws Exception {
+  public void testDeserializeInvalidToken() throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonToken token1 = parser.deserialize(TOKEN_STRING_BAD_SIG);
+    deserializeAndExpectIllegalArgument(parser, TOKEN_STRING_2PARTS);
+    deserializeAndExpectIllegalArgument(parser, TOKEN_STRING_EMPTY_SIG);
+  }
+  
+  public void testDeserializeCorruptJson() throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    try {
+      parser.deserialize(TOKEN_STRING_CORRUPT_HEADER);
+      fail("Expected JsonParseException");
+    } catch(JsonParseException e) {
+      // no-op
+    }    
+    try {
+      parser.deserialize(TOKEN_STRING_CORRUPT_PAYLOAD);
+      fail("Expected JsonParseException");
+    } catch(JsonParseException e) {
+      // no-op
+    }
+  }
+
+  
+  private void deserializeAndExpectIllegalArgument(JsonTokenParser parser, 
+      String tokenString) throws SignatureException {
+    try {
+      parser.deserialize(tokenString);
+      fail("Expected IllegalArgumentException");
+    } catch(IllegalArgumentException e) {
+      // no-op
+    } catch(IllegalStateException e) {
+      // no-op
+    }
+  }
+  
+  public void testDeserialize() throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonToken token = parser.deserialize(TOKEN_STRING);
+
+    assertEquals("google.com", token.getIssuer());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+  }
+  
+  public void testVerifyAndDeserialize() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_STRING);
 

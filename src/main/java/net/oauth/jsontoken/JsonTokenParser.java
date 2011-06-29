@@ -39,49 +39,45 @@ import com.google.gson.JsonParser;
 public class JsonTokenParser {
 
   private final Clock clock;
-  private final VerifierProviders locators;
+  private final VerifierProviders verifierProviders;
   private final Checker[] checkers;
 
   /**
    * Creates a new {@link JsonTokenParser} with a default system clock. The default
    * system clock tolerates a clock skew of up to {@link SystemClock#DEFAULT_ACCEPTABLE_CLOCK_SKEW}.
    *
-   * @param locators an object that provides signature verifiers, based signature algorithm,
-   *   as well as on the signer and key ids.
+   * @param verifierProviders an object that provides signature verifiers
+   *   based on a signature algorithm, the signer, and key ids.
    * @param checker an audience checker that validates the audience in the JSON token.
    */
-  public JsonTokenParser(VerifierProviders locators, Checker checker) {
-    this(new SystemClock(), locators, checker);
+  public JsonTokenParser(VerifierProviders verifierProviders, Checker checker) {
+    this(new SystemClock(), verifierProviders, checker);
   }
 
   /**
    * Creates a new {@link JsonTokenParser}.
    *
-   * @param clock a clock object that will decide whether a given token is currently
-   *   valid or not.
-   * @param locators an object that provides signature verifiers, based signature algorithm,
-   *   as well as on the signer and key ids.
+   * @param clock a clock object that will decide whether a given token is
+   *   currently valid or not.
+   * @param verifierProviders an object that provides signature verifiers
+   *   based on a signature algorithm, the signer, and key ids.
    * @param checkers an array of checkers that validates the parameters in the JSON token.
    */
-  public JsonTokenParser(Clock clock, VerifierProviders locators, Checker... checkers) {
+  public JsonTokenParser(Clock clock, VerifierProviders verifierProviders, Checker... checkers) {
     this.clock = Preconditions.checkNotNull(clock);
-    this.locators = Preconditions.checkNotNull(locators);
-    this.checkers =     Preconditions.checkNotNull(checkers);
+    this.verifierProviders = verifierProviders;
+    this.checkers = checkers;
   }
-
+  
   /**
-   * Parses, and verifies, a JSON Token.
-   * @param tokenString the serialized token that is to parsed and verified.
-   * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
-   *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
-   * @throws SignatureException 
+   * Decodes the JWT token string into a JsonToken object. Does not perform
+   * any validation of headers or claims.
+   * 
+   * @param tokenString The original encoded representation of a JWT
+   * @return Unverified contents of the JWT as a JsonToken
    */
-  public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
-    String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
-    if (pieces.length != 3) {
-      throw new IllegalArgumentException("Expected JWT to have 3 segments separated by '" + 
-          JsonTokenUtil.DELIMITER + "', but it has " + pieces.length + " segments");
-    }
+  public JsonToken deserialize(String tokenString) {
+    String[] pieces = splitTokenString(tokenString);
     String jwtHeaderSegment = pieces[0];
     String jwtPayloadSegment = pieces[1];
     byte[] signature = Base64.decodeBase64(pieces[2]);
@@ -91,26 +87,78 @@ public class JsonTokenParser {
     JsonObject payload = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtPayloadSegment))
         .getAsJsonObject();
     
-    JsonElement algorithmName = header.get(JsonToken.ALGORITHM_HEADER);
-    if (algorithmName == null) {
-      throw new SignatureException("JWT header is missing the required '" +
-          JsonToken.ALGORITHM_HEADER + "' parameter");
+    JsonToken jsonToken = new JsonToken(header, payload, clock, tokenString);
+    return jsonToken;
+  }
+
+  /**
+   * Verifies that the jsonToken has a valid signature and valid standard claims
+   * (iat, exp). Uses VerifierProviders to obtain the secret key.
+   * 
+   * @param jsonToken
+   * @throws SignatureException
+   */
+  public void verify(JsonToken jsonToken) throws SignatureException {
+    List<Verifier> verifiers = provideVerifiers(jsonToken);
+    verify(jsonToken, verifiers);
+  }
+
+  /**
+   * Parses, and verifies, a JSON Token.
+   * 
+   * @param tokenString the serialized token that is to parsed and verified.
+   * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
+   *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
+   * @throws SignatureException 
+   */
+  public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
+    JsonToken jsonToken = deserialize(tokenString);
+    verify(jsonToken);
+    return jsonToken;
+  }
+  
+  /**
+   * Verifies that the jsonToken has a valid signature and valid standard claims
+   * (iat, exp). Does not need VerifierProviders because verifiers are passed in
+   * directly.
+   * 
+   * @param jsonToken the token to verify
+   * @throws SignatureException when the signature is invalid
+   * @throws IllegalStateException when exp or iat are invalid 
+   */
+  public void verify(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
+    if (! signatureIsValid(jsonToken.getTokenString(), verifiers)) {
+      throw new SignatureException("Invalid signature for token: " +
+          jsonToken.getTokenString());
     }
-    SignatureAlgorithm sigAlg = SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
-    
-    JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
-    
-    String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
-    String baseString = JsonTokenUtil.toDotFormat(jwtHeaderSegment, jwtPayloadSegment);
-    
-    JsonToken jsonToken = new JsonToken(payload, clock);
-    
-    List<Verifier> verifiers = locators.getVerifierProvider(sigAlg)
-        .findVerifier(jsonToken.getIssuer(), keyId);
-    if (verifiers == null) {
-      throw new SignatureException("No valid verifier for issuer: " + jsonToken.getIssuer());
+    Instant now = clock.now();
+    if (! expirationIsValid(jsonToken, now)) {
+      throw new IllegalStateException("token expired at " +
+          jsonToken.getExpiration() + ", now is " + now);
     }
-    
+    if (! issuedAtIsValid(jsonToken, now)) {
+      throw new IllegalStateException("token from the future was issued at " +
+          jsonToken.getIssuedAt() + ", now is " + now);
+    }
+    if (checkers != null) {
+      for (Checker checker : checkers) {
+        checker.check(jsonToken.getPayloadAsJsonObject());
+      }
+    }
+  }
+
+  /**
+   * Verifies that a JSON Web Token's signature is valid.
+   * 
+   * @param tokenString the encoded and signed JSON Web Token to verify.
+   * @param verifiers used to verify the signature. These usually encapsulate
+   *        secret keys.
+   */
+  public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
+    String[] pieces = splitTokenString(tokenString);
+    byte[] signature = Base64.decodeBase64(pieces[2]);
+    String baseString = JsonTokenUtil.toDotFormat(pieces[0], pieces[1]);
+
     boolean sigVerified = false;
     for (Verifier verifier : verifiers) {
       AsciiStringVerifier asciiVerifier = new AsciiStringVerifier(verifier);
@@ -122,26 +170,70 @@ public class JsonTokenParser {
         continue;
       }
     }
-    if (!sigVerified) {
-      throw new SignatureException("Signature verification failed for issuer: " +
-          jsonToken.getIssuer());
-    }
-    Instant now = clock.now();
-    Instant expiration = jsonToken.getExpiration();
-    if ((expiration != null) && now.isAfter(expiration)) {
-      throw new SignatureException("token expired at " + expiration + ", now is " + now);
-    }
-    Instant issuedAt = jsonToken.getIssuedAt();
-    if ((issuedAt != null) && now.isBefore(issuedAt)) {
-      throw new SignatureException("token claims it was issued in the future at " + issuedAt + 
-          ", now is " + now);
-    }
-
-    for (Checker checker : checkers) {
-      checker.check(payload);
-    }
-
-    return jsonToken;
+    return sigVerified;
   }
   
+  /**
+   * Verifies that a JSON Web Token is not expired.
+   * 
+   * @param jsonToken the token to verify
+   * @param now the instant to use as point of reference for current time
+   * @return false if the token is expired, true otherwise
+   */
+  public boolean expirationIsValid(JsonToken jsonToken, Instant now) {
+    Instant expiration = jsonToken.getExpiration();
+    if ((expiration != null) && now.isAfter(expiration)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Verifies that a JSON Web Token was issued in the past.
+   * 
+   * @param jsonToken the token to verify
+   * @param now the instant to use as point of reference for current time
+   * @return false if the JWT's 'iat' is later than now, true otherwise
+   */
+  public boolean issuedAtIsValid(JsonToken jsonToken, Instant now) {
+    Instant issuedAt = jsonToken.getIssuedAt();
+    if ((issuedAt != null) && now.isBefore(issuedAt)) {
+      return false;
+    }
+    return true;
+  }
+  
+  /**
+   * Use VerifierProviders to get a list of verifiers for this token
+   * 
+   * @param jsonToken
+   * @return list of verifiers
+   * @throws SignatureException
+   */
+  private List<Verifier> provideVerifiers(JsonToken jsonToken) throws SignatureException {
+    Preconditions.checkNotNull(verifierProviders);
+    JsonObject header = jsonToken.getHeader();
+    JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
+    String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
+    SignatureAlgorithm sigAlg = jsonToken.getSignatureAlgorithm();
+    List<Verifier> verifiers = verifierProviders.getVerifierProvider(sigAlg)
+        .findVerifier(jsonToken.getIssuer(), keyId);
+    if (verifiers == null) {
+      throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());
+    }
+    return verifiers;
+  }
+
+  /**
+   * @param tokenString The original encoded representation of a JWT
+   * @return Three components of the JWT as an array of strings
+   */
+  private String[] splitTokenString(String tokenString) {
+    String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
+    if (pieces.length != 3) {
+      throw new IllegalStateException("Expected JWT to have 3 segments separated by '" + 
+          JsonTokenUtil.DELIMITER + "', but it has " + pieces.length + " segments");
+    }
+    return pieces;
+  }
 }
