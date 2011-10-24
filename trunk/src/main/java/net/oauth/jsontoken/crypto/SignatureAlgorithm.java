@@ -21,7 +21,9 @@ package net.oauth.jsontoken.crypto;
  */
 public enum SignatureAlgorithm {
   HS256("SHA256"),
-  RS256("SHA256");
+  HS1("SHA1"),
+  RS256("RS256"),
+  RS1("RS1");
 
   private final String hashAlg;
 
