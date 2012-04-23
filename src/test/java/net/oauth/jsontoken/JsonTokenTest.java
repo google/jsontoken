@@ -16,8 +16,10 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
-import java.util.regex.Pattern;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
@@ -27,14 +29,13 @@ import org.apache.commons.codec.binary.StringUtils;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
+import java.security.SignatureException;
+import java.util.regex.Pattern;
 
 public class JsonTokenTest extends JsonTokenTestBase {
   
   public static String TOKEN_STRING = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
+  public static String TOKEN_STRING_ISSUER_NULL = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOm51bGwsImJhciI6MTUsImZvbyI6InNvbWUgdmFsdWUiLCJhdWQiOiJodHRwOi8vd3d3Lmdvb2dsZS5jb20iLCJpYXQiOjEyNzY2Njk3MjIsImV4cCI6MTI3NjY2OTcyMn0.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
   public static String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_";
   public static String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ";
   public static String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.";
@@ -60,7 +61,13 @@ public class JsonTokenTest extends JsonTokenTestBase {
     
     assertEquals(TOKEN_STRING, token.serializeAndSign());
   }
-  
+
+  public void testJsonNull() throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(null, null);
+    JsonToken token = parser.deserialize(TOKEN_STRING_ISSUER_NULL);
+    assertNull(token.getIssuer());
+  }
+
   public void testDeserializeInvalidToken() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken token1 = parser.deserialize(TOKEN_STRING_BAD_SIG);

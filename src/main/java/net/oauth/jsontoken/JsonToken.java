@@ -223,7 +223,11 @@ public class JsonToken {
   }
 
   public JsonPrimitive getParamAsPrimitive(String param) {
-    return payload.getAsJsonPrimitive(param);
+    JsonElement element = payload.get(param);
+    if (element != null && element.isJsonPrimitive()) {
+      return (JsonPrimitive) element;
+    }
+    return null;
   }
   
   public JsonObject getPayloadAsJsonObject() {
@@ -261,20 +265,20 @@ public class JsonToken {
   }
   
   private String getParamAsString(String param) {
-    JsonPrimitive value = getParamAsPrimitive(param);
-    if (value == null) {
-      return null;
-    } else {
-      return value.getAsString();
-    }
+    JsonPrimitive primitive = getParamAsPrimitive(param);
+    return primitive == null ? null : primitive.getAsString();
   }
+
   private Long getParamAsLong(String param) {
-    JsonPrimitive value = getParamAsPrimitive(param);
-    if (value == null) {
-      return null;
-    } else {
-      return value.getAsLong();
+    JsonPrimitive primitive = getParamAsPrimitive(param);
+    if (primitive != null && primitive.isNumber()) {
+      try {
+        return primitive.getAsLong();
+      } catch (NumberFormatException e) {
+        return null;
+      }
     }
+    return null;
   }
   
   protected String computeSignatureBaseString() {
