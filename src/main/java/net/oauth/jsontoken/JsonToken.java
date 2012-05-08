@@ -271,7 +271,7 @@ public class JsonToken {
 
   private Long getParamAsLong(String param) {
     JsonPrimitive primitive = getParamAsPrimitive(param);
-    if (primitive != null && primitive.isNumber()) {
+    if (primitive != null && (primitive.isNumber() || primitive.isString())) {
       try {
         return primitive.getAsLong();
       } catch (NumberFormatException e) {
