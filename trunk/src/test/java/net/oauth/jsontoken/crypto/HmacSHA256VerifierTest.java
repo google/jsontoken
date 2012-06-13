@@ -25,7 +25,7 @@ import java.security.SignatureException;
  */
 public class HmacSHA256VerifierTest extends TestCase {
   private static final byte[] SYMMETRIC_KEY = "kjdhasdkjhaskdjhaskdjhaskdjh".getBytes();
-  public static final byte[] SOURCE = "randomdatatobesignedfortest".getBytes();
+  private static final byte[] SOURCE = "randomdatatobesignedfortest".getBytes();
 
   public void testGoodSignature() throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("test", "test-key", SYMMETRIC_KEY);
