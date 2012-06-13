@@ -43,8 +43,32 @@ public class HmacSHA256Verifier implements Verifier {
   @Override
   public void verifySignature(byte[] source, byte[] signature) throws SignatureException {
     byte[] comparison = signer.sign(source);
-    if (!Arrays.equals(comparison, signature)) {
+    if (!compareBytes(signature, comparison)) {
       throw new SignatureException("signature did not verify");
+    }
+  }
+
+  /**
+   * Performs a byte-by-byte comparison of {@code first} and {@code second} parameters. This
+   * method will "NOT" short-circuit the comparison once it has detected a byte difference in
+   * order to defend against a "timing attack".
+   *
+   * @param first the first byte array used in the comparison
+   * @param second the second byte array used in the comparison
+   * @return {@code true} if the {@code first} and {@code second} byte arrays are equal
+   *         otherwise {@code false}
+   */
+  private boolean compareBytes(byte[] first, byte[] second) {
+    if (first == null || second == null) {
+      return (first == second);
+    } else if (first.length != second.length) {
+      return false;
+    } else {
+      byte result = 0;
+      for (int i = 0; i < first.length; i++) {
+        result |= first[i] ^ second[i];
+      }
+      return (result == 0);
     }
   }
 }

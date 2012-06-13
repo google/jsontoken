@@ -41,8 +41,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class JsonTokenTestBase extends TestCase {
-
+public abstract class JsonTokenTestBase extends TestCase {
 
   protected static final byte[] SYMMETRIC_KEY = "kjdhasdkjhaskdjhaskdjhaskdjh".getBytes();
 
@@ -136,5 +135,4 @@ public class JsonTokenTestBase extends TestCase {
     locatorsFromRuby = new VerifierProviders();
     locatorsFromRuby.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocatorFromRuby);
   }
-  
 }
