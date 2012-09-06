@@ -16,9 +16,10 @@
  */
 package net.oauth.jsontoken;
 
-import java.security.SignatureException;
-import java.util.List;
-import java.util.regex.Pattern;
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -28,10 +29,9 @@ import net.oauth.jsontoken.discovery.VerifierProviders;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
 
-import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import java.security.SignatureException;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Class that parses and verifies JSON Tokens.
@@ -131,15 +131,25 @@ public class JsonTokenParser {
       throw new SignatureException("Invalid signature for token: " +
           jsonToken.getTokenString());
     }
-    Instant now = clock.now();
-    if (! expirationIsValid(jsonToken, now)) {
-      throw new IllegalStateException("token expired at " +
-          jsonToken.getExpiration() + ", now is " + now);
+
+    Instant issuedAt = jsonToken.getIssuedAt();
+    Instant expiration = jsonToken.getExpiration();
+
+    if (issuedAt == null && expiration != null) {
+      issuedAt = new Instant(0);
     }
-    if (! issuedAtIsValid(jsonToken, now)) {
-      throw new IllegalStateException("token from the future was issued at " +
-          jsonToken.getIssuedAt() + ", now is " + now);
+
+    if (issuedAt != null && expiration == null) {
+      expiration = new Instant(Long.MAX_VALUE);
     }
+
+    if (issuedAt != null && expiration != null) {
+      if (! clock.isCurrentTimeInInterval(issuedAt, expiration)) {
+        throw new IllegalStateException(String.format("Invalid iat and/or exp. iat: %s exp: %s "
+            + "now: %s", jsonToken.getIssuedAt(), jsonToken.getExpiration(), clock.now()));
+      }
+    }
+
     if (checkers != null) {
       for (Checker checker : checkers) {
         checker.check(jsonToken.getPayloadAsJsonObject());
