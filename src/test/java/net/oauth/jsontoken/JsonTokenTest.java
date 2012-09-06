@@ -33,7 +33,9 @@ import java.security.SignatureException;
 import java.util.regex.Pattern;
 
 public class JsonTokenTest extends JsonTokenTestBase {
-  
+
+  private static final Duration SKEW = Duration.standardMinutes(1);
+
   public static String TOKEN_STRING = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
   public static String TOKEN_STRING_ISSUER_NULL = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOm51bGwsImJhciI6MTUsImZvbyI6InNvbWUgdmFsdWUiLCJhdWQiOiJodHRwOi8vd3d3Lmdvb2dsZS5jb20iLCJpYXQiOjEyNzY2Njk3MjIsImV4cCI6MTI3NjY2OTcyMn0.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
   public static String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_";
@@ -41,7 +43,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
   public static String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.";
   public static String TOKEN_STRING_CORRUPT_HEADER = "0yJ0bGci0iJIUzI0NiIsIm0pZCI60mtleT0ifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
   public static String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&XtOiJnb290bGUuY20tIiwiYmFyIjoxNSwiZm9vIjoic290ZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
-  public FakeClock clock = new FakeClock(Duration.standardMinutes(1));
+  public FakeClock clock = new FakeClock(SKEW);
 
   @Override
   public void setUp() throws Exception {
@@ -57,9 +59,86 @@ public class JsonTokenTest extends JsonTokenTestBase {
     token.setParam("foo", "some value");
     token.setAudience("http://www.google.com");
     token.setIssuedAt(clock.now());
-    token.setExpiration(clock.now().withDurationAdded(60,1));
-    
+    token.setExpiration(clock.now().withDurationAdded(60, 1));
+
     assertEquals(TOKEN_STRING, token.serializeAndSign());
+  }
+
+  private void checkTimeFrame(Instant issuedAt, Instant expiration) throws Exception {
+    HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
+    JsonToken token = new JsonToken(signer, clock);
+    if (issuedAt != null) {
+      token.setIssuedAt(issuedAt);
+    }
+    if (expiration != null) {
+      token.setExpiration(expiration);
+    }
+    token.setAudience("http://www.google.com");
+
+    JsonToken verifiedToken = new JsonTokenParser(clock, locators, new IgnoreAudience())
+        .verifyAndDeserialize(token.serializeAndSign());
+    assertEquals(issuedAt, verifiedToken.getIssuedAt());
+    assertEquals(expiration, verifiedToken.getExpiration());
+  }
+
+  private void checkTimeFrameIllegalStateException(Instant issuedAt, Instant expiration)
+      throws Exception {
+    try {
+      checkTimeFrame(issuedAt, expiration);
+      fail("IllegalStateException should be thrown.");
+    } catch (IllegalStateException e) {
+      // Pass.
+    }
+  }
+
+  public void testIssueAtSkew() throws Exception {
+    Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
+    Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
+    checkTimeFrame(issuedAt, expiration);
+  }
+
+  public void testIssueAtTooMuchSkew() throws Exception {
+    Instant issuedAt = clock.now().plus(SKEW.plus(Duration.standardSeconds(1)));
+    Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
+    checkTimeFrameIllegalStateException(issuedAt, expiration);
+  }
+
+  public void testExpirationSkew() throws Exception {
+    Instant expiration = clock.now().minus(SKEW.minus(Duration.standardSeconds(1)));
+    Instant issuedAt = expiration.minus(Duration.standardSeconds(1));
+    checkTimeFrame(issuedAt, expiration);
+  }
+
+  public void testExpirationTooMuchSkew() throws Exception {
+    Instant expiration = clock.now().minus(SKEW.plus(Duration.standardSeconds(1)));
+    Instant issuedAt = expiration.minus(Duration.standardSeconds(1));
+    checkTimeFrameIllegalStateException(issuedAt, expiration);
+  }
+
+  public void testIssuedAtNull() throws Exception {
+    Instant expiration = clock.now().minus(SKEW.minus(Duration.standardSeconds(1)));
+    checkTimeFrame(null, expiration);
+  }
+
+  public void testExpirationNull() throws Exception {
+    Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
+    checkTimeFrame(issuedAt, null);
+  }
+
+  public void testIssueAtNullExpirationNull() throws Exception {
+    checkTimeFrame(null, null);
+  }
+
+  public void testFutureToken() throws Exception {
+    Instant issuedAt = clock.now().plus(SKEW.plus(Duration.standardSeconds(1)));
+    Instant expiration = issuedAt.plus(Duration.standardDays(1));
+    checkTimeFrameIllegalStateException(issuedAt, expiration);
+  }
+
+  public void testPastToken() throws Exception {
+    Instant expiration = clock.now().minus(SKEW.plus(Duration.standardSeconds(1)));
+    Instant issuedAt = expiration.minus(Duration.standardDays(1));
+    checkTimeFrameIllegalStateException(issuedAt, expiration);
   }
 
   public void testJsonNull() throws Exception {
@@ -74,36 +153,36 @@ public class JsonTokenTest extends JsonTokenTestBase {
     deserializeAndExpectIllegalArgument(parser, TOKEN_STRING_2PARTS);
     deserializeAndExpectIllegalArgument(parser, TOKEN_STRING_EMPTY_SIG);
   }
-  
+
   public void testDeserializeCorruptJson() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     try {
       parser.deserialize(TOKEN_STRING_CORRUPT_HEADER);
       fail("Expected JsonParseException");
-    } catch(JsonParseException e) {
+    } catch (JsonParseException e) {
       // no-op
-    }    
+    }
     try {
       parser.deserialize(TOKEN_STRING_CORRUPT_PAYLOAD);
       fail("Expected JsonParseException");
-    } catch(JsonParseException e) {
+    } catch (JsonParseException e) {
       // no-op
     }
   }
 
-  
-  private void deserializeAndExpectIllegalArgument(JsonTokenParser parser, 
+
+  private void deserializeAndExpectIllegalArgument(JsonTokenParser parser,
       String tokenString) throws SignatureException {
     try {
       parser.deserialize(tokenString);
       fail("Expected IllegalArgumentException");
-    } catch(IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       // no-op
-    } catch(IllegalStateException e) {
+    } catch (IllegalStateException e) {
       // no-op
     }
   }
-  
+
   public void testDeserialize() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken token = parser.deserialize(TOKEN_STRING);
@@ -112,7 +191,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
-  
+
   public void testVerifyAndDeserialize() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_STRING);
@@ -123,6 +202,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
   }
 
   public static String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
+
   public void testVerificationOnTokenFromRuby() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locatorsFromRuby, new IgnoreAudience());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_FROM_RUBY);
@@ -143,7 +223,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     JsonToken token = new JsonToken(signer, clock);
     token.setParam("bar", 15);
     token.setParam("foo", "some value");
-    token.setExpiration(clock.now().withDurationAdded(60,1));
+    token.setExpiration(clock.now().withDurationAdded(60, 1));
 
     String tokenString = token.serializeAndSign();
 
@@ -157,7 +237,8 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
     // now test what happens if we tamper with the token
     JsonObject payload = new JsonParser().parse(
-        StringUtils.newStringUtf8(Base64.decodeBase64(tokenString.split(Pattern.quote("."))[1]))).getAsJsonObject();
+        StringUtils.newStringUtf8(Base64.decodeBase64(tokenString.split(Pattern.quote("."))[1])))
+        .getAsJsonObject();
     payload.remove("bar");
     payload.addProperty("bar", 14);
     String payloadString = new Gson().toJson(payload);
@@ -166,7 +247,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertEquals(3, parts.length);
 
     String tamperedToken = parts[0] + "." + parts[1] + "." + parts[2];
-      
+
     try {
       token = parser.verifyAndDeserialize(tamperedToken);
       fail("verification should have failed");
