@@ -144,7 +144,8 @@ public class JsonTokenParser {
     }
 
     if (issuedAt != null && expiration != null) {
-      if (! clock.isCurrentTimeInInterval(issuedAt, expiration)) {
+      if (issuedAt.isAfter(expiration)
+          || ! clock.isCurrentTimeInInterval(issuedAt, expiration)) {
         throw new IllegalStateException(String.format("Invalid iat and/or exp. iat: %s exp: %s "
             + "now: %s", jsonToken.getIssuedAt(), jsonToken.getExpiration(), clock.now()));
       }
