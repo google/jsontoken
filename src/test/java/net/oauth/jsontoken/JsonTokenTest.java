@@ -91,6 +91,12 @@ public class JsonTokenTest extends JsonTokenTestBase {
     }
   }
 
+  public void testIssuedAtAfterExpiration() throws Exception {
+    Instant issuedAt = clock.now();
+    Instant expiration = issuedAt.minus(Duration.standardSeconds(1));
+    checkTimeFrameIllegalStateException(issuedAt, expiration);
+  }
+
   public void testIssueAtSkew() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
     Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
