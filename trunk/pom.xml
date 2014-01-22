@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.googlecode.jsontoken</groupId>
   <artifactId>jsontoken</artifactId>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>jsontoken</name>
   <description>JWT implementation</description>
@@ -21,9 +21,9 @@
     <version>7</version>
   </parent>
   <scm>
-    <connection>scm:svn:http://jsontoken.googlecode.com/svn/tags/jsontoken-1.1</connection>
-    <developerConnection>scm:svn:https://jsontoken.googlecode.com/svn/tags/jsontoken-1.1</developerConnection>
-    <url>http://jsontoken.googlecode.com/svn/tags/jsontoken-1.1</url>
+    <connection>scm:svn:http://jsontoken.googlecode.com/svn/trunk/</connection>
+    <developerConnection>scm:svn:https://jsontoken.googlecode.com/svn/trunk/</developerConnection>
+    <url>http://jsontoken.googlecode.com/svn/trunk/</url>
   </scm>
 
   <developers>
