@@ -65,8 +65,8 @@ public class MagicRsaPublicKey {
     byte[] modulusBytes = Base64.decodeBase64(modulusString);
     byte[] exponentBytes = Base64.decodeBase64(exponentString);
 
-    BigInteger modulus = new BigInteger(modulusBytes);
-    BigInteger exponent = new BigInteger(exponentBytes);
+    BigInteger modulus = new BigInteger(1, modulusBytes);
+    BigInteger exponent = new BigInteger(1, exponentBytes);
 
     RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
     KeyFactory fac;
