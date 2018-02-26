@@ -32,17 +32,20 @@ import com.google.gson.JsonPrimitive;
  * A signed Json Assertion
  */
 public class SignedJsonAssertionToken extends JsonToken {
-  
+
   public static final String JWT = "jwt";
-  
+
   public static final String GRANT_TYPE = "grant_type";
   public static final String GRANT_TYPE_VALUE = "http://oauth.net/grant_type/jwt/1.0/bearer";
-  
+
   // addition JSON token payload fields for signed json assertion
+  /** One should use "sub" for subject claim. */
+  @Deprecated
   public static final String SUBJECT = "subject";
+  public static final String SUB = "sub";
   public static final String SCOPE = "scope";
   public static final String NONCE = "nonce";
-  
+
   public SignedJsonAssertionToken(Signer signer, Clock clock) {
     super(signer, clock);
   }
@@ -50,7 +53,7 @@ public class SignedJsonAssertionToken extends JsonToken {
   public SignedJsonAssertionToken(Signer signer) {
     super(signer);
   }
-  
+
   public SignedJsonAssertionToken(JsonToken token) {
     super(token.getPayloadAsJsonObject());
   }
@@ -60,15 +63,26 @@ public class SignedJsonAssertionToken extends JsonToken {
     return subjectJson == null ? null : subjectJson.getAsString();
   }
 
+  /** Please use {@link #setSub(String)} instead. */
+  @Deprecated
   public void setSubject(String m) {
     setParam(SUBJECT, m);
   }
-  
+
+  public String getSub() {
+    JsonPrimitive subjectJson = getParamAsPrimitive(SUB);
+    return subjectJson == null ? null : subjectJson.getAsString();
+  }
+
+  public void setSub(String m) {
+    setParam(SUB, m);
+  }
+
   public String getScope() {
     JsonPrimitive scopeJson = getParamAsPrimitive(SCOPE);
     return scopeJson == null ? null : scopeJson.getAsString();
   }
-  
+
   public void setScope(String scope) {
     setParam(SCOPE, scope);
   }
@@ -81,7 +95,7 @@ public class SignedJsonAssertionToken extends JsonToken {
   public void setNonce(String n) {
     setParam(NONCE, n);
   }
-  
+
   public String getJsonAssertionPostBody() throws SignatureException {
     StringBuffer buffer = new StringBuffer();
     buffer.append(GRANT_TYPE).append("=").append(GRANT_TYPE_VALUE);
@@ -98,7 +112,7 @@ public class SignedJsonAssertionToken extends JsonToken {
   public String serializeAndSign() throws SignatureException {
     return super.serializeAndSign();
   }
-  
+
   @Override
   protected String computeSignatureBaseString() {
     if (getIssuedAt() == null) {
