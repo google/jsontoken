@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * Class that provides common functions
  * used by {@link JsonTokenParser} and {@link AsyncJsonTokenParser}.
  */
-public abstract class AbstractJsonTokenParser {
+abstract class AbstractJsonTokenParser {
   private final Clock clock;
   private final Checker[] checkers;
 
@@ -226,4 +226,5 @@ public abstract class AbstractJsonTokenParser {
     }
 
   }
+
 }
