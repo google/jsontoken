@@ -16,11 +16,13 @@
  */
 package net.oauth.jsontoken;
 
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import com.sun.istack.internal.Nullable;
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
@@ -196,35 +198,25 @@ abstract class AbstractJsonTokenParser {
     String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
     SignatureAlgorithm sigAlg = jsonToken.getSignatureAlgorithm();
 
-    return new ProviderLookupData(sigAlg, jsonToken.getIssuer(), keyId);
+    return ProviderLookupData.create(sigAlg, jsonToken.getIssuer(), keyId);
   }
 
   /**
    * Class that bundles up the necessary data to look up verifiers.
    */
-  final class ProviderLookupData {
-    private SignatureAlgorithm sigAlg;
-    private String issuer;
-    private String keyId;
-
-    ProviderLookupData(SignatureAlgorithm sigAlg, String issuer, String keyId) {
-      this.sigAlg = sigAlg;
-      this.issuer = issuer;
-      this.keyId = keyId;
+  @AutoValue
+  abstract static class ProviderLookupData {
+    static ProviderLookupData create(
+        @Nullable SignatureAlgorithm sigAlg,
+        @Nullable String issuer,
+        @Nullable String keyId
+    ) {
+      return new AutoValue_AbstractJsonTokenParser_ProviderLookupData(sigAlg, issuer, keyId);
     }
 
-    SignatureAlgorithm getSigAlg() {
-      return sigAlg;
-    }
-
-    String getIssuer() {
-      return issuer;
-    }
-
-    String getKeyId() {
-      return keyId;
-    }
-
+    @Nullable abstract SignatureAlgorithm getSigAlg();
+    @Nullable abstract String getIssuer();
+    @Nullable abstract String getKeyId();
   }
 
 }
