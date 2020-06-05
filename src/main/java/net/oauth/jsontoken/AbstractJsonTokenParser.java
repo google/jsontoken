@@ -47,7 +47,7 @@ abstract class AbstractJsonTokenParser {
    *   currently valid or not.
    * @param checkers an array of checkers that validates the parameters in the JSON token.
    */
-  protected AbstractJsonTokenParser(Clock clock, Checker... checkers) {
+  AbstractJsonTokenParser(Clock clock, Checker... checkers) {
     this.clock = Preconditions.checkNotNull(clock);
     this.checkers = checkers;
   }
@@ -190,7 +190,7 @@ abstract class AbstractJsonTokenParser {
    * @param jsonToken the token to verify
    * @return Signature algorithm, issuer, and keyId in an object
    */
-  protected ProviderLookupData getLookupData(JsonToken jsonToken) {
+  ProviderLookupData getLookupData(JsonToken jsonToken) {
     JsonObject header = jsonToken.getHeader();
     JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
     String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
@@ -202,26 +202,26 @@ abstract class AbstractJsonTokenParser {
   /**
    * Class that bundles up the necessary data to look up verifiers.
    */
-  protected class ProviderLookupData {
+  final class ProviderLookupData {
     private SignatureAlgorithm sigAlg;
     private String issuer;
     private String keyId;
 
-    public ProviderLookupData(SignatureAlgorithm sigAlg, String issuer, String keyId) {
+    ProviderLookupData(SignatureAlgorithm sigAlg, String issuer, String keyId) {
       this.sigAlg = sigAlg;
       this.issuer = issuer;
       this.keyId = keyId;
     }
 
-    public SignatureAlgorithm getSigAlg() {
+    SignatureAlgorithm getSigAlg() {
       return sigAlg;
     }
 
-    public String getIssuer() {
+    String getIssuer() {
       return issuer;
     }
 
-    public String getKeyId() {
+    String getKeyId() {
       return keyId;
     }
 
