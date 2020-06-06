@@ -22,7 +22,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import com.sun.istack.internal.Nullable;
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
@@ -30,6 +29,7 @@ import net.oauth.jsontoken.crypto.Verifier;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.security.SignatureException;
 import java.util.List;
 import java.util.regex.Pattern;
