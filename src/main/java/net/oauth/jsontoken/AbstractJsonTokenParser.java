@@ -186,7 +186,7 @@ abstract class AbstractJsonTokenParser {
    * @param jsonToken the token to verify
    * @return Signature algorithm, issuer, and keyId in an object
    */
-  VerifierLookupData getLookupData(JsonToken jsonToken) {
+  VerifierLookupData getVerifierLookupData(JsonToken jsonToken) {
     JsonObject header = jsonToken.getHeader();
     JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
     String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();

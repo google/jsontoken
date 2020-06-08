@@ -92,7 +92,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
-    VerifierLookupData lookup = getLookupData(jsonToken);
+    VerifierLookupData lookup = getVerifierLookupData(jsonToken);
     List<Verifier> verifiers = verifierProviders.getVerifierProvider(lookup.getSignatureAlgorithm())
         .findVerifier(lookup.getIssuer(), lookup.getKeyId());
     if (verifiers == null) {
