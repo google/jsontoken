@@ -92,8 +92,8 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) throws SignatureException {
     Preconditions.checkNotNull(verifierProviders);
-    ProviderLookupData lookup = getLookupData(jsonToken);
-    List<Verifier> verifiers = verifierProviders.getVerifierProvider(lookup.getSigAlg())
+    VerifierLookupData lookup = getLookupData(jsonToken);
+    List<Verifier> verifiers = verifierProviders.getVerifierProvider(lookup.getSignatureAlgorithm())
         .findVerifier(lookup.getIssuer(), lookup.getKeyId());
     if (verifiers == null) {
       throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());

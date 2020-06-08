@@ -152,10 +152,7 @@ abstract class AbstractJsonTokenParser {
    */
   public boolean expirationIsValid(JsonToken jsonToken, Instant now) {
     Instant expiration = jsonToken.getExpiration();
-    if ((expiration != null) && now.isAfter(expiration)) {
-      return false;
-    }
-    return true;
+    return expiration == null || expiration.isAfter(now);
   }
 
   /**
@@ -167,10 +164,7 @@ abstract class AbstractJsonTokenParser {
    */
   public boolean issuedAtIsValid(JsonToken jsonToken, Instant now) {
     Instant issuedAt = jsonToken.getIssuedAt();
-    if ((issuedAt != null) && now.isBefore(issuedAt)) {
-      return false;
-    }
-    return true;
+    return issuedAt == null || issuedAt.isAfter(now);
   }
 
   /**
@@ -192,29 +186,28 @@ abstract class AbstractJsonTokenParser {
    * @param jsonToken the token to verify
    * @return Signature algorithm, issuer, and keyId in an object
    */
-  ProviderLookupData getLookupData(JsonToken jsonToken) {
+  VerifierLookupData getLookupData(JsonToken jsonToken) {
     JsonObject header = jsonToken.getHeader();
     JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
     String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
-    SignatureAlgorithm sigAlg = jsonToken.getSignatureAlgorithm();
+    SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
 
-    return ProviderLookupData.create(sigAlg, jsonToken.getIssuer(), keyId);
+    return VerifierLookupData.create(signatureAlgorithm, jsonToken.getIssuer(), keyId);
   }
 
   /**
    * Class that bundles up the necessary data to look up verifiers.
    */
   @AutoValue
-  abstract static class ProviderLookupData {
-    static ProviderLookupData create(
-        @Nullable SignatureAlgorithm sigAlg,
+  abstract static class VerifierLookupData {
+    static VerifierLookupData create(
+        @Nullable SignatureAlgorithm signatureAlgorithm,
         @Nullable String issuer,
-        @Nullable String keyId
-    ) {
-      return new AutoValue_AbstractJsonTokenParser_ProviderLookupData(sigAlg, issuer, keyId);
+        @Nullable String keyId) {
+      return new AutoValue_AbstractJsonTokenParser_VerifierLookupData(signatureAlgorithm, issuer, keyId);
     }
 
-    @Nullable abstract SignatureAlgorithm getSigAlg();
+    @Nullable abstract SignatureAlgorithm getSignatureAlgorithm();
     @Nullable abstract String getIssuer();
     @Nullable abstract String getKeyId();
   }
