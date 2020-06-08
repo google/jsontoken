@@ -86,11 +86,11 @@
     	<scope>compile</scope>
     </dependency>
     <dependency>
-    	<groupId>com.google.collections</groupId>
-    	<artifactId>google-collections</artifactId>
-    	<version>1.0</version>
-    	<type>jar</type>
-    	<scope>compile</scope>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>20.0</version>
+        <type>jar</type>
+        <scope>compile</scope>
     </dependency>
     <dependency>
     	<groupId>joda-time</groupId>
