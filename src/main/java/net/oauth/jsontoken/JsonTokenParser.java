@@ -90,7 +90,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * @return list of verifiers
    * @throws IllegalStateException
    */
-  private List<Verifier> provideVerifiers(JsonToken jsonToken) throws SignatureException {
+  private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
     VerifierLookupData lookup = getLookupData(jsonToken);
     List<Verifier> verifiers = verifierProviders.getVerifierProvider(lookup.getSignatureAlgorithm())
