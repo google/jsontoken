@@ -164,7 +164,7 @@ abstract class AbstractJsonTokenParser {
    */
   public boolean issuedAtIsValid(JsonToken jsonToken, Instant now) {
     Instant issuedAt = jsonToken.getIssuedAt();
-    return issuedAt == null || issuedAt.isAfter(now);
+    return issuedAt == null || issuedAt.isBefore(now);
   }
 
   /**
