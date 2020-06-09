@@ -60,6 +60,7 @@ abstract class AbstractJsonTokenParser {
    *
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
+   * @throws IllegalStateException when tokenString doesn't have three parts
    */
   public JsonToken deserialize(String tokenString) {
     String[] pieces = splitTokenString(tokenString);
@@ -123,6 +124,7 @@ abstract class AbstractJsonTokenParser {
    * @param tokenString the encoded and signed JSON Web Token to verify.
    * @param verifiers used to verify the signature. These usually encapsulate
    *        secret keys.
+   * @throws IllegalStateException when tokenString doesn't have three parts
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
     String[] pieces = splitTokenString(tokenString);
@@ -170,6 +172,7 @@ abstract class AbstractJsonTokenParser {
   /**
    * @param tokenString The original encoded representation of a JWT
    * @return Three components of the JWT as an array of strings
+   * @throws IllegalStateException when tokenString doesn't have three parts
    */
   private String[] splitTokenString(String tokenString) {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));

@@ -62,7 +62,9 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * (iat, exp). Uses VerifierProviders to obtain the secret key.
    * 
    * @param jsonToken
-   * @throws SignatureException
+   * @throws SignatureException when the signature is invalid
+   * @throws IllegalStateException when exp or iat are invalid or
+   *   when there are no valid verifiers for the issuer
    */
   public void verify(JsonToken jsonToken) throws SignatureException {
     List<Verifier> verifiers = provideVerifiers(jsonToken);
@@ -75,7 +77,8 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * @param tokenString the serialized token that is to parsed and verified.
    * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
    *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
-   * @throws SignatureException 
+   * @throws SignatureException when the signature is invalid
+   * @throws IllegalStateException when tokenString doesn't have three parts
    */
   public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
     JsonToken jsonToken = deserialize(tokenString);
@@ -88,7 +91,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * 
    * @param jsonToken
    * @return list of verifiers
-   * @throws IllegalStateException
+   * @throws IllegalStateException when there are no valid verifiers for the issuer
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
