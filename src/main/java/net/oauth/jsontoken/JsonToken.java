@@ -51,11 +51,8 @@ public class JsonToken {
   
   public final static int DEFAULT_LIFETIME_IN_MINS = 2;
 
-  private JsonObject header;
-  private String keyId;
-  private SignatureAlgorithm sigAlg;
-
   protected final Clock clock;
+  private final JsonObject header;
   private final JsonObject payload;
   private final String tokenString;
   
@@ -82,12 +79,17 @@ public class JsonToken {
   public JsonToken(Signer signer, Clock clock) {
     Preconditions.checkNotNull(signer);
     Preconditions.checkNotNull(clock);
-    
+
+    header = new JsonObject();
+    header.addProperty(ALGORITHM_HEADER, signer.getSignatureAlgorithm().getNameForJson());
+    String keyId = signer.getKeyId();
+    if (keyId != null) {
+      header.addProperty(KEY_ID_HEADER, keyId);
+    }
+
     this.payload = new JsonObject();
     this.signer = signer;
     this.clock = clock;
-    this.keyId = signer.getKeyId();
-    this.sigAlg = signer.getSignatureAlgorithm();
     this.signature = null;
     this.baseString = null;
     this.tokenString = null;
@@ -109,14 +111,12 @@ public class JsonToken {
    */
   public JsonToken(JsonObject header, JsonObject payload, Clock clock, 
       String tokenString) {
+    this.header = header;
     this.payload = payload;
     this.clock = clock;
     this.baseString = null;
     this.signature = null;
-    this.keyId = null;
-    this.sigAlg = null;
     this.signer = null;
-    this.header = header;
     this.tokenString = tokenString;
   }
   
@@ -128,12 +128,11 @@ public class JsonToken {
    * @param payload A payload JSON object.
    */
   public JsonToken(JsonObject payload) {
+    this.header = null;
     this.payload = payload;
     this.baseString = null;
     this.tokenString = null;
     this.signature = null;
-    this.keyId = null;
-    this.sigAlg = null;
     this.signer = null;
     this.clock = null;
   }
@@ -148,13 +147,12 @@ public class JsonToken {
    *   of the token, if not explicitly set.
    */
   public JsonToken(JsonObject payload, Clock clock) {
+    this.header = null;
     this.payload = payload;
     this.clock = clock;
     this.baseString = null;
     this.tokenString = null;
     this.signature = null;
-    this.keyId = null;
-    this.sigAlg = null;
     this.signer = null;
   }
 
@@ -239,32 +237,25 @@ public class JsonToken {
   }
   
   public String getKeyId() {
-    if (keyId == null && signer == null) {
-      if (header == null) {
-        throw new NullPointerException("JWT has no signer or header");
-      }
-      JsonElement keyIdName = header.get(JsonToken.KEY_ID_HEADER);
-      if (keyIdName == null) {
-        return null;
-      }
-      return keyIdName.getAsString();
+    if (header == null) {
+      return null;
     }
-    return keyId;
+
+    JsonElement keyIdName = header.get(JsonToken.KEY_ID_HEADER);
+    return keyIdName != null ? keyIdName.getAsString() : null;
   }
 
   public SignatureAlgorithm getSignatureAlgorithm() {
-    if (sigAlg == null) {
-      if (header == null) {
-        throw new IllegalStateException("JWT has no algorithm or header");
-      }
-      JsonElement algorithmName = header.get(JsonToken.ALGORITHM_HEADER);
-      if (algorithmName == null) {
-        throw new IllegalStateException("JWT header is missing the required '" +
-            JsonToken.ALGORITHM_HEADER + "' parameter");
-      }
-      sigAlg = SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
+    if (header == null) {
+      throw new IllegalStateException("JWT has no algorithm or header");
     }
-    return sigAlg;
+
+    JsonElement algorithmName = header.get(JsonToken.ALGORITHM_HEADER);
+    if (algorithmName == null) {
+      throw new IllegalStateException("JWT header is missing the required '" +
+          JsonToken.ALGORITHM_HEADER + "' parameter");
+    }
+    return SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
   }
 
   public String getTokenString() {
@@ -273,7 +264,7 @@ public class JsonToken {
 
   public JsonObject getHeader() {
     if (header == null) {
-      createHeader();
+      throw new IllegalStateException("JWT has no header");
     }
     return header;
   }
@@ -304,16 +295,6 @@ public class JsonToken {
         JsonTokenUtil.toBase64(payload)
         );
     return baseString;
-  }
-
-  private JsonObject createHeader() {
-    header = new JsonObject();
-    header.addProperty(ALGORITHM_HEADER, getSignatureAlgorithm().getNameForJson());
-    String keyId = getKeyId();
-    if (keyId != null) {
-      header.addProperty(KEY_ID_HEADER, keyId);
-    }
-    return header;
   }
 
   private String getSignature() throws SignatureException {
