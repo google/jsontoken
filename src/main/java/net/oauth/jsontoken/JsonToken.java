@@ -51,10 +51,10 @@ public class JsonToken {
   
   public final static int DEFAULT_LIFETIME_IN_MINS = 2;
 
-
   private JsonObject header;
+  private String keyId;
   private SignatureAlgorithm sigAlg;
-  
+
   protected final Clock clock;
   private final JsonObject payload;
   private final String tokenString;
@@ -86,6 +86,7 @@ public class JsonToken {
     this.payload = new JsonObject();
     this.signer = signer;
     this.clock = clock;
+    this.keyId = signer.getKeyId();
     this.sigAlg = signer.getSignatureAlgorithm();
     this.signature = null;
     this.baseString = null;
@@ -112,6 +113,7 @@ public class JsonToken {
     this.clock = clock;
     this.baseString = null;
     this.signature = null;
+    this.keyId = null;
     this.sigAlg = null;
     this.signer = null;
     this.header = header;
@@ -130,6 +132,7 @@ public class JsonToken {
     this.baseString = null;
     this.tokenString = null;
     this.signature = null;
+    this.keyId = null;
     this.sigAlg = null;
     this.signer = null;
     this.clock = null;
@@ -150,6 +153,7 @@ public class JsonToken {
     this.baseString = null;
     this.tokenString = null;
     this.signature = null;
+    this.keyId = null;
     this.sigAlg = null;
     this.signer = null;
   }
@@ -235,7 +239,17 @@ public class JsonToken {
   }
   
   public String getKeyId() {
-    return signer.getKeyId();
+    if (keyId == null && signer == null) {
+      if (header == null) {
+        throw new NullPointerException("JWT has no signer or header");
+      }
+      JsonElement keyIdName = header.get(JsonToken.KEY_ID_HEADER);
+      if (keyIdName == null) {
+        return null;
+      }
+      return keyIdName.getAsString();
+    }
+    return keyId;
   }
 
   public SignatureAlgorithm getSignatureAlgorithm() {
