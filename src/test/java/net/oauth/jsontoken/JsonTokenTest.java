@@ -1,6 +1,7 @@
 package net.oauth.jsontoken;
 
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
+import org.joda.time.Duration;
 
 public class JsonTokenTest extends JsonTokenTestBase {
 
@@ -12,7 +13,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     token.setParam("foo", "some value");
     token.setAudience("http://www.google.com");
     token.setIssuedAt(clock.now());
-    token.setExpiration(clock.now().withDurationAdded(60, 1));
+    token.setExpiration(clock.now().plus(Duration.standardSeconds(1)));
 
     assertEquals(TOKEN_STRING, token.serializeAndSign());
   }
