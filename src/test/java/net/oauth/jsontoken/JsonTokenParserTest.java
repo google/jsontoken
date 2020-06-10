@@ -34,6 +34,8 @@ import java.util.regex.Pattern;
 
 public class JsonTokenParserTest extends JsonTokenTestBase {
 
+  public static String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
+
   private void checkTimeFrame(Instant issuedAt, Instant expiration) throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
     JsonToken token = new JsonToken(signer, clock);
@@ -175,8 +177,6 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
-
-  public static String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
 
   public void testVerificationOnTokenFromRuby() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locatorsFromRuby, new IgnoreAudience());
