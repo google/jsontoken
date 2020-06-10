@@ -176,7 +176,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
     assertEquals("key2", token.getKeyId());
     assertEquals(new Instant(1276669722000L), token.getIssuedAt());
-    assertEquals(new Instant(1276669722000L), token.getExpiration());
+    assertEquals(new Instant(1276669723000L), token.getExpiration());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
@@ -239,7 +239,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
     assertEquals("key2", token.getKeyId());
     assertEquals(new Instant(1276669722000L), token.getIssuedAt());
-    assertEquals(new Instant(1276669722000L), token.getExpiration());
+    assertEquals(new Instant(1276669723000L), token.getExpiration());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
