@@ -24,25 +24,28 @@ import com.google.gson.JsonParser;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+import net.oauth.jsontoken.crypto.Verifier;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
 import java.security.SignatureException;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class JsonTokenParserTest extends JsonTokenTestBase {
 
-  private static String TOKEN_STRING_ISSUER_NULL = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOm51bGwsImJhciI6MTUsImZvbyI6InNvbWUgdmFsdWUiLCJhdWQiOiJodHRwOi8vd3d3Lmdvb2dsZS5jb20iLCJpYXQiOjEyNzY2Njk3MjIsImV4cCI6MTI3NjY2OTcyMn0.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
-  private static String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_";
-  private static String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ";
-  private static String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.";
-  private static String TOKEN_STRING_CORRUPT_HEADER = "0yJ0bGci0iJIUzI0NiIsIm0pZCI60mtleT0ifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
-  private static String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&XtOiJnb290bGUuY20tIiwiYmFyIjoxNSwiZm9vIjoic290ZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
-  private static String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
+  private static final String TOKEN_STRING_ISSUER_NULL = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOm51bGwsImJhciI6MTUsImZvbyI6InNvbWUgdmFsdWUiLCJhdWQiOiJodHRwOi8vd3d3Lmdvb2dsZS5jb20iLCJpYXQiOjEyNzY2Njk3MjIsImV4cCI6MTI3NjY2OTcyMn0.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
+  private static final String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_";
+  private static final String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ";
+  private static final String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.";
+  private static final String TOKEN_STRING_CORRUPT_HEADER = "0yJ0bGci0iJIUzI0NiIsIm0pZCI60mtleT0ifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
+  private static final String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&XtOiJnb290bGUuY20tIiwiYmFyIjoxNSwiZm9vIjoic290ZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
+  private static final String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
 
-  private void checkTimeFrame(Instant issuedAt, Instant expiration) throws Exception {
+  private boolean testVerifyTimeFrame(Instant issuedAt, Instant expiration) throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
     JsonToken token = new JsonToken(signer, clock);
     if (issuedAt != null) {
@@ -53,109 +56,141 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     }
     token.setAudience("http://www.google.com");
 
-    JsonToken verifiedToken = new JsonTokenParser(clock, locators, new IgnoreAudience())
-        .verifyAndDeserialize(token.serializeAndSign());
-    assertEquals(issuedAt, verifiedToken.getIssuedAt());
-    assertEquals(expiration, verifiedToken.getExpiration());
-  }
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonToken checkToken = parser.deserialize(token.serializeAndSign());
 
-  private void checkTimeFrameIllegalStateException(Instant issuedAt, Instant expiration)
-      throws Exception {
     try {
-      checkTimeFrame(issuedAt, expiration);
-      fail("IllegalStateException should be thrown.");
+      parser.verify(checkToken);
+      return true;
     } catch (IllegalStateException e) {
-      // Pass.
+      return false;
     }
   }
 
-  public void testIssuedAtAfterExpiration() throws Exception {
+  public void testVerifyIssuedAtAfterExpiration() throws Exception {
     Instant issuedAt = clock.now();
     Instant expiration = issuedAt.minus(Duration.standardSeconds(1));
-    checkTimeFrameIllegalStateException(issuedAt, expiration);
+    assertFalse(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testIssueAtSkew() throws Exception {
+  public void testVerifyIssuedAtSkew() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
     Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
-    checkTimeFrame(issuedAt, expiration);
+    assertTrue(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testIssueAtTooMuchSkew() throws Exception {
+  public void testVerifyIssuedAtTooMuchSkew() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.plus(Duration.standardSeconds(1)));
     Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
-    checkTimeFrameIllegalStateException(issuedAt, expiration);
+    assertFalse(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testExpirationSkew() throws Exception {
+  public void testVerifyExpirationSkew() throws Exception {
     Instant expiration = clock.now().minus(SKEW.minus(Duration.standardSeconds(1)));
     Instant issuedAt = expiration.minus(Duration.standardSeconds(1));
-    checkTimeFrame(issuedAt, expiration);
+    assertTrue(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testExpirationTooMuchSkew() throws Exception {
+  public void testVerifyExpirationTooMuchSkew() throws Exception {
     Instant expiration = clock.now().minus(SKEW.plus(Duration.standardSeconds(1)));
     Instant issuedAt = expiration.minus(Duration.standardSeconds(1));
-    checkTimeFrameIllegalStateException(issuedAt, expiration);
+    assertFalse(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testIssuedAtNull() throws Exception {
+  public void testVerifyIssuedAtNull() throws Exception {
     Instant expiration = clock.now().minus(SKEW.minus(Duration.standardSeconds(1)));
-    checkTimeFrame(null, expiration);
+    assertTrue(testVerifyTimeFrame(null, expiration));
   }
 
-  public void testExpirationNull() throws Exception {
+  public void testVerifyExpirationNull() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
-    checkTimeFrame(issuedAt, null);
+    assertTrue(testVerifyTimeFrame(issuedAt, null));
   }
 
-  public void testIssueAtNullExpirationNull() throws Exception {
-    checkTimeFrame(null, null);
+  public void testVerifyIssuedAtNullExpirationNull() throws Exception {
+    assertTrue((testVerifyTimeFrame(null, null)));
   }
 
-  public void testFutureToken() throws Exception {
+  public void testVerifyFutureToken() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.plus(Duration.standardSeconds(1)));
     Instant expiration = issuedAt.plus(Duration.standardDays(1));
-    checkTimeFrameIllegalStateException(issuedAt, expiration);
+    assertFalse(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testPastToken() throws Exception {
+  public void testVerifyPastToken() throws Exception {
     Instant expiration = clock.now().minus(SKEW.plus(Duration.standardSeconds(1)));
     Instant issuedAt = expiration.minus(Duration.standardDays(1));
-    checkTimeFrameIllegalStateException(issuedAt, expiration);
+    assertFalse(testVerifyTimeFrame(issuedAt, expiration));
   }
 
-  public void testJsonNull() throws Exception {
+  private boolean testVerifySignature(String tokenString) throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonToken checkToken = parser.deserialize(tokenString);
+
+    try {
+      parser.verify(checkToken);
+      return true;
+    } catch (SignatureException e) {
+      return false;
+    }
+  }
+
+  private void testVerifySignatureExpectIllegalStateException(String tokenString) throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonToken token = parser.deserialize(TOKEN_STRING);
+    JsonToken testToken = new JsonToken(
+        token.getHeader(),
+        token.getPayloadAsJsonObject(),
+        clock,
+        tokenString
+    );
+
+    try {
+      parser.verify(testToken);
+      fail("Expected IllegalStateException");
+    } catch (IllegalStateException e) {
+      // no-op
+    }
+  }
+
+  public void testVerifyValidSignature() throws Exception {
+    assertTrue(testVerifySignature(TOKEN_STRING));
+  }
+
+  public void testVerifyBadSignature() throws Exception {
+    assertFalse(testVerifySignature(TOKEN_STRING_BAD_SIG));
+  }
+
+  public void testVerifySignatureIsEmpty() throws Exception {
+    testVerifySignatureExpectIllegalStateException(TOKEN_STRING_EMPTY_SIG);
+  }
+
+  public void testVerifySignatureIsNull() throws Exception {
+    testVerifySignatureExpectIllegalStateException(TOKEN_STRING_2PARTS);
+  }
+
+  public void testDeserialize() throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonToken token = parser.deserialize(TOKEN_STRING);
+
+    assertEquals("google.com", token.getIssuer());
+    assertEquals("http://www.google.com", token.getAudience());
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertEquals("key2", token.getKeyId());
+    assertEquals(new Instant(1276669722000L), token.getIssuedAt());
+    assertEquals(new Instant(1276669722000L), token.getExpiration());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+  }
+
+  public void testDeserializeNullIssuer() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(null, null);
     JsonToken token = parser.deserialize(TOKEN_STRING_ISSUER_NULL);
     assertNull(token.getIssuer());
   }
 
-  public void testDeserializeInvalidToken() throws Exception {
+  private void deserializeExpectIllegalArgumentException(String tokenString) throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    JsonToken token1 = parser.deserialize(TOKEN_STRING_BAD_SIG);
-    deserializeAndExpectIllegalArgument(parser, TOKEN_STRING_2PARTS);
-    deserializeAndExpectIllegalArgument(parser, TOKEN_STRING_EMPTY_SIG);
-  }
-
-  public void testDeserializeCorruptJson() throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    try {
-      parser.deserialize(TOKEN_STRING_CORRUPT_HEADER);
-      fail("Expected JsonParseException");
-    } catch (JsonParseException e) {
-      // no-op
-    }
-    try {
-      parser.deserialize(TOKEN_STRING_CORRUPT_PAYLOAD);
-      fail("Expected JsonParseException");
-    } catch (JsonParseException e) {
-      // no-op
-    }
-  }
-
-  private void deserializeAndExpectIllegalArgument(JsonTokenParser parser,
-      String tokenString) throws SignatureException {
     try {
       parser.deserialize(tokenString);
       fail("Expected IllegalArgumentException");
@@ -166,13 +201,35 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     }
   }
 
-  public void testDeserialize() throws Exception {
+  public void testDeserializeBadSignature() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    JsonToken token = parser.deserialize(TOKEN_STRING);
+    parser.deserialize(TOKEN_STRING_BAD_SIG);
+  }
 
-    assertEquals("google.com", token.getIssuer());
-    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
-    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+  public void testDeserializeNoSignature() throws Exception {
+    deserializeExpectIllegalArgumentException(TOKEN_STRING_2PARTS);
+  }
+
+  public void testDeserializeEmptySignature() throws Exception {
+    deserializeExpectIllegalArgumentException(TOKEN_STRING_EMPTY_SIG);
+  }
+
+  private void deserializeExpectJsonParseException(String tokenString) throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    try {
+      parser.deserialize(TOKEN_STRING_CORRUPT_HEADER);
+      fail("Expected JsonParseException");
+    } catch (JsonParseException e) {
+      // no-op
+    }
+  }
+
+  public void testDeserializeCorruptHeader() throws Exception {
+    deserializeExpectJsonParseException(TOKEN_STRING_CORRUPT_HEADER);
+  }
+
+  public void testDeserializeCorruptPayload() throws Exception {
+    deserializeExpectJsonParseException(TOKEN_STRING_CORRUPT_PAYLOAD);
   }
 
   public void testVerifyAndDeserialize() throws Exception {
@@ -180,13 +237,100 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonToken token = parser.verifyAndDeserialize(TOKEN_STRING);
 
     assertEquals("google.com", token.getIssuer());
+    assertEquals("http://www.google.com", token.getAudience());
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertEquals("key2", token.getKeyId());
+    assertEquals(new Instant(1276669722000L), token.getIssuedAt());
+    assertEquals(new Instant(1276669722000L), token.getExpiration());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 
-  public void testVerificationOnTokenFromRuby() throws Exception {
+  public void testVerifyAndDeserializeTokenFromRuby() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locatorsFromRuby, new IgnoreAudience());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_FROM_RUBY);
+  }
+
+  private boolean testSignature(String tokenString) throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    List<Verifier> verifiers = locators.getVerifierProvider(SignatureAlgorithm.HS256)
+        .findVerifier("google.com", "key2");
+    return parser.signatureIsValid(tokenString, verifiers);
+  }
+
+  public void testSignatureIsValid() throws Exception {
+    assertTrue(testSignature(TOKEN_STRING));
+  }
+
+  public void testSignatureIsBad() throws Exception {
+    assertFalse(testSignature(TOKEN_STRING_BAD_SIG));
+  }
+
+  private void testSignatureExpectIllegalStateException(String tokenString) throws Exception {
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    List<Verifier> verifiers = locators.getVerifierProvider(SignatureAlgorithm.HS256)
+        .findVerifier("google.com", "key2");
+
+    try {
+      parser.signatureIsValid(tokenString, verifiers);
+      fail("Expected IllegalStateException");
+    } catch (IllegalStateException e) {
+      // no-op
+    }
+  }
+
+  public void testSignatureIsEmpty() throws Exception {
+    testSignatureExpectIllegalStateException(TOKEN_STRING_EMPTY_SIG);
+  }
+
+  public void testSignatureIsNull() throws Exception {
+    testSignatureExpectIllegalStateException(TOKEN_STRING_2PARTS);
+  }
+
+  private boolean testExpiration (Instant expiration) throws Exception {
+    HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
+    JsonToken token = new JsonToken(signer, clock);
+    if (expiration != null) {
+      token.setExpiration(expiration);
+    }
+
+    JsonTokenParser tokenParser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    return tokenParser.expirationIsValid(token, clock.now());
+  }
+
+  public void testExpirationInFuture() throws Exception {
+    assertTrue(testExpiration(clock.now().plus(Duration.standardSeconds(1))));
+  }
+
+  public void testExpirationInPast() throws Exception {
+    assertFalse(testExpiration(clock.now().minus(Duration.standardSeconds(1))));
+  }
+
+  public void testExpirationIsNull() throws Exception {
+    assertTrue(testExpiration(null));
+  }
+
+  private boolean testIssuedAt (Instant issuedAt) throws Exception {
+    HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
+    JsonToken token = new JsonToken(signer, clock);
+    if (issuedAt != null) {
+      token.setIssuedAt(issuedAt);
+    }
+
+    JsonTokenParser tokenParser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    return tokenParser.issuedAtIsValid(token, clock.now());
+  }
+
+  public void testIssuedAtInPast() throws Exception {
+    assertTrue(testIssuedAt(clock.now().minus(Duration.standardSeconds(1))));
+  }
+
+  public void testIssuedAtInFuture() throws Exception {
+    assertFalse(testIssuedAt(clock.now().plus(Duration.standardSeconds(1))));
+  }
+
+  public void testIssuedAtIsNull() throws Exception {
+    assertTrue(testIssuedAt(null));
   }
 
   public void testPublicKey() throws Exception {
@@ -227,4 +371,5 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
       // expected
     }
   }
+
 }
