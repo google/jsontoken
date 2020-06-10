@@ -173,10 +173,12 @@ public class JsonToken {
     return JsonTokenUtil.toJson(payload);
   }
 
+  @Nullable
   public String getIssuer() {
     return getParamAsString(ISSUER);
   }
 
+  @Nullable
   public Instant getIssuedAt() {
     Long issuedAt = getParamAsLong(ISSUED_AT);
     if (issuedAt == null) {
@@ -190,6 +192,7 @@ public class JsonToken {
     setParam(ISSUED_AT, instant.getMillis() / 1000);
   }
 
+  @Nullable
   public Instant getExpiration() {
     Long expiration = getParamAsLong(EXPIRATION);
     if (expiration == null) {
@@ -203,6 +206,7 @@ public class JsonToken {
     setParam(EXPIRATION, instant.getMillis() / 1000);
   }
 
+  @Nullable
   public String getAudience() {
     return getParamAsString(AUDIENCE);
   }
@@ -219,6 +223,7 @@ public class JsonToken {
     payload.addProperty(name, value);
   }
 
+  @Nullable
   public JsonPrimitive getParamAsPrimitive(String param) {
     JsonElement element = payload.get(param);
     if (element != null && element.isJsonPrimitive()) {
@@ -227,6 +232,7 @@ public class JsonToken {
     return null;
   }
 
+  @Nullable
   public JsonObject getPayloadAsJsonObject() {
     return payload;
   }
@@ -270,12 +276,14 @@ public class JsonToken {
     }
     return header;
   }
-  
+
+  @Nullable
   private String getParamAsString(String param) {
     JsonPrimitive primitive = getParamAsPrimitive(param);
     return primitive == null ? null : primitive.getAsString();
   }
 
+  @Nullable
   private Long getParamAsLong(String param) {
     JsonPrimitive primitive = getParamAsPrimitive(param);
     if (primitive != null && (primitive.isNumber() || primitive.isString())) {
