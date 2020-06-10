@@ -58,7 +58,6 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken checkToken = parser.deserialize(token.serializeAndSign());
-
     try {
       parser.verify(checkToken);
       return true;
@@ -126,7 +125,6 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   private boolean testVerifySignature(String tokenString) throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken checkToken = parser.deserialize(tokenString);
-
     try {
       parser.verify(checkToken);
       return true;
