@@ -28,6 +28,7 @@ import net.oauth.jsontoken.crypto.Signer;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
 
+import javax.annotation.Nullable;
 import java.security.SignatureException;
 
 
@@ -89,7 +90,7 @@ public class JsonToken {
 
     String issuer = signer.getIssuer();
     if (issuer != null) {
-      setParam(JsonToken.ISSUER, issuer);
+      setParam(ISSUER, issuer);
     }
   }
 
@@ -186,7 +187,7 @@ public class JsonToken {
   }
 
   public void setIssuedAt(Instant instant) {
-    setParam(JsonToken.ISSUED_AT, instant.getMillis() / 1000);
+    setParam(ISSUED_AT, instant.getMillis() / 1000);
   }
 
   public Instant getExpiration() {
@@ -199,7 +200,7 @@ public class JsonToken {
   }
 
   public void setExpiration(Instant instant) {
-    setParam(JsonToken.EXPIRATION, instant.getMillis() / 1000);
+    setParam(EXPIRATION, instant.getMillis() / 1000);
   }
 
   public String getAudience() {
@@ -225,17 +226,18 @@ public class JsonToken {
     }
     return null;
   }
-  
+
   public JsonObject getPayloadAsJsonObject() {
     return payload;
   }
-  
+
+  @Nullable
   public String getKeyId() {
     if (header == null) {
       return null;
     }
 
-    JsonElement keyIdName = header.get(JsonToken.KEY_ID_HEADER);
+    JsonElement keyIdName = header.get(KEY_ID_HEADER);
     return keyIdName != null ? keyIdName.getAsString() : null;
   }
 
@@ -247,10 +249,10 @@ public class JsonToken {
       throw new IllegalStateException("JWT has no algorithm or header");
     }
 
-    JsonElement algorithmName = header.get(JsonToken.ALGORITHM_HEADER);
+    JsonElement algorithmName = header.get(ALGORITHM_HEADER);
     if (algorithmName == null) {
       throw new IllegalStateException("JWT header is missing the required '" +
-          JsonToken.ALGORITHM_HEADER + "' parameter");
+          ALGORITHM_HEADER + "' parameter");
     }
     return SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
   }
@@ -300,7 +302,7 @@ public class JsonToken {
     return baseString;
   }
 
-  private JsonObject createHeader(Signer signer) {
+  private static JsonObject createHeader(Signer signer) {
     JsonObject newHeader = new JsonObject();
     SignatureAlgorithm signatureAlgorithm = signer.getSignatureAlgorithm();
     if (signatureAlgorithm != null) {
