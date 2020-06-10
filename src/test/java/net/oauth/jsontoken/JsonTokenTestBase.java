@@ -32,6 +32,8 @@ import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
 
 import org.apache.commons.codec.binary.Base64;
+import org.joda.time.Duration;
+import org.joda.time.Instant;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -79,6 +81,10 @@ public abstract class JsonTokenTestBase extends TestCase {
   protected VerifierProviders locators;
   protected VerifierProviders locatorsFromRuby;
   protected RSAPrivateKey privateKey;
+
+  protected static String TOKEN_STRING = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIyfQ.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
+  protected static final Duration SKEW = Duration.standardMinutes(1);
+  protected FakeClock clock = new FakeClock(SKEW);
 
   /**
    * Convert encoded tokens into a more human-readable form without verifying.
@@ -130,9 +136,11 @@ public abstract class JsonTokenTestBase extends TestCase {
       @Override
       public List<Verifier> findVerifier(String signerId, String keyId) {
         return Lists.newArrayList(hmacVerifierFromRuby);
-  }
+      }
     };
     locatorsFromRuby = new VerifierProviders();
     locatorsFromRuby.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocatorFromRuby);
+
+    clock.setNow(new Instant(1276669722000L));
   }
 }
