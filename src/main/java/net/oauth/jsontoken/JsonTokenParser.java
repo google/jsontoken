@@ -223,7 +223,6 @@ public class JsonTokenParser {
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) throws SignatureException {
     Preconditions.checkNotNull(verifierProviders);
-    JsonObject header = jsonToken.getHeader();
     String keyId = jsonToken.getKeyId();
     SignatureAlgorithm sigAlg = jsonToken.getSignatureAlgorithm();
     List<Verifier> verifiers = verifierProviders.getVerifierProvider(sigAlg)

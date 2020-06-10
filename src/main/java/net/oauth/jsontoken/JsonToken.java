@@ -79,20 +79,14 @@ public class JsonToken {
   public JsonToken(Signer signer, Clock clock) {
     Preconditions.checkNotNull(signer);
     Preconditions.checkNotNull(clock);
-
-    header = new JsonObject();
-    header.addProperty(ALGORITHM_HEADER, signer.getSignatureAlgorithm().getNameForJson());
-    String keyId = signer.getKeyId();
-    if (keyId != null) {
-      header.addProperty(KEY_ID_HEADER, keyId);
-    }
-
+    this.header = createHeader(signer);
     this.payload = new JsonObject();
     this.signer = signer;
     this.clock = clock;
     this.signature = null;
     this.baseString = null;
     this.tokenString = null;
+
     String issuer = signer.getIssuer();
     if (issuer != null) {
       setParam(JsonToken.ISSUER, issuer);
@@ -245,6 +239,9 @@ public class JsonToken {
     return keyIdName != null ? keyIdName.getAsString() : null;
   }
 
+  /**
+   * @throws IllegalStateException when header doesn't exist
+   */
   public SignatureAlgorithm getSignatureAlgorithm() {
     if (header == null) {
       throw new IllegalStateException("JWT has no algorithm or header");
@@ -262,6 +259,9 @@ public class JsonToken {
     return tokenString;
   }
 
+  /**
+   * @throws IllegalStateException when header doesn't exist
+   */
   public JsonObject getHeader() {
     if (header == null) {
       throw new IllegalStateException("JWT has no header");
@@ -285,7 +285,10 @@ public class JsonToken {
     }
     return null;
   }
-  
+
+  /**
+   * @throws IllegalStateException when header doesn't exist
+   */
   protected String computeSignatureBaseString() {
     if (baseString != null && !baseString.isEmpty()) {
       return baseString;
@@ -297,11 +300,25 @@ public class JsonToken {
     return baseString;
   }
 
+  private JsonObject createHeader(Signer signer) {
+    JsonObject newHeader = new JsonObject();
+    SignatureAlgorithm sigAlg = signer.getSignatureAlgorithm();
+
+    if (sigAlg != null) {
+      newHeader.addProperty(ALGORITHM_HEADER, signer.getSignatureAlgorithm().getNameForJson());
+    }
+    String keyId = signer.getKeyId();
+    if (keyId != null) {
+      newHeader.addProperty(KEY_ID_HEADER, keyId);
+    }
+    return newHeader;
+  }
+
   private String getSignature() throws SignatureException {
     if (signature != null && !signature.isEmpty()) {
       return signature;
     }
-    
+
     if (signer == null) {
       throw new SignatureException("can't sign JsonToken with signer.");
     }
