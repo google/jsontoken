@@ -303,7 +303,6 @@ public class JsonToken {
   private JsonObject createHeader(Signer signer) {
     JsonObject newHeader = new JsonObject();
     SignatureAlgorithm sigAlg = signer.getSignatureAlgorithm();
-
     if (sigAlg != null) {
       newHeader.addProperty(ALGORITHM_HEADER, signer.getSignatureAlgorithm().getNameForJson());
     }
