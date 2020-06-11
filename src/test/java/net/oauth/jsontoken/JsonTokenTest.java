@@ -26,7 +26,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertEquals(TOKEN_STRING, token.serializeAndSign());
   }
 
-  public void testSignAndSerializeNullFields() throws Exception {
+  public void testSignAndSerialize_nullFields() throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer(null, (String) null, "secret".getBytes());
 
     JsonToken token = new JsonToken(signer, clock);
@@ -35,10 +35,57 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertEquals(TOKEN_STRING_NULL_FIELDS, token.serializeAndSign());
   }
 
-  public void testSignAndSerializeEmptyPayload() throws Exception {
+  public void testSignAndSerialize_emptyPayload() throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer(null, (String) null, "secret".getBytes());
     JsonToken token = new JsonToken(signer, clock);
     assertEquals(TOKEN_STRING_EMPTY_PAYLOAD, token.serializeAndSign());
+  }
+
+  public void testSignAndSerialize_tokenFromJson() throws Exception {
+    JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
+    try {
+      token.serializeAndSign();
+      fail("Expected SignatureException");
+    } catch (SignatureException e) {
+      // expected
+    }
+  }
+
+  public void testConstructFromJson() throws Exception {
+    JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
+    assertEquals(TOKEN_STRING, token.getTokenString());
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertEquals("key2", token.getKeyId());
+    assertPayload(token);
+  }
+
+  public void testConstructFromJson_onlyPayload() throws Exception {
+    JsonToken token = new JsonToken(getFullPayload(), clock);
+    assertPayload(token);
+  }
+
+  public void testConstructFromJson_nullFields() throws Exception {
+    JsonObject header = new JsonObject();
+    header.addProperty(JsonToken.ALGORITHM_HEADER, "HS256");
+
+    JsonObject payload = new JsonObject();
+    payload.addProperty("hello", "world");
+
+    JsonToken token = new JsonToken(header, payload, clock, TOKEN_STRING_NULL_FIELDS);
+    assertEquals(TOKEN_STRING_NULL_FIELDS, token.getTokenString());
+    assertEquals("world", token.getParamAsPrimitive("hello").getAsString());
+    assertNullPayload(token);
+  }
+
+  public void testConstructFromJson_emptyPayload() throws Exception {
+    JsonObject header = new JsonObject();
+    header.addProperty(JsonToken.ALGORITHM_HEADER, "HS256");
+
+    JsonObject payload = new JsonObject();
+
+    JsonToken token = new JsonToken(header, payload, clock, TOKEN_STRING_EMPTY_PAYLOAD);
+    assertEquals(TOKEN_STRING_EMPTY_PAYLOAD, token.getTokenString());
+    assertNullPayload(token);
   }
 
   private JsonObject getFullHeader() {
@@ -59,7 +106,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     return payload;
   }
 
-  private void fullPayloadAssertions(JsonToken token) {
+  private void assertPayload(JsonToken token) {
     assertEquals("google.com", token.getIssuer());
     assertEquals("http://www.google.com", token.getAudience());
     assertEquals(new Instant(1276669722000L), token.getIssuedAt());
@@ -68,20 +115,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 
-  public void testParse() throws Exception {
-    JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
-    assertEquals(TOKEN_STRING, token.getTokenString());
-    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
-    assertEquals("key2", token.getKeyId());
-    fullPayloadAssertions(token);
-  }
-
-  public void testParseOnlyPayload() throws Exception {
-    JsonToken token = new JsonToken(getFullPayload(), clock);
-    fullPayloadAssertions(token);
-  }
-
-  private void nullPayloadAssertions(JsonToken token) throws Exception {
+  private void assertNullPayload(JsonToken token) throws Exception {
     assertNull(token.getIssuer());
     assertNull(token.getAudience());
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
@@ -90,37 +124,4 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertNull(token.getExpiration());
   }
 
-  public void testParseNullFields() throws Exception {
-    JsonObject header = new JsonObject();
-    header.addProperty(JsonToken.ALGORITHM_HEADER, "HS256");
-
-    JsonObject payload = new JsonObject();
-    payload.addProperty("hello", "world");
-
-    JsonToken token = new JsonToken(header, payload, clock, TOKEN_STRING_NULL_FIELDS);
-    assertEquals(TOKEN_STRING_NULL_FIELDS, token.getTokenString());
-    assertEquals("world", token.getParamAsPrimitive("hello").getAsString());
-    nullPayloadAssertions(token);
-  }
-
-  public void testParseEmptyPayload() throws Exception {
-    JsonObject header = new JsonObject();
-    header.addProperty(JsonToken.ALGORITHM_HEADER, "HS256");
-
-    JsonObject payload = new JsonObject();
-
-    JsonToken token = new JsonToken(header, payload, clock, TOKEN_STRING_EMPTY_PAYLOAD);
-    assertEquals(TOKEN_STRING_EMPTY_PAYLOAD, token.getTokenString());
-    nullPayloadAssertions(token);
-  }
-
-  public void testSignParsedToken() throws Exception {
-    JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
-    try {
-      token.serializeAndSign();
-      fail("Expected SignatureException");
-    } catch (SignatureException e) {
-      // no-op
-    }
-  }
 }
