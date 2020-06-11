@@ -16,20 +16,16 @@
  */
 package net.oauth.jsontoken;
 
-import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
-import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
 
-import javax.annotation.Nullable;
 import java.security.SignatureException;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -60,13 +56,12 @@ abstract class AbstractJsonTokenParser {
    *
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
-   * @throws IllegalStateException when tokenString isn't in three parts
+   * @throws IllegalStateException when tokenString is not a properly formatted JWT
    */
   public JsonToken deserialize(String tokenString) {
     String[] pieces = splitTokenString(tokenString);
     String jwtHeaderSegment = pieces[0];
     String jwtPayloadSegment = pieces[1];
-    byte[] signature = Base64.decodeBase64(pieces[2]);
     JsonParser parser = new JsonParser();
     JsonObject header = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment))
         .getAsJsonObject();
@@ -124,7 +119,7 @@ abstract class AbstractJsonTokenParser {
    * @param tokenString the encoded and signed JSON Web Token to verify.
    * @param verifiers used to verify the signature. These usually encapsulate
    *        secret keys.
-   * @throws IllegalStateException when tokenString isn't in three parts
+   * @throws IllegalStateException when tokenString is not a properly formatted JWT
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
     String[] pieces = splitTokenString(tokenString);
@@ -172,7 +167,7 @@ abstract class AbstractJsonTokenParser {
   /**
    * @param tokenString The original encoded representation of a JWT
    * @return Three components of the JWT as an array of strings
-   * @throws IllegalStateException when tokenString isn't in three parts
+   * @throws IllegalStateException when tokenString is not a properly formatted JWT
    */
   private String[] splitTokenString(String tokenString) {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
@@ -181,38 +176,6 @@ abstract class AbstractJsonTokenParser {
           JsonTokenUtil.DELIMITER + "', but it has " + pieces.length + " segments");
     }
     return pieces;
-  }
-
-  /**
-   * Extracts the necessary information to look up verifiers.
-   *
-   * @param jsonToken the token to verify
-   * @return Signature algorithm, issuer, and keyId in an object
-   */
-  VerifierLookupData getVerifierLookupData(JsonToken jsonToken) {
-    JsonObject header = jsonToken.getHeader();
-    JsonElement keyIdJson = header.get(JsonToken.KEY_ID_HEADER);
-    String keyId = (keyIdJson == null) ? null : keyIdJson.getAsString();
-    SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
-
-    return VerifierLookupData.create(signatureAlgorithm, jsonToken.getIssuer(), keyId);
-  }
-
-  /**
-   * Class that bundles up the necessary data to look up verifiers.
-   */
-  @AutoValue
-  abstract static class VerifierLookupData {
-    static VerifierLookupData create(
-        @Nullable SignatureAlgorithm signatureAlgorithm,
-        @Nullable String issuer,
-        @Nullable String keyId) {
-      return new AutoValue_AbstractJsonTokenParser_VerifierLookupData(signatureAlgorithm, issuer, keyId);
-    }
-
-    @Nullable abstract SignatureAlgorithm getSignatureAlgorithm();
-    @Nullable abstract String getIssuer();
-    @Nullable abstract String getKeyId();
   }
 
 }

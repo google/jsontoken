@@ -78,7 +78,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
    *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
    * @throws SignatureException when the signature is invalid
-   * @throws IllegalStateException when tokenString doesn't have three parts
+   * @throws IllegalStateException when tokenString is not a properly formatted JWT
    */
   public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
     JsonToken jsonToken = deserialize(tokenString);
@@ -95,7 +95,6 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
-    VerifierLookupData lookup = getVerifierLookupData(jsonToken);
     List<Verifier> verifiers = verifierProviders
         .getVerifierProvider(jsonToken.getSignatureAlgorithm())
         .findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
