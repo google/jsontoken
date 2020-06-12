@@ -223,7 +223,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     try {
       parser.deserialize(tokenString);
-      fail("Expected IllegalArgumentException");
+      fail("Expected IllegalStateException");
     } catch (IllegalStateException e) {
       // expected
     }
