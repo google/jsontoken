@@ -125,11 +125,11 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_noSignature() throws Exception {
-    deserializeExpectIllegalArgumentException(TOKEN_STRING_2PARTS);
+    deserializeExpectIllegalStateException(TOKEN_STRING_2PARTS);
   }
 
   public void testDeserialize_emptySignature() throws Exception {
-    deserializeExpectIllegalArgumentException(TOKEN_STRING_EMPTY_SIG);
+    deserializeExpectIllegalStateException(TOKEN_STRING_EMPTY_SIG);
   }
 
   public void testDeserialize_corruptHeader() throws Exception {
@@ -219,7 +219,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     }
   }
 
-  private void deserializeExpectIllegalArgumentException(String tokenString) throws Exception {
+  private void deserializeExpectIllegalStateException(String tokenString) throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     try {
       parser.deserialize(tokenString);
