@@ -75,6 +75,7 @@ public class JsonTokenParser {
    * 
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public JsonToken deserialize(String tokenString) {
     String[] pieces = splitTokenString(tokenString);
@@ -96,7 +97,12 @@ public class JsonTokenParser {
    * (iat, exp). Uses VerifierProviders to obtain the secret key.
    * 
    * @param jsonToken
-   * @throws SignatureException
+   * @throws SignatureException when the signature is invalid
+   *   or if any of the checkers fail
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
+   *   or if there is no valid verifier for the issuer
+   *   or if the header does not exist
    */
   public void verify(JsonToken jsonToken) throws SignatureException {
     List<Verifier> verifiers = provideVerifiers(jsonToken);
@@ -109,7 +115,11 @@ public class JsonTokenParser {
    * @param tokenString the serialized token that is to parsed and verified.
    * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
    *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
-   * @throws SignatureException 
+   * @throws SignatureException when the signature is invalid
+   *   or if any of the checkers fail
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
+   *   or if there is no valid verifier for the issuer
    */
   public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
     JsonToken jsonToken = deserialize(tokenString);
@@ -124,7 +134,9 @@ public class JsonTokenParser {
    * 
    * @param jsonToken the token to verify
    * @throws SignatureException when the signature is invalid
-   * @throws IllegalStateException when exp or iat are invalid 
+   *   or if any of the checkers fail
+   * @throws IllegalStateException when exp or iat are invalid
+   *   or if tokenString is not a properly formatted JWT
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
     if (! signatureIsValid(jsonToken.getTokenString(), verifiers)) {
@@ -163,7 +175,8 @@ public class JsonTokenParser {
    * 
    * @param tokenString the encoded and signed JSON Web Token to verify.
    * @param verifiers used to verify the signature. These usually encapsulate
-   *        secret keys.
+   *   secret keys.
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
     String[] pieces = splitTokenString(tokenString);
@@ -219,9 +232,11 @@ public class JsonTokenParser {
    * 
    * @param jsonToken
    * @return list of verifiers
-   * @throws SignatureException
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if there is no valid verifier for the issuer
+   *   or if the header does not exist
    */
-  private List<Verifier> provideVerifiers(JsonToken jsonToken) throws SignatureException {
+  private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
     String keyId = jsonToken.getKeyId();
     SignatureAlgorithm sigAlg = jsonToken.getSignatureAlgorithm();
@@ -236,6 +251,7 @@ public class JsonTokenParser {
   /**
    * @param tokenString The original encoded representation of a JWT
    * @return Three components of the JWT as an array of strings
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   private String[] splitTokenString(String tokenString) {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
