@@ -17,7 +17,6 @@
 package net.oauth.jsontoken;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
