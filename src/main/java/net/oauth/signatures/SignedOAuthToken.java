@@ -66,6 +66,10 @@ public class SignedOAuthToken extends JsonToken {
     return getParamAsPrimitive(BODY_HASH).getAsString();
   }
 
+  /**
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if the header does not exist
+   */
   public void setRequestBody(byte[] body) {
     setParam(BODY_HASH, getBodyHash(body));
   }
@@ -99,6 +103,10 @@ public class SignedOAuthToken extends JsonToken {
     return super.serializeAndSign();
   }
 
+  /**
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if the header does not exist
+   */
   private String getBodyHash(byte[] requestBody) {
     Preconditions.checkNotNull(requestBody);
     String hashAlg = getSignatureAlgorithm().getHashAlgorithm();
@@ -112,3 +120,4 @@ public class SignedOAuthToken extends JsonToken {
     return Base64.encodeBase64URLSafeString(hash);
   }
 }
+
