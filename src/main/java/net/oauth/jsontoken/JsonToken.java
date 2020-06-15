@@ -248,7 +248,8 @@ public class JsonToken {
   }
 
   /**
-   * @throws IllegalStateException when header doesn't exist
+   * @throws IllegalStateException if the header does not exist
+   * @throws IllegalArgumentException if the signature algorithm is not supported
    */
   public SignatureAlgorithm getSignatureAlgorithm() {
     if (header == null) {
@@ -268,7 +269,7 @@ public class JsonToken {
   }
 
   /**
-   * @throws IllegalStateException when header doesn't exist
+   * @throws IllegalStateException if the header does not exist
    */
   public JsonObject getHeader() {
     if (header == null) {
@@ -297,7 +298,7 @@ public class JsonToken {
   }
 
   /**
-   * @throws IllegalStateException when header doesn't exist
+   * @throws IllegalStateException if the header does not exist
    */
   protected String computeSignatureBaseString() {
     if (baseString != null && !baseString.isEmpty()) {
@@ -323,6 +324,9 @@ public class JsonToken {
     return newHeader;
   }
 
+  /**
+   * @throws SignatureException if the signer does not exist
+   */
   private String getSignature() throws SignatureException {
     if (signature != null && !signature.isEmpty()) {
       return signature;
