@@ -19,6 +19,7 @@ package net.oauth.jsontoken;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
@@ -75,6 +76,7 @@ public class JsonTokenParser {
    * 
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
+   * @throws JsonParseException if the header or payload of tokenString is corrupted
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public JsonToken deserialize(String tokenString) {
@@ -117,6 +119,7 @@ public class JsonTokenParser {
    *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
    * @throws SignatureException when the signature is invalid
    *   or if any of the checkers fail
+   * @throws JsonParseException if the header or payload portion of tokenString is corrupted
    * @throws IllegalArgumentException if the signature algorithm is not supported
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    *   or if there is no valid verifier for the issuer

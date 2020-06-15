@@ -22,6 +22,7 @@ import java.util.Enumeration;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.gson.JsonParseException;
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.SystemClock;
@@ -75,6 +76,7 @@ public class SignedOAuthTokenParser {
    * @return the signed OAuth token.
    * @throws SignatureException if the signature doesn't check out, or if authentication fails
    *   for other reason (missing Authorization header, etc.).
+   * @throws JsonParseException if the header or payload of tokenString is corrupted
    * @throws IllegalArgumentException if the signature algorithm is not supported
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    *   or if there is no valid verifier for the issuer
@@ -123,6 +125,7 @@ public class SignedOAuthTokenParser {
    * @param uri the URI against which the token was exercised.
    * @return the signed OAuth token (deserialized)
    * @throws SignatureException if the signature (or anything else) doesn't check out.
+   * @throws JsonParseException if the header or payload of tokenString is corrupted
    * @throws IllegalArgumentException if the signature algorithm is not supported
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    *   or if there is no valid verifier for the issuer
