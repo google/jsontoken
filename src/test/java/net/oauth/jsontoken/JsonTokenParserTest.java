@@ -84,7 +84,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerify_issuedAtNullExpirationNull() throws Exception {
-    assertTrue((verifyTimeFrame(null, null)));
+    assertTrue(verifyTimeFrame(null, null));
   }
 
   public void testVerify_futureToken() throws Exception {
