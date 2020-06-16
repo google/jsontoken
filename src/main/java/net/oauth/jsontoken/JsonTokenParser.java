@@ -17,6 +17,7 @@
 package net.oauth.jsontoken;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
@@ -137,7 +138,6 @@ public class JsonTokenParser {
    * @param jsonToken the token to verify
    * @throws SignatureException when the signature is invalid
    *   or if any of the checkers fail
-   *   or if the signature algorithm is not supported
    * @throws IllegalStateException when exp or iat are invalid
    *   or if tokenString is not a properly formatted JWT
    */

@@ -151,7 +151,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerify_failChecker() throws Exception {
-    JsonTokenParser parser = getJsonTokenParserAlwaysFailChecker();
+    JsonTokenParser parser = getJsonTokenParser(locators, new IgnoreAudience(), new AlwaysFailAudience());
     JsonToken checkToken = getJsonTokenToVerify(TOKEN_STRING);
     assertThrows(
         SignatureException.class,
@@ -161,11 +161,10 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_noVerifiers() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    List<Verifier> noVerifiers = new ArrayList<>();
     JsonToken checkToken = getJsonTokenToVerify(TOKEN_STRING);
     assertThrows(
         SignatureException.class,
-        () -> parser.verify(checkToken, noVerifiers)
+        () -> parser.verify(checkToken, new ArrayList<>())
     );
   }
 
@@ -185,7 +184,11 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerifyWithJsonTokenOnly_noVerifiers() throws Exception {
-    JsonTokenParser parser = getJsonTokenParserNoVerifiers();
+    VerifierProvider noLocator = (signerId, keyId) -> null;
+    VerifierProviders noLocators = new VerifierProviders();
+    noLocators.setVerifierProvider(SignatureAlgorithm.HS256, noLocator);
+
+    JsonTokenParser parser = getJsonTokenParser(noLocators, new IgnoreAudience());
     JsonToken checkToken = getJsonTokenToVerify(TOKEN_STRING);
     assertThrows(
         IllegalStateException.class,
@@ -202,7 +205,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_nullIssuer() throws Exception {
-    JsonTokenParser parser = getJsonTokenParserNull();
+    JsonTokenParser parser = getJsonTokenParser(null);
     JsonToken token = parser.deserialize(TOKEN_STRING_ISSUER_NULL);
     assertNull(token.getIssuer());
   }
@@ -281,7 +284,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerifyAndDeserialize_tokenFromRuby() throws Exception {
-    JsonTokenParser parser = getJsonTokenParserLocatorsFromRuby();
+    JsonTokenParser parser = getJsonTokenParser(locatorsFromRuby, new IgnoreAudience());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_FROM_RUBY);
 
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
@@ -457,22 +460,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     return new JsonTokenParser(clock, locators, new IgnoreAudience());
   }
 
-  private JsonTokenParser getJsonTokenParserAlwaysFailChecker() {
-    return new JsonTokenParser(clock, locators, new IgnoreAudience(), new AlwaysFailAudience());
-  }
-
-  private JsonTokenParser getJsonTokenParserNoVerifiers() {
-    VerifierProvider noLocator = (signerId, keyId) -> null;
-    VerifierProviders noLocators = new VerifierProviders();
-    noLocators.setVerifierProvider(SignatureAlgorithm.HS256, noLocator);
-    return new JsonTokenParser(clock, noLocators, new IgnoreAudience());
-  }
-
-  private JsonTokenParser getJsonTokenParserNull() {
-    return new JsonTokenParser(null, null);
-  }
-
-  private JsonTokenParser getJsonTokenParserLocatorsFromRuby() {
-    return new JsonTokenParser(clock, locatorsFromRuby, new IgnoreAudience());
+  private JsonTokenParser getJsonTokenParser(VerifierProviders providers, Checker...checkers) {
+    return new JsonTokenParser(clock, providers, checkers);
   }
 }
