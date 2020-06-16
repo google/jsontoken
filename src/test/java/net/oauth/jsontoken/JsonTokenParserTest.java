@@ -475,5 +475,4 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   private JsonTokenParser getJsonTokenParserLocatorsFromRuby() {
     return new JsonTokenParser(clock, locatorsFromRuby, new IgnoreAudience());
   }
-
 }
