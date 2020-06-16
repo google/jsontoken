@@ -1,5 +1,7 @@
 package net.oauth.jsontoken;
 
+import static org.junit.Assert.assertThrows;
+
 import com.google.gson.JsonObject;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -43,12 +45,10 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
   public void testSignAndSerialize_tokenFromJson() throws Exception {
     JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
-    try {
-      token.serializeAndSign();
-      fail("Expected SignatureException");
-    } catch (SignatureException e) {
-      // expected
-    }
+    assertThrows(
+        SignatureException.class,
+        () -> token.serializeAndSign()
+    );
   }
 
   public void testConstructFromJson() throws Exception {
