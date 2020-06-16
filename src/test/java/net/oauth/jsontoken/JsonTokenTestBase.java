@@ -162,4 +162,18 @@ public abstract class JsonTokenTestBase extends TestCase {
     payload.addProperty(JsonToken.EXPIRATION, 1276669723);
     return payload;
   }
+
+  protected void assertHeader(JsonToken token) {
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertEquals("key2", token.getKeyId());
+  }
+
+  protected void assertPayload(JsonToken token) {
+    assertEquals("google.com", token.getIssuer());
+    assertEquals("http://www.google.com", token.getAudience());
+    assertEquals(new Instant(1276669722000L), token.getIssuedAt());
+    assertEquals(new Instant(1276669723000L), token.getExpiration());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+  }
 }

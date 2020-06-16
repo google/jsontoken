@@ -137,6 +137,7 @@ public class JsonTokenParser {
    * @param jsonToken the token to verify
    * @throws SignatureException when the signature is invalid
    *   or if any of the checkers fail
+   *   or if the signature algorithm is not supported
    * @throws IllegalStateException when exp or iat are invalid
    *   or if tokenString is not a properly formatted JWT
    */
