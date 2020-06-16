@@ -90,7 +90,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerify_issuedAtNullExpirationNull() throws Exception {
-    assertTrue((verifyTimeFrame(null, null)));
+    assertTrue(verifyTimeFrame(null, null));
   }
 
   public void testVerify_futureToken() throws Exception {
@@ -164,7 +164,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_valid() throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience(), new AlwaysFailAudience());
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     JsonToken token = parser.deserialize(TOKEN_STRING);
 
     assertEquals("google.com", token.getIssuer());
@@ -178,14 +178,22 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_nullIssuer() throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(null, null, new IgnoreAudience(), new AlwaysFailAudience());
+    JsonTokenParser parser = new JsonTokenParser(null, null);
     JsonToken token = parser.deserialize(TOKEN_STRING_ISSUER_NULL);
     assertNull(token.getIssuer());
   }
 
   public void testDeserialize_badSignature() throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience(), new AlwaysFailAudience());
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
     parser.deserialize(TOKEN_STRING_BAD_SIG);
+  }
+
+  public void testDeserialize_nullSignature() throws Exception {
+    deserializeExpectIllegalStateException(TOKEN_STRING_2PARTS);
+  }
+
+  public void testDeserialize_headerOnly() throws Exception {
+    deserializeExpectIllegalStateException(TOKEN_STRING_1PART);
   }
 
   public void testDeserialize_unsupportedSignatureAlgorithm() throws Exception {
@@ -193,16 +201,12 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     parser.deserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
   }
 
-  public void testDeserialize_nullSignature() throws Exception {
+  public void testDeserialize_noSignature() throws Exception {
     deserializeExpectIllegalStateException(TOKEN_STRING_2PARTS);
   }
 
   public void testDeserialize_emptySignature() throws Exception {
     deserializeExpectIllegalStateException(TOKEN_STRING_EMPTY_SIG);
-  }
-
-  public void testDeserialize_headerOnly() throws Exception {
-    deserializeExpectIllegalStateException(TOKEN_STRING_1PART);
   }
 
   public void testDeserialize_corruptHeader() throws Exception {
