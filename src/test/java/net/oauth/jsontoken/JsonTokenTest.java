@@ -27,7 +27,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
   }
 
   public void testSignAndSerialize_nullFields() throws Exception {
-    HmacSHA256Signer signer = new HmacSHA256Signer(null, (String) null, "secret".getBytes());
+    HmacSHA256Signer signer = new HmacSHA256Signer(null, null, "secret".getBytes());
 
     JsonToken token = new JsonToken(signer, clock);
     token.setParam("hello", "world");
