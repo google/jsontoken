@@ -20,6 +20,8 @@ import junit.framework.TestCase;
 
 import java.security.SignatureException;
 
+import static org.junit.Assert.assertThrows;
+
 /**
  * Basic unit tests for the {@link HmacSHA256Verifier} class.
  */
@@ -43,9 +45,9 @@ public class HmacSHA256VerifierTest extends TestCase {
     byte[] signature = signer.sign(SOURCE);
     signature[0] ^= 1;
 
-    try {
-      verifier.verifySignature(SOURCE, signature);
-      fail("Expected bad signature");
-    } catch (SignatureException expected) { }
+    assertThrows(
+        SignatureException.class,
+        () -> verifier.verifySignature(SOURCE, signature)
+    );
   }
 }

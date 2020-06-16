@@ -8,6 +8,8 @@ import org.joda.time.Instant;
 
 import java.security.SignatureException;
 
+import static org.junit.Assert.assertThrows;
+
 public class JsonTokenTest extends JsonTokenTestBase {
 
   private static final String TOKEN_STRING_NULL_FIELDS = "eyJhbGciOiJIUzI1NiJ9.eyJoZWxsbyI6IndvcmxkIn0.URnYdSXdAAEukebqZgMq6oFjK4E9cEZlfvO8tBe_WeA";
@@ -43,12 +45,10 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
   public void testSignAndSerialize_tokenFromJson() throws Exception {
     JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
-    try {
-      token.serializeAndSign();
-      fail("Expected SignatureException");
-    } catch (SignatureException e) {
-      // expected
-    }
+    assertThrows(
+        SignatureException.class,
+        () -> token.serializeAndSign()
+    );
   }
 
   public void testConstructFromJson() throws Exception {

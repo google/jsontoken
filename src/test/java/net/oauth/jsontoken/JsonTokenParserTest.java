@@ -33,6 +33,8 @@ import org.joda.time.Instant;
 import java.security.SignatureException;
 import java.util.regex.Pattern;
 
+import static org.junit.Assert.assertThrows;
+
 public class JsonTokenParserTest extends JsonTokenTestBase {
 
   private static final String TOKEN_STRING_ISSUER_NULL = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOm51bGwsImJhciI6MTUsImZvbyI6InNvbWUgdmFsdWUiLCJhdWQiOiJodHRwOi8vd3d3Lmdvb2dsZS5jb20iLCJpYXQiOjEyNzY2Njk3MjIsImV4cCI6MTI3NjY2OTcyMn0.jKcuP6BR_-cKpQv2XdFLguYgOxw4ahkZiqjcgrQcm70";
@@ -190,12 +192,10 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     String tamperedToken = parts[0] + "." + parts[1] + "." + parts[2];
 
-    try {
-      token = parser.verifyAndDeserialize(tamperedToken);
-      fail("verification should have failed");
-    } catch (SignatureException e) {
-      // expected
-    }
+    assertThrows(
+        SignatureException.class,
+        () -> parser.verifyAndDeserialize(tamperedToken)
+    );
   }
 
   private boolean verifyTimeFrame(Instant issuedAt, Instant expiration) throws Exception {
@@ -221,21 +221,17 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   private void deserializeExpectIllegalStateException(String tokenString) throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    try {
-      parser.deserialize(tokenString);
-      fail("Expected IllegalStateException");
-    } catch (IllegalStateException e) {
-      // expected
-    }
+    assertThrows(
+        IllegalStateException.class,
+        () -> parser.deserialize(tokenString)
+    );
   }
 
   private void deserializeExpectJsonParseException(String tokenString) throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    try {
-      parser.deserialize(tokenString);
-      fail("Expected JsonParseException");
-    } catch (JsonParseException e) {
-      // expected
-    }
+    assertThrows(
+        JsonParseException.class,
+        () -> parser.deserialize(tokenString)
+    );
   }
 }
