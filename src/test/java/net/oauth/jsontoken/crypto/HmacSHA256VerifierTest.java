@@ -16,8 +16,9 @@
  */
 package net.oauth.jsontoken.crypto;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertThrows;
 
+import junit.framework.TestCase;
 import java.security.SignatureException;
 
 /**
@@ -43,9 +44,9 @@ public class HmacSHA256VerifierTest extends TestCase {
     byte[] signature = signer.sign(SOURCE);
     signature[0] ^= 1;
 
-    try {
-      verifier.verifySignature(SOURCE, signature);
-      fail("Expected bad signature");
-    } catch (SignatureException expected) { }
+    assertThrows(
+        SignatureException.class,
+        () -> verifier.verifySignature(SOURCE, signature)
+    );
   }
 }
