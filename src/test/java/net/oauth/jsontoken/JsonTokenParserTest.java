@@ -16,6 +16,8 @@
  */
 package net.oauth.jsontoken;
 
+import static org.junit.Assert.assertThrows;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -32,8 +34,6 @@ import org.joda.time.Instant;
 
 import java.security.SignatureException;
 import java.util.regex.Pattern;
-
-import static org.junit.Assert.assertThrows;
 
 public class JsonTokenParserTest extends JsonTokenTestBase {
 
@@ -127,19 +127,35 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_noSignature() throws Exception {
-    deserializeExpectIllegalStateException(TOKEN_STRING_2PARTS);
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    assertThrows(
+        IllegalStateException.class,
+        () -> parser.deserialize(TOKEN_STRING_2PARTS)
+    );
   }
 
   public void testDeserialize_emptySignature() throws Exception {
-    deserializeExpectIllegalStateException(TOKEN_STRING_EMPTY_SIG);
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    assertThrows(
+        IllegalStateException.class,
+        () -> parser.deserialize(TOKEN_STRING_EMPTY_SIG)
+    );
   }
 
   public void testDeserialize_corruptHeader() throws Exception {
-    deserializeExpectJsonParseException(TOKEN_STRING_CORRUPT_HEADER);
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    assertThrows(
+        JsonParseException.class,
+        () -> parser.deserialize(TOKEN_STRING_CORRUPT_HEADER)
+    );
   }
 
   public void testDeserialize_corruptPayload() throws Exception {
-    deserializeExpectJsonParseException(TOKEN_STRING_CORRUPT_PAYLOAD);
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    assertThrows(
+        JsonParseException.class,
+        () -> parser.deserialize(TOKEN_STRING_CORRUPT_PAYLOAD)
+    );
   }
 
   public void testVerifyAndDeserialize_valid() throws Exception {
@@ -219,19 +235,4 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     }
   }
 
-  private void deserializeExpectIllegalStateException(String tokenString) throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    assertThrows(
-        IllegalStateException.class,
-        () -> parser.deserialize(tokenString)
-    );
-  }
-
-  private void deserializeExpectJsonParseException(String tokenString) throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    assertThrows(
-        JsonParseException.class,
-        () -> parser.deserialize(tokenString)
-    );
-  }
 }

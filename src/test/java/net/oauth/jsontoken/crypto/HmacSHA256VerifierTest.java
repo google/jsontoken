@@ -16,11 +16,10 @@
  */
 package net.oauth.jsontoken.crypto;
 
-import junit.framework.TestCase;
-
-import java.security.SignatureException;
-
 import static org.junit.Assert.assertThrows;
+
+import junit.framework.TestCase;
+import java.security.SignatureException;
 
 /**
  * Basic unit tests for the {@link HmacSHA256Verifier} class.

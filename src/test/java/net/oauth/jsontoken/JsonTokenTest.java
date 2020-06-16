@@ -1,5 +1,7 @@
 package net.oauth.jsontoken;
 
+import static org.junit.Assert.assertThrows;
+
 import com.google.gson.JsonObject;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -7,8 +9,6 @@ import org.joda.time.Duration;
 import org.joda.time.Instant;
 
 import java.security.SignatureException;
-
-import static org.junit.Assert.assertThrows;
 
 public class JsonTokenTest extends JsonTokenTestBase {
 
