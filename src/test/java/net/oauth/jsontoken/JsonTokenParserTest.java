@@ -425,33 +425,20 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
       token.setExpiration(expiration);
     }
 
-    JsonToken checkToken = new JsonToken(
-        token.getHeader(),
-        token.getPayloadAsJsonObject(),
-        clock,
-        token.serializeAndSign()
-    );
-
-    return checkToken;
+    return new JsonToken(
+        token.getHeader(), token.getPayloadAsJsonObject(), clock, token.serializeAndSign());
   }
 
-  // deserializes the token string such that tokenStrings without signatures are allowed
+  /**
+   * Deserializes the token string such that tokenStrings without signatures are allowed.
+   * Only supports token strings with at least two parts.
+   */
   private JsonToken naiveDeserialize(String tokenString) {
     List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
-    if (pieces.size() < 2) {
-      fail("naiveDeserialize does not support deserializing the token string: " + tokenString);
-    }
     JsonParser jsonParser = new JsonParser();
     JsonObject header = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0))).getAsJsonObject();
     JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1))).getAsJsonObject();
-    JsonToken checkToken = new JsonToken(
-        header,
-        payload,
-        clock,
-        tokenString
-    );
-
-    return checkToken;
+    return new JsonToken(header, payload, clock, tokenString);
   }
 
   private List<Verifier> getVerifiers() {
