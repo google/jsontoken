@@ -76,10 +76,9 @@ public class JsonTokenParser {
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public JsonToken deserialize(String tokenString) {
-    String[] pieces = splitTokenString(tokenString);
-    String jwtHeaderSegment = pieces[0];
-    String jwtPayloadSegment = pieces[1];
-    byte[] signature = Base64.decodeBase64(pieces[2]);
+    List<String> pieces = splitTokenString(tokenString);
+    String jwtHeaderSegment = pieces.get(0);
+    String jwtPayloadSegment = pieces.get(1);
     JsonParser parser = new JsonParser();
     JsonObject header = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment))
         .getAsJsonObject();
@@ -178,9 +177,9 @@ public class JsonTokenParser {
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
-    String[] pieces = splitTokenString(tokenString);
-    byte[] signature = Base64.decodeBase64(pieces[2]);
-    String baseString = JsonTokenUtil.toDotFormat(pieces[0], pieces[1]);
+    List<String> pieces = splitTokenString(tokenString);
+    byte[] signature = Base64.decodeBase64(pieces.get(2));
+    String baseString = JsonTokenUtil.toDotFormat(pieces.get(0), pieces.get(1));
 
     boolean sigVerified = false;
     for (Verifier verifier : verifiers) {
@@ -252,12 +251,12 @@ public class JsonTokenParser {
    * @return Three components of the JWT as an array of strings
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
-  private String[] splitTokenString(String tokenString) {
-    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).limit(4).splitToList(tokenString);
+  private List<String> splitTokenString(String tokenString) {
+    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
     if (pieces.size() != 3) {
       throw new IllegalStateException("Expected JWT to have 3 segments separated by '" + 
           JsonTokenUtil.DELIMITER + "', but it has " + pieces.size() + " segments");
     }
-    return pieces.toArray(new String[0]);
+    return pieces;
   }
 }
