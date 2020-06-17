@@ -18,6 +18,7 @@ package net.oauth.jsontoken;
 
 import com.google.common.collect.Lists;
 
+import com.google.gson.JsonObject;
 import junit.framework.TestCase;
 
 import net.oauth.jsontoken.crypto.HmacSHA256Verifier;
@@ -142,5 +143,19 @@ public abstract class JsonTokenTestBase extends TestCase {
     locatorsFromRuby.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocatorFromRuby);
 
     clock.setNow(new Instant(1276669722000L));
+  }
+
+  protected void assertHeader(JsonToken token) {
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertEquals("key2", token.getKeyId());
+  }
+
+  protected void assertPayload(JsonToken token) {
+    assertEquals("google.com", token.getIssuer());
+    assertEquals("http://www.google.com", token.getAudience());
+    assertEquals(new Instant(1276669722000L), token.getIssuedAt());
+    assertEquals(new Instant(1276669723000L), token.getExpiration());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 }
