@@ -145,24 +145,6 @@ public abstract class JsonTokenTestBase extends TestCase {
     clock.setNow(new Instant(1276669722000L));
   }
 
-  protected JsonObject getFullHeader() {
-    JsonObject header = new JsonObject();
-    header.addProperty(JsonToken.ALGORITHM_HEADER, "HS256");
-    header.addProperty(JsonToken.KEY_ID_HEADER, "key2");
-    return header;
-  }
-
-  protected JsonObject getFullPayload() {
-    JsonObject payload = new JsonObject();
-    payload.addProperty(JsonToken.ISSUER, "google.com");
-    payload.addProperty("bar", 15);
-    payload.addProperty("foo", "some value");
-    payload.addProperty(JsonToken.AUDIENCE, "http://www.google.com");
-    payload.addProperty(JsonToken.ISSUED_AT, 1276669722);
-    payload.addProperty(JsonToken.EXPIRATION, 1276669723);
-    return payload;
-  }
-
   protected void assertHeader(JsonToken token) {
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
     assertEquals("key2", token.getKeyId());
