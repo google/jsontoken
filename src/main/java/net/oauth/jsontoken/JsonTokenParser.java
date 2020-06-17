@@ -18,6 +18,7 @@ package net.oauth.jsontoken;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
@@ -63,8 +64,11 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * 
    * @param jsonToken
    * @throws SignatureException when the signature is invalid
-   * @throws IllegalStateException when exp or iat are invalid or
-   *   when there are no valid verifiers for the issuer
+   *   or if any of the checkers fail
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
+   *   or if there is no valid verifier for the issuer
+   *   or if the header does not exist
    */
   public void verify(JsonToken jsonToken) throws SignatureException {
     List<Verifier> verifiers = provideVerifiers(jsonToken);
@@ -78,7 +82,11 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * @return the deserialized {@link JsonObject}, suitable for passing to the constructor
    *   of {@link JsonToken} or equivalent constructor of {@link JsonToken} subclasses.
    * @throws SignatureException when the signature is invalid
-   * @throws IllegalStateException when tokenString is not a properly formatted JWT
+   *   or if any of the checkers fail
+   * @throws JsonParseException if the header or payload portion of tokenString is corrupted
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
+   *   or if there is no valid verifier for the issuer
    */
   public JsonToken verifyAndDeserialize(String tokenString) throws SignatureException {
     JsonToken jsonToken = deserialize(tokenString);
@@ -91,7 +99,9 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * 
    * @param jsonToken
    * @return list of verifiers
-   * @throws IllegalStateException when there are no valid verifiers for the issuer
+   * @throws IllegalArgumentException if the signature algorithm is not supported
+   * @throws IllegalStateException if there is no valid verifier for the issuer
+   *   or if the header does not exist
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
@@ -103,5 +113,4 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
     }
     return verifiers;
   }
-
 }

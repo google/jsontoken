@@ -18,6 +18,7 @@ package net.oauth.jsontoken;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
@@ -56,7 +57,8 @@ abstract class AbstractJsonTokenParser {
    *
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
-   * @throws IllegalStateException when tokenString is not a properly formatted JWT
+   * @throws JsonParseException if the header or payload of tokenString is corrupted
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public JsonToken deserialize(String tokenString) {
     String[] pieces = splitTokenString(tokenString);
@@ -118,8 +120,8 @@ abstract class AbstractJsonTokenParser {
    *
    * @param tokenString the encoded and signed JSON Web Token to verify.
    * @param verifiers used to verify the signature. These usually encapsulate
-   *        secret keys.
-   * @throws IllegalStateException when tokenString is not a properly formatted JWT
+   *   secret keys.
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
     String[] pieces = splitTokenString(tokenString);
