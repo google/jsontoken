@@ -17,22 +17,18 @@
 package net.oauth.jsontoken;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
+import com.google.common.base.Splitter;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
-
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
-
 import java.security.SignatureException;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Class that parses and verifies JSON Tokens.
@@ -257,11 +253,11 @@ public class JsonTokenParser {
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   private String[] splitTokenString(String tokenString) {
-    String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
-    if (pieces.length != 3) {
+    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).limit(4).splitToList(tokenString);
+    if (pieces.size() != 3) {
       throw new IllegalStateException("Expected JWT to have 3 segments separated by '" + 
-          JsonTokenUtil.DELIMITER + "', but it has " + pieces.length + " segments");
+          JsonTokenUtil.DELIMITER + "', but it has " + pieces.size() + " segments");
     }
-    return pieces;
+    return pieces.toArray(new String[0]);
   }
 }

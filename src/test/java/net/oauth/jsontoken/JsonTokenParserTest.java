@@ -136,10 +136,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testDeserialize_emptySignature() throws Exception {
     JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
-    assertThrows(
-        IllegalStateException.class,
-        () -> parser.deserialize(TOKEN_STRING_EMPTY_SIG)
-    );
+    parser.deserialize(TOKEN_STRING_EMPTY_SIG);
   }
 
   public void testDeserialize_corruptHeader() throws Exception {
