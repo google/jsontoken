@@ -81,7 +81,9 @@ abstract class AbstractJsonTokenParser {
    *
    * @param jsonToken the token to verify
    * @throws SignatureException when the signature is invalid
+   *   or if any of the checkers fail
    * @throws IllegalStateException when exp or iat are invalid
+   *   or if tokenString is not a properly formatted JWT
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
     if (! signatureIsValid(jsonToken.getTokenString(), verifiers)) {
@@ -169,7 +171,7 @@ abstract class AbstractJsonTokenParser {
   /**
    * @param tokenString The original encoded representation of a JWT
    * @return Three components of the JWT as an array of strings
-   * @throws IllegalStateException when tokenString is not a properly formatted JWT
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   private String[] splitTokenString(String tokenString) {
     String[] pieces = tokenString.split(Pattern.quote(JsonTokenUtil.DELIMITER));
