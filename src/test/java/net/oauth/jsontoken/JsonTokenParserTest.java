@@ -55,7 +55,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_valid() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     parser.verify(checkToken, getVerifiers());
   }
 
@@ -117,7 +117,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_badSignature() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING_BAD_SIG);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING_BAD_SIG);
     assertThrows(
         SignatureException.class,
         () -> parser.verify(checkToken, getVerifiers())
@@ -144,7 +144,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_unsupportedSignatureAlgorithm() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
     assertThrows(
         SignatureException.class,
         () -> parser.verify(checkToken, getVerifiers())
@@ -153,7 +153,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_failChecker() throws Exception {
     JsonTokenParser parser = getJsonTokenParser(locators, new IgnoreAudience(), new AlwaysFailAudience());
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertThrows(
         SignatureException.class,
         () -> parser.verify(checkToken, getVerifiers())
@@ -162,7 +162,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_noVerifiers() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertThrows(
         SignatureException.class,
         () -> parser.verify(checkToken, new ArrayList<>())
@@ -171,13 +171,13 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerifyWithJsonToken_valid() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     parser.verify(checkToken);
   }
 
   public void testVerifyWithJsonToken_unsupportedSignature() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
     assertThrows(
         IllegalArgumentException.class,
         () -> parser.verify(checkToken)
@@ -190,7 +190,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     noLocators.setVerifierProvider(SignatureAlgorithm.HS256, noLocator);
 
     JsonTokenParser parser = getJsonTokenParser(noLocators, new IgnoreAudience());
-    JsonToken checkToken = parser.deserialize(TOKEN_STRING);
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertThrows(
         IllegalStateException.class,
         () -> parser.verify(checkToken)
@@ -435,13 +435,12 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     return checkToken;
   }
 
+  // deserializes the token string such that tokenStrings without signatures are allowed
   private JsonToken naiveDeserialize(String tokenString) {
-    assertTrue(
-        tokenString.equals(TOKEN_STRING_2PARTS)
-          || tokenString.equals(TOKEN_STRING_EMPTY_SIG)
-    );
-
-    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(TOKEN_STRING_2PARTS);
+    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
+    if (pieces.size() < 2) {
+      fail("naiveDeserialize does not support deserializing the token string: " + tokenString);
+    }
     JsonParser jsonParser = new JsonParser();
     JsonObject header = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0))).getAsJsonObject();
     JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1))).getAsJsonObject();
@@ -449,7 +448,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
         header,
         payload,
         clock,
-        TOKEN_STRING_2PARTS
+        tokenString
     );
 
     return checkToken;
