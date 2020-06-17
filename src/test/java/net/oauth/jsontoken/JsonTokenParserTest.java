@@ -318,7 +318,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     );
   }
 
-  public void testExpiration_futureExpiration() throws Exception {
+  public void testExpirationIsValid_futureExpiration() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     Instant expiration = clock.now().plus(Duration.standardSeconds(1));
     JsonToken checkToken = getJsonTokenWithTimeRange(null, expiration);
@@ -326,7 +326,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertTrue(parser.expirationIsValid(checkToken, clock.now()));
   }
 
-  public void testExpiration_pastExpiration() throws Exception {
+  public void testExpirationIsValid_pastExpiration() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     Instant expiration = clock.now().minus(Duration.standardSeconds(1));
     JsonToken checkToken = getJsonTokenWithTimeRange(null, expiration);
@@ -334,14 +334,14 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertFalse(parser.expirationIsValid(checkToken, clock.now()));
   }
 
-  public void testExpiration_nullExpiration() throws Exception {
+  public void testExpirationIsValid_nullExpiration() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     JsonToken checkToken = getJsonTokenWithTimeRange(null, null);
 
     assertTrue(parser.expirationIsValid(checkToken, clock.now()));
   }
 
-  public void testIssuedAt_pastIssuedAt() throws Exception {
+  public void testIssuedAtIsValid_pastIssuedAt() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     Instant issuedAt = clock.now().minus(Duration.standardSeconds(1));
     JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, null);
@@ -349,7 +349,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertTrue(parser.issuedAtIsValid(checkToken, clock.now()));
   }
 
-  public void testIssuedAt_futureIssuedAt() throws Exception {
+  public void testIssuedAtIsValid_futureIssuedAt() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     Instant issuedAt = clock.now().plus(Duration.standardSeconds(1));
     JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, null);
@@ -357,7 +357,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertFalse(parser.issuedAtIsValid(checkToken, clock.now()));
   }
 
-  public void testIssuedAt_nullIssuedAt() throws Exception {
+  public void testIssuedAtIsValid_nullIssuedAt() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     JsonToken checkToken = getJsonTokenWithTimeRange(null, null);
 
@@ -460,7 +460,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     return new JsonTokenParser(clock, locators, new IgnoreAudience());
   }
 
-  private JsonTokenParser getJsonTokenParser(VerifierProviders providers, Checker...checkers) {
+  private JsonTokenParser getJsonTokenParser(VerifierProviders providers, Checker... checkers) {
     return new JsonTokenParser(clock, providers, checkers);
   }
 }

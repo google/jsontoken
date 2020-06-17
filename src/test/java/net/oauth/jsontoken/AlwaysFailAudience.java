@@ -1,7 +1,6 @@
 package net.oauth.jsontoken;
 
 import com.google.gson.JsonObject;
-
 import java.security.SignatureException;
 
 /**
