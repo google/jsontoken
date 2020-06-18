@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import org.joda.time.Duration;
+import org.joda.time.Instant;
 
 import java.security.SignatureException;
 
@@ -69,7 +70,8 @@ public class JsonTokenTest extends JsonTokenTestBase {
   public void testConstructFromJson() throws Exception {
     JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
     assertEquals(TOKEN_STRING, token.getTokenString());
-    assertHeader(token);
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertEquals("key2", token.getKeyId());
     assertPayload(token);
   }
 
@@ -102,15 +104,6 @@ public class JsonTokenTest extends JsonTokenTestBase {
     assertNullPayload(token);
   }
 
-  private void assertNullPayload(JsonToken token) throws Exception {
-    assertNull(token.getIssuer());
-    assertNull(token.getAudience());
-    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
-    assertNull(token.getKeyId());
-    assertNull(token.getIssuedAt());
-    assertNull(token.getExpiration());
-  }
-
   private JsonObject getFullHeader() {
     JsonObject header = new JsonObject();
     header.addProperty(JsonToken.ALGORITHM_HEADER, "HS256");
@@ -127,6 +120,24 @@ public class JsonTokenTest extends JsonTokenTestBase {
     payload.addProperty(JsonToken.ISSUED_AT, 1276669722);
     payload.addProperty(JsonToken.EXPIRATION, 1276669723);
     return payload;
+  }
+
+  private void assertPayload(JsonToken token) {
+    assertEquals("google.com", token.getIssuer());
+    assertEquals("http://www.google.com", token.getAudience());
+    assertEquals(new Instant(1276669722000L), token.getIssuedAt());
+    assertEquals(new Instant(1276669723000L), token.getExpiration());
+    assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
+    assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+  }
+
+  private void assertNullPayload(JsonToken token) throws Exception {
+    assertNull(token.getIssuer());
+    assertNull(token.getAudience());
+    assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
+    assertNull(token.getKeyId());
+    assertNull(token.getIssuedAt());
+    assertNull(token.getExpiration());
   }
 
 }
