@@ -120,12 +120,12 @@ public class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    */
   private ListenableFuture<List<Verifier>> provideVerifiers(JsonToken jsonToken) {
     ListenableFuture<JsonToken> futureJsonToken = Futures.immediateFuture(jsonToken);
-    AsyncFunction<JsonToken, List<Verifier>> findVerifiersFunc =
+    AsyncFunction<JsonToken, List<Verifier>> findVerifiersFunction =
         token -> asyncVerifierProviders
             .getVerifierProvider(token.getSignatureAlgorithm())
             .findVerifier(token.getIssuer(), token.getKeyId());
 
-    Function<List<Verifier>, List<Verifier>> checkNullFunc =
+    Function<List<Verifier>, List<Verifier>> checkNullFunction =
         verifiers -> {
           if (verifiers == null) {
             throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());
@@ -134,9 +134,9 @@ public class AsyncJsonTokenParser extends AbstractJsonTokenParser {
         };
 
     ListenableFuture<List<Verifier>> futureVerifiers =
-        Futures.transformAsync(futureJsonToken, findVerifiersFunc, executor);
+        Futures.transformAsync(futureJsonToken, findVerifiersFunction, executor);
 
-    return Futures.transform(futureVerifiers, checkNullFunc, executor);
+    return Futures.transform(futureVerifiers, checkNullFunction, executor);
   }
 
   private Void verifyAndReturnVoid(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
