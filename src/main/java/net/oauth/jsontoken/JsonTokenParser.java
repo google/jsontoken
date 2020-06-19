@@ -22,6 +22,7 @@ import com.google.gson.JsonParseException;
 
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
+import org.joda.time.Instant;
 
 import java.security.SignatureException;
 import java.util.List;
@@ -95,6 +96,21 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
   }
   
   /**
+   * Verifies that a JSON Web Token was issued in the past.
+   *
+   * @param jsonToken the token to verify
+   * @param now the instant to use as point of reference for current time
+   * @return false if the JWT's 'iat' is later than now, true otherwise
+   */
+  public boolean issuedAtIsValid(JsonToken jsonToken, Instant now) {
+    Instant issuedAt = jsonToken.getIssuedAt();
+    if ((issuedAt != null) && now.isBefore(issuedAt)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Use VerifierProviders to get a list of verifiers for this token
    * 
    * @param jsonToken
@@ -113,4 +129,5 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
     }
     return verifiers;
   }
+
 }
