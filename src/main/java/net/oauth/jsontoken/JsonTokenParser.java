@@ -19,11 +19,8 @@ package net.oauth.jsontoken;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
-import org.joda.time.Instant;
-
 import java.security.SignatureException;
 import java.util.List;
 
