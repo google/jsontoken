@@ -44,14 +44,10 @@ import java.util.regex.Pattern;
 public class JsonTokenParserTest extends JsonTokenTestBase {
 
   private static final String TOKEN_STRING_ISSUER_NULL = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOm51bGwsImJhciI6MTUsImZvbyI6InNvbWUgdmFsdWUiLCJhdWQiOiJodHRwOi8vd3d3Lmdvb2dsZS5jb20iLCJpYXQiOjEyNzY2Njk3MjIsImV4cCI6MTI3NjY2OTcyM30.WPaa6PoLWPzNfnIBisBX9549kWeABSj9tXnwnPE4IJk";
-  private static final String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Wugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
   private static final String TOKEN_STRING_1PART = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ";
   private static final String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ";
   private static final String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.";
   private static final String TOKEN_STRING_CORRUPT_HEADER = "fyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
-  private static final String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&nb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
-  private static final String TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM = "eyJhbGciOiJIUzUxMiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.44qsiZg1Hnf95N-2wNqd1htgDlE7X0BSUMMkboMcZ5QLKbmVATozMuzdoE0MAhU-IdWUuICFbzu_wcDEXDTLug";
-  private static final String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
 
   public void testVerify_valid() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
@@ -421,18 +417,6 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     return new JsonToken(
         token.getHeader(), token.getPayloadAsJsonObject(), clock, token.serializeAndSign());
-  }
-
-  /**
-   * Deserializes the token string such that tokenStrings without signatures are allowed.
-   * Only supports token strings with at least two parts.
-   */
-  private JsonToken naiveDeserialize(String tokenString) {
-    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
-    JsonParser jsonParser = new JsonParser();
-    JsonObject header = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0))).getAsJsonObject();
-    JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1))).getAsJsonObject();
-    return new JsonToken(header, payload, clock, tokenString);
   }
 
   private List<Verifier> getVerifiers() {
