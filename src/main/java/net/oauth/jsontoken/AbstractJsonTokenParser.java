@@ -1,5 +1,5 @@
 /**
- * Copyright 2010 Google Inc.
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,12 @@ import com.google.common.base.Splitter;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.Verifier;
-
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
-
 import java.security.SignatureException;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Class that provides common functions
