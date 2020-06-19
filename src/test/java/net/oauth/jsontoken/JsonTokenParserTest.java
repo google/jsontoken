@@ -128,7 +128,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonTokenParser parser = getJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_EMPTY_SIG);
     assertThrows(
-        IllegalStateException.class,
+        SignatureException.class,
         () -> parser.verify(checkToken, getVerifiers())
     );
   }
@@ -225,11 +225,8 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_emptySignature() throws Exception {
-    JsonTokenParser parser = getJsonTokenParser();
-    assertThrows(
-        IllegalStateException.class,
-        () -> parser.deserialize(TOKEN_STRING_EMPTY_SIG)
-    );
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    parser.deserialize(TOKEN_STRING_EMPTY_SIG);
   }
 
   public void testDeserialize_unsupportedSignatureAlgorithm() throws Exception {
@@ -305,10 +302,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testSignatureIsValid_emptySignature() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    assertThrows(
-        IllegalStateException.class,
-        () -> parser.signatureIsValid(TOKEN_STRING_EMPTY_SIG, getVerifiers())
-    );
+    assertFalse(parser.signatureIsValid(TOKEN_STRING_EMPTY_SIG, getVerifiers()));
   }
 
   public void testSignatureIsValid_nullSignature() throws Exception {
