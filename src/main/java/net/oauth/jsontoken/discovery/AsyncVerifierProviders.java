@@ -23,6 +23,7 @@ import net.oauth.jsontoken.crypto.Verifier;
 import java.util.Map;
 
 /**
+ * The asynchronous counterpart of {@link VerifierProviders}.
  * A collection of {@link AsyncVerifierProvider}s, one for each signature algorithm.
  * The {@link AsyncJsonTokenParser} uses a {@link AsyncVerifierProviders} instance to locate
  * verification keys. In particular, it will first look up the {@link AsyncVerifierProvider}
@@ -30,7 +31,7 @@ import java.util.Map;
  * will use different ways to look up verification keys - for example, symmetric keys
  * will always be pre-negotiated and looked up in a local database, while public
  * verification keys can be looked up on demand), and the ask the {@link AsyncVerifierProvider}
- * to provide a {@link Verifier} to check the validity of the JSON Token.
+ * to provide a future that will return a {@link Verifier} to check the validity of the JSON Token.
  */
 public class AsyncVerifierProviders {
 

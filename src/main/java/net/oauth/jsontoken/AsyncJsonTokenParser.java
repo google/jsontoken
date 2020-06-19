@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /**
+ * The asynchronous counterpart of {@link JsonTokenParser}.
  * Class that parses and verifies JSON Tokens asynchronously.
  */
 public class AsyncJsonTokenParser extends AbstractJsonTokenParser {

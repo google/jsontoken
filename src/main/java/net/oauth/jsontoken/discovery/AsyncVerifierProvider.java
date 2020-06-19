@@ -22,6 +22,7 @@ import net.oauth.jsontoken.crypto.Verifier;
 import java.util.List;
 
 /**
+ * The asynchronous counterpart of {@link VerifierProvider}.
  * An interface that must be implemented by JSON Token verifiers. The {@link AsyncJsonTokenParser}
  * uses {@link AsyncVerifierProvider} implementations to find verification keys asynchronously with
  * which to verify the parsed JSON Token. There are different implementations of this interface for
