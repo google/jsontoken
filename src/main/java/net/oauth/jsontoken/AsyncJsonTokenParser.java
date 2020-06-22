@@ -22,11 +22,14 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
-import net.oauth.jsontoken.crypto.Verifier;
-import net.oauth.jsontoken.discovery.AsyncVerifierProviders;
+import java.security.NoSuchProviderException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+import net.oauth.jsontoken.crypto.Verifier;
+import net.oauth.jsontoken.discovery.AsyncVerifierProvider;
+import net.oauth.jsontoken.discovery.AsyncVerifierProviders;
 
 /**
  * The asynchronous counterpart of {@link JsonTokenParser}.
@@ -107,9 +110,13 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   private ListenableFuture<List<Verifier>> provideVerifiers(JsonToken jsonToken) {
     ListenableFuture<List<Verifier>> futureVerifiers;
     try {
-      futureVerifiers = asyncVerifierProviders
-          .getVerifierProvider(jsonToken.getSignatureAlgorithm())
-          .findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
+      SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
+      AsyncVerifierProvider provider = asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
+      if (provider == null) {
+        throw new NoSuchProviderException("No valid provider for the algorithm: " + signatureAlgorithm);
+      }
+
+      futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
       return Futures.immediateFailedFuture(e);
     }

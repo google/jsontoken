@@ -20,6 +20,13 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.net.URI;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.List;
+import java.util.regex.Pattern;
 import junit.framework.TestCase;
 import net.oauth.jsontoken.crypto.HmacSHA256Verifier;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -34,13 +41,6 @@ import net.oauth.jsontoken.discovery.VerifierProviders;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
-import java.net.URI;
-import java.security.KeyFactory;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.List;
-import java.util.regex.Pattern;
 
 public abstract class JsonTokenTestBase extends TestCase {
 

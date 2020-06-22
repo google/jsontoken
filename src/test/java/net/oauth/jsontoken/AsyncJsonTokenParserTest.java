@@ -1,16 +1,14 @@
 package net.oauth.jsontoken;
 
-import static org.junit.Assert.assertThrows;
-
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonParseException;
+import java.security.SignatureException;
+import java.util.concurrent.*;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.discovery.AsyncVerifierProvider;
 import net.oauth.jsontoken.discovery.AsyncVerifierProviders;
-import java.security.SignatureException;
-import java.util.concurrent.*;
+import org.junit.function.ThrowingRunnable;
 
 public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
@@ -45,7 +43,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
       return null;
     };
 
-    executor = Executors.newFixedThreadPool(4);
+    executor = MoreExecutors.directExecutor();
   }
 
   public void testVerify_valid() throws Exception {
@@ -129,17 +127,14 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     return new AsyncJsonTokenParser(clock, providers, executor, checkers);
   }
 
-  private <T extends Throwable> void assertCause(Class<T> throwableClass, Callable func) throws Exception {
+  private <T extends Throwable> void assertCause(Class<T> throwableClass, ThrowingRunnable func) {
     try {
-      func.call();
+      func.run();
       fail("Expected ExecutionException with the cause: " + throwableClass.getName());
     } catch (ExecutionException e) {
-      assertThrows(
-          throwableClass,
-          () -> {
-            throw e.getCause();
-          }
-      );
+      assertTrue(throwableClass.isInstance(e.getCause()));
+    } catch (Throwable t) {
+      fail("Expected ExecutionException with the cause: " + throwableClass.getName());
     }
   }
 

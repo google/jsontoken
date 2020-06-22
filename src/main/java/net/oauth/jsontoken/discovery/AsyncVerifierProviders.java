@@ -16,6 +16,7 @@
  */
 package net.oauth.jsontoken.discovery;
 
+import javax.annotation.Nullable;
 import net.oauth.jsontoken.AsyncJsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
@@ -35,5 +36,6 @@ public interface AsyncVerifierProviders {
    * @return a {@link AsyncVerifierProvider} corresponding to a given signature algorithm
    * that allows for asynchronous retrieval of a verification key.
    */
+  @Nullable
   AsyncVerifierProvider getVerifierProvider(SignatureAlgorithm alg);
 }
