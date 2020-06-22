@@ -66,11 +66,10 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   public ListenableFuture<Void> verify(JsonToken jsonToken) {
     ListenableFuture<List<Verifier>> futureVerifiers = provideVerifiers(jsonToken);
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
-    AsyncFunction<List<Verifier>, Void> verifyFunction =
-        verifiers -> {
-          verify(jsonToken, verifiers);
-          return Futures.immediateVoidFuture();
-        };
+    AsyncFunction<List<Verifier>, Void> verifyFunction = verifiers -> {
+      verify(jsonToken, verifiers);
+      return Futures.immediateVoidFuture();
+    };
 
     return Futures.transformAsync(futureVerifiers, verifyFunction, executor);
   }
@@ -115,13 +114,12 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       return Futures.immediateFailedFuture(e);
     }
 
-    Function<List<Verifier>, List<Verifier>> checkNullFunction =
-        verifiers -> {
-          if (verifiers == null) {
-            throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());
-          }
-          return verifiers;
-        };
+    Function<List<Verifier>, List<Verifier>> checkNullFunction = verifiers -> {
+      if (verifiers == null) {
+        throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());
+      }
+      return verifiers;
+    };
 
     return Futures.transform(futureVerifiers, checkNullFunction, executor);
   }
