@@ -26,15 +26,24 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     AsyncVerifierProvider rsaLocator = (issuer, keyId) -> Futures.immediateFuture(
         locators.getVerifierProvider(SignatureAlgorithm.RS256).findVerifier(issuer, keyId));
 
-    asyncLocators = new AsyncVerifierProviders();
-    asyncLocators.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocator);
-    asyncLocators.setVerifierProvider(SignatureAlgorithm.RS256, rsaLocator);
+    asyncLocators = alg -> {
+      if (alg.equals(SignatureAlgorithm.HS256)) {
+        return hmacLocator;
+      } else if (alg.equals(SignatureAlgorithm.RS256)) {
+        return rsaLocator;
+      }
+      return null;
+    };
 
     AsyncVerifierProvider hmacLocatorFromRuby = (issuer, keyId) -> Futures.immediateFuture(
         locatorsFromRuby.getVerifierProvider(SignatureAlgorithm.HS256).findVerifier(issuer, keyId));
 
-    asyncLocatorsFromRuby = new AsyncVerifierProviders();
-    asyncLocatorsFromRuby.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocatorFromRuby);
+    asyncLocatorsFromRuby = alg -> {
+      if (alg.equals(SignatureAlgorithm.HS256)) {
+        return hmacLocatorFromRuby;
+      }
+      return null;
+    };
 
     executor = Executors.newFixedThreadPool(4);
   }
@@ -65,8 +74,12 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_noVerifiers() throws Exception {
     AsyncVerifierProvider noLocator = (signerId, keyId) -> Futures.immediateFuture(null);
-    AsyncVerifierProviders noLocators = new AsyncVerifierProviders();
-    noLocators.setVerifierProvider(SignatureAlgorithm.HS256, noLocator);
+    AsyncVerifierProviders noLocators = alg -> {
+      if (alg.equals(SignatureAlgorithm.HS256)) {
+        return noLocator;
+      }
+      return null;
+    };
 
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noLocators, new IgnoreAudience());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);

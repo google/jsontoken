@@ -43,6 +43,6 @@ public interface AsyncVerifierProvider {
    * @return a {@link ListenableFuture} object that asynchronously returns a {@link Verifier}
    * that represents the verification key.
    */
-  public ListenableFuture<List<Verifier>> findVerifier(String issuer, String keyId);
+  ListenableFuture<List<Verifier>> findVerifier(String issuer, String keyId);
 
 }

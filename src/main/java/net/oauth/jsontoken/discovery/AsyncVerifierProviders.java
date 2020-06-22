@@ -16,38 +16,24 @@
  */
 package net.oauth.jsontoken.discovery;
 
-import com.google.common.collect.Maps;
 import net.oauth.jsontoken.AsyncJsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
-import java.util.Map;
 
 /**
  * The asynchronous counterpart of {@link VerifierProviders}.
- * A collection of {@link AsyncVerifierProvider}s, one for each signature algorithm.
- * The {@link AsyncJsonTokenParser} uses a {@link AsyncVerifierProviders} instance to locate
- * verification keys. In particular, it will first look up the {@link AsyncVerifierProvider}
- * for the signature algorithm used in the JSON Token (different signature methods
- * will use different ways to look up verification keys - for example, symmetric keys
- * will always be pre-negotiated and looked up in a local database, while public
- * verification keys can be looked up on demand), and the ask the {@link AsyncVerifierProvider}
- * to provide a future that will return a {@link Verifier} to check the validity of the JSON Token.
+ * An interface that must be implemented by JSON Token verifiers. The {@link AsyncJsonTokenParser}
+ * uses the {@link AsyncVerifierProviders} implementation to locate verification keys. In particular, 
+ * it will first look up the {@link AsyncVerifierProvider} for the signature algorithm used in the JSON 
+ * Token and the ask the {@link AsyncVerifierProvider} to provide a future that will return
+ * a {@link Verifier} to check the validity of the JSON Token.
  */
-public class AsyncVerifierProviders {
-
-  private final Map<SignatureAlgorithm, AsyncVerifierProvider> map = Maps.newHashMap();
+public interface AsyncVerifierProviders {
 
   /**
-   * Sets a new {@link AsyncVerifierProvider} for the given {@link SignatureAlgorithm}.
+   * @param alg the signature algorithm of the JSON Token.
+   * @return a {@link AsyncVerifierProvider} corresponding to a given signature algorithm
+   * that allows for asynchronous retrieval of a verification key.
    */
-  public void setVerifierProvider(SignatureAlgorithm alg, AsyncVerifierProvider provider) {
-    map.put(alg, provider);
-  }
-
-  /**
-   * Returns the {@link AsyncVerifierProvider} for the given {@link SignatureAlgorithm}.
-   */
-  public AsyncVerifierProvider getVerifierProvider(SignatureAlgorithm alg) {
-    return map.get(alg);
-  }
+  AsyncVerifierProvider getVerifierProvider(SignatureAlgorithm alg);
 }
