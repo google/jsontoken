@@ -88,18 +88,14 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * or equivalent constructor of {@link JsonToken} subclasses.
    */
   public ListenableFuture<JsonToken> verifyAndDeserialize(String tokenString) {
-    JsonToken token;
+    JsonToken jsonToken;
     try {
-      token = deserialize(tokenString);
-    } catch (Throwable t) {
-      return Futures.immediateFailedFuture(t);
+      jsonToken = deserialize(tokenString);
+    } catch (Exception e) {
+      return Futures.immediateFailedFuture(e);
     }
 
-    ListenableFuture<JsonToken> futureTokenString = Futures.immediateFuture(token);
-    AsyncFunction<JsonToken, JsonToken> verifyFunction =
-        jsonToken -> Futures.transform(verify(jsonToken), unused -> jsonToken, executor);
-
-    return Futures.transformAsync(futureTokenString, verifyFunction, executor);
+    return Futures.transform(verify(jsonToken), unused -> jsonToken, executor);
   }
 
   /**
@@ -115,8 +111,8 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       futureVerifiers = asyncVerifierProviders
           .getVerifierProvider(jsonToken.getSignatureAlgorithm())
           .findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
-    } catch (Throwable t) {
-      return Futures.immediateFailedFuture(t);
+    } catch (Exception e) {
+      return Futures.immediateFailedFuture(e);
     }
 
     Function<List<Verifier>, List<Verifier>> checkNullFunction =
