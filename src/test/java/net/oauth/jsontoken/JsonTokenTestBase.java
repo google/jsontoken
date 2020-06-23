@@ -16,11 +16,18 @@
  */
 package net.oauth.jsontoken;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.net.URI;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.List;
+import java.util.regex.Pattern;
 import junit.framework.TestCase;
-
 import net.oauth.jsontoken.crypto.HmacSHA256Verifier;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
@@ -31,18 +38,9 @@ import net.oauth.jsontoken.discovery.ServerInfo;
 import net.oauth.jsontoken.discovery.ServerInfoResolver;
 import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
-
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
-
-import java.net.URI;
-import java.security.KeyFactory;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.List;
-import java.util.regex.Pattern;
 
 public abstract class JsonTokenTestBase extends TestCase {
 
@@ -84,6 +82,11 @@ public abstract class JsonTokenTestBase extends TestCase {
   protected RSAPrivateKey privateKey;
 
   protected static final String TOKEN_STRING = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
+  protected static final String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Wugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
+  protected static final String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&nb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
+  protected static final String TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM = "eyJhbGciOiJIUzUxMiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.44qsiZg1Hnf95N-2wNqd1htgDlE7X0BSUMMkboMcZ5QLKbmVATozMuzdoE0MAhU-IdWUuICFbzu_wcDEXDTLug";
+  protected static final String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
+
   protected static final Duration SKEW = Duration.standardMinutes(1);
   protected FakeClock clock = new FakeClock(SKEW);
 
@@ -157,5 +160,17 @@ public abstract class JsonTokenTestBase extends TestCase {
     assertEquals(new Instant(1276669723000L), token.getExpiration());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
+  }
+
+  /**
+   * Deserializes the token string such that tokenStrings without signatures are allowed.
+   * Only supports token strings with at least two parts.
+   */
+  protected JsonToken naiveDeserialize(String tokenString) {
+    List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
+    JsonParser jsonParser = new JsonParser();
+    JsonObject header = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0))).getAsJsonObject();
+    JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1))).getAsJsonObject();
+    return new JsonToken(header, payload, clock, tokenString);
   }
 }
