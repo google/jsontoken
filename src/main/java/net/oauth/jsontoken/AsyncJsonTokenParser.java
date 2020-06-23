@@ -60,8 +60,10 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * (iat, exp). Uses {@link AsyncVerifierProviders} to obtain the secret key.
    * This method is not expected to throw exceptions when returning a future. However,
    * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} follows the same possible exceptions
+   * in which {@link ExecutionException#getCause()} includes the possible exceptions
    * as thrown by {@link JsonTokenParser#verify(JsonToken)}.
+   * Additionally, {@link NoSuchProviderException} may be a cause if there are no verifier
+   * providers implemented for a given signature algorithm.
    *
    * @param jsonToken
    * @return a {@link ListenableFuture} that will fail if the token fails verification.
@@ -81,8 +83,10 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * Parses and verifies a JSON Token.
    * This method is not expected to throw exceptions when returning a future. However,
    * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} follows the same possible exceptions
+   * in which {@link ExecutionException#getCause()} includes the same possible exceptions
    * thrown by {@link JsonTokenParser#verifyAndDeserialize(String)}.
+   * Additionally, {@link NoSuchProviderException} may be a cause if there are no verifier
+   * providers implemented for a given signature algorithm.
    *
    * @param tokenString the serialized token that is to parsed and verified.
    * @return a {@link ListenableFuture} that will return the deserialized {@link JsonObject},
@@ -115,7 +119,6 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       if (provider == null) {
         throw new NoSuchProviderException("No valid provider for the algorithm: " + signatureAlgorithm);
       }
-
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
       return Futures.immediateFailedFuture(e);
