@@ -19,10 +19,11 @@ package net.oauth.jsontoken;
 import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonObject;
-import java.security.SignatureException;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import org.joda.time.Duration;
+
+import java.security.SignatureException;
 
 public class JsonTokenTest extends JsonTokenTestBase {
 

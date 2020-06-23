@@ -21,12 +21,12 @@ import com.google.common.base.Splitter;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import java.security.SignatureException;
-import java.util.List;
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.Verifier;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
+import java.security.SignatureException;
+import java.util.List;
 
 /**
  * Class that provides common functions
