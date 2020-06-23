@@ -55,7 +55,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_badSignature() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_BAD_SIG);
-    assertCause(
+    assertFailsWithCause(
         SignatureException.class,
         () -> parser.verify(checkToken).get()
     );
@@ -64,7 +64,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_unsupportedSignature() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
-    assertCause(
+    assertFailsWithCause(
         IllegalArgumentException.class,
         () -> parser.verify(checkToken).get()
     );
@@ -81,7 +81,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noLocators, new IgnoreAudience());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
-    assertCause(
+    assertFailsWithCause(
         IllegalStateException.class,
         () -> parser.verify(checkToken).get()
     );
@@ -96,7 +96,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerifyAndDeserialize_deserializeFail() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
-    assertCause(
+    assertFailsWithCause(
         JsonParseException.class,
         () -> parser.verifyAndDeserialize(TOKEN_STRING_CORRUPT_PAYLOAD).get()
     );
@@ -104,7 +104,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerifyAndDeserialize_verifyFail() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
-    assertCause(
+    assertFailsWithCause(
         SignatureException.class,
         () -> parser.verifyAndDeserialize(TOKEN_STRING_BAD_SIG).get()
     );
@@ -127,9 +127,9 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     return new AsyncJsonTokenParser(clock, providers, executor, checkers);
   }
 
-  private <T extends Throwable> void assertCause(Class<T> throwableClass, ThrowingRunnable func) {
+  private <T extends Throwable> void assertFailsWithCause(Class<T> throwableClass, ThrowingRunnable runnable) {
     try {
-      func.run();
+      runnable.run();
       fail("Expected ExecutionException with the cause: " + throwableClass.getName());
     } catch (ExecutionException e) {
       assertTrue(throwableClass.isInstance(e.getCause()));
