@@ -1,10 +1,13 @@
 package net.oauth.jsontoken;
 
+import static org.junit.Assert.assertThrows;
+
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonParseException;
 import java.security.SignatureException;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.discovery.AsyncVerifierProvider;
 import net.oauth.jsontoken.discovery.AsyncVerifierProviders;
@@ -128,14 +131,12 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   }
 
   private <T extends Throwable> void assertFailsWithCause(Class<T> throwableClass, ThrowingRunnable runnable) {
-    try {
-      runnable.run();
-      fail("Expected ExecutionException with the cause: " + throwableClass.getName());
-    } catch (ExecutionException e) {
-      assertTrue(throwableClass.isInstance(e.getCause()));
-    } catch (Throwable t) {
-      fail("Expected ExecutionException with the cause: " + throwableClass.getName());
-    }
+    ExecutionException e = assertThrows(
+        ExecutionException.class,
+        runnable
+    );
+
+    assertTrue(throwableClass.isInstance(e.getCause()));
   }
 
 }

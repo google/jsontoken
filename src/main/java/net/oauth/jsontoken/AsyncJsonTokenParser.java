@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
-import java.security.NoSuchProviderException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -62,8 +61,6 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * when getting the result of the future, an {@link ExecutionException} may be thrown
    * in which {@link ExecutionException#getCause()} includes the possible exceptions
    * as thrown by {@link JsonTokenParser#verify(JsonToken)}.
-   * Additionally, {@link NoSuchProviderException} may be a cause if there are no verifier
-   * providers implemented for a given signature algorithm.
    *
    * @param jsonToken
    * @return a {@link ListenableFuture} that will fail if the token fails verification.
@@ -85,8 +82,6 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * when getting the result of the future, an {@link ExecutionException} may be thrown
    * in which {@link ExecutionException#getCause()} includes the same possible exceptions
    * thrown by {@link JsonTokenParser#verifyAndDeserialize(String)}.
-   * Additionally, {@link NoSuchProviderException} may be a cause if there are no verifier
-   * providers implemented for a given signature algorithm.
    *
    * @param tokenString the serialized token that is to parsed and verified.
    * @return a {@link ListenableFuture} that will return the deserialized {@link JsonObject},
@@ -117,7 +112,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
       AsyncVerifierProvider provider = asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
       if (provider == null) {
-        throw new NoSuchProviderException("No valid provider for the algorithm: " + signatureAlgorithm);
+        throw new IllegalStateException("No valid provider for the algorithm: " + signatureAlgorithm);
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
