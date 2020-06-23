@@ -25,6 +25,7 @@ import java.util.List;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
+import net.oauth.jsontoken.exceptions.ErrorCode;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 
@@ -34,6 +35,7 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   private static final String TOKEN_STRING_1PART = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ";
   private static final String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ";
   private static final String TOKEN_STRING_EMPTY_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.";
+  protected static final String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&nb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
   private static final String TOKEN_STRING_CORRUPT_HEADER = "fyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
 
   public void testVerify_valid() throws Exception {
@@ -45,64 +47,90 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_issuedAtAfterExpiration() throws Exception {
     Instant issuedAt = clock.now();
     Instant expiration = issuedAt.minus(Duration.standardSeconds(1));
-    assertFalse(verifyTimeFrame(issuedAt, expiration));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, expiration);
+
+    assertThrowsWithErrorCode(
+        IllegalStateException.class,
+        ErrorCode.BAD_TIME_RANGE,
+        () -> parser.verify(checkToken, getVerifiers())
+    );
   }
 
   public void testVerify_issuedAtSkew() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
     Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
-    assertTrue(verifyTimeFrame(issuedAt, expiration));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, expiration);
+
+    parser.verify(checkToken, getVerifiers());
   }
 
   public void testVerify_issuedAtTooMuchSkew() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.plus(Duration.standardSeconds(1)));
     Instant expiration = issuedAt.plus(Duration.standardSeconds(1));
-    assertFalse(verifyTimeFrame(issuedAt, expiration));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, expiration);
+
+    assertThrowsWithErrorCode(
+        IllegalStateException.class,
+        ErrorCode.BAD_TIME_RANGE,
+        () -> parser.verify(checkToken, getVerifiers())
+    );
   }
 
   public void testVerify_issuedAtNull() throws Exception {
     Instant expiration = clock.now().minus(SKEW.minus(Duration.standardSeconds(1)));
-    assertTrue(verifyTimeFrame(null, expiration));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(null, expiration);
+
+    parser.verify(checkToken, getVerifiers());
   }
 
   public void testVerify_expirationSkew() throws Exception {
     Instant expiration = clock.now().minus(SKEW.minus(Duration.standardSeconds(1)));
     Instant issuedAt = expiration.minus(Duration.standardSeconds(1));
-    assertTrue(verifyTimeFrame(issuedAt, expiration));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, expiration);
+
+    parser.verify(checkToken, getVerifiers());
   }
 
   public void testVerify_expirationTooMuchSkew() throws Exception {
     Instant expiration = clock.now().minus(SKEW.plus(Duration.standardSeconds(1)));
     Instant issuedAt = expiration.minus(Duration.standardSeconds(1));
-    assertFalse(verifyTimeFrame(issuedAt, expiration));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, expiration);
+
+    assertThrowsWithErrorCode(
+        IllegalStateException.class,
+        ErrorCode.EXPIRED_TOKEN,
+        () -> parser.verify(checkToken, getVerifiers())
+    );
   }
 
   public void testVerify_expirationNull() throws Exception {
     Instant issuedAt = clock.now().plus(SKEW.minus(Duration.standardSeconds(1)));
-    assertTrue(verifyTimeFrame(issuedAt, null));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, null);
+
+    parser.verify(checkToken, getVerifiers());
   }
 
   public void testVerify_issuedAtNullExpirationNull() throws Exception {
-    assertTrue(verifyTimeFrame(null, null));
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
+    JsonToken checkToken = getJsonTokenWithTimeRange(null, null);
+
+    parser.verify(checkToken, getVerifiers());
   }
 
-  public void testVerify_futureToken() throws Exception {
-    Instant issuedAt = clock.now().plus(SKEW.plus(Duration.standardSeconds(1)));
-    Instant expiration = issuedAt.plus(Duration.standardDays(1));
-    assertFalse(verifyTimeFrame(issuedAt, expiration));
-  }
-
-  public void testVerify_pastToken() throws Exception {
-    Instant expiration = clock.now().minus(SKEW.plus(Duration.standardSeconds(1)));
-    Instant issuedAt = expiration.minus(Duration.standardDays(1));
-    assertFalse(verifyTimeFrame(issuedAt, expiration));
-  }
 
   public void testVerify_badSignature() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_BAD_SIG);
-    assertThrows(
+    assertThrowsWithErrorCode(
         SignatureException.class,
+        ErrorCode.BAD_SIGNATURE,
         () -> parser.verify(checkToken, getVerifiers())
     );
   }
@@ -110,8 +138,9 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_emptySignature() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_EMPTY_SIG);
-    assertThrows(
+    assertThrowsWithErrorCode(
         SignatureException.class,
+        ErrorCode.BAD_SIGNATURE,
         () -> parser.verify(checkToken, getVerifiers())
     );
   }
@@ -119,8 +148,9 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_nullSignature() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_2PARTS);
-    assertThrows(
+    assertThrowsWithErrorCode(
         IllegalStateException.class,
+        ErrorCode.MALFORMED_TOKEN_STRING,
         () -> parser.verify(checkToken, getVerifiers())
     );
   }
@@ -128,8 +158,10 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_unsupportedSignatureAlgorithm() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
-    assertThrows(
+    // This function does not explicitly check or access the signature algorithm
+    assertThrowsWithErrorCode(
         SignatureException.class,
+        ErrorCode.BAD_SIGNATURE,
         () -> parser.verify(checkToken, getVerifiers())
     );
   }
@@ -144,11 +176,12 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
     );
   }
 
-  public void testVerify_noVerifiers() throws Exception {
+  public void testVerify_emptyVerifiers() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
-    assertThrows(
+    assertThrowsWithErrorCode(
         SignatureException.class,
+        ErrorCode.BAD_SIGNATURE,
         () -> parser.verify(checkToken, new ArrayList<>())
     );
   }
@@ -174,14 +207,15 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testDeserialize_noSignature() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
-    assertThrows(
+    assertThrowsWithErrorCode(
         IllegalStateException.class,
+        ErrorCode.MALFORMED_TOKEN_STRING,
         () -> parser.deserialize(TOKEN_STRING_2PARTS)
     );
   }
 
   public void testDeserialize_emptySignature() throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new AlwaysPassChecker());
+    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
     parser.deserialize(TOKEN_STRING_EMPTY_SIG);
   }
 
@@ -192,8 +226,9 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testDeserialize_headerOnly() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
-    assertThrows(
+    assertThrowsWithErrorCode(
         IllegalStateException.class,
+        ErrorCode.MALFORMED_TOKEN_STRING,
         () -> parser.deserialize(TOKEN_STRING_1PART)
     );
   }
@@ -231,8 +266,9 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testSignatureIsValid_nullSignature() throws Exception {
     AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
-    assertThrows(
+    assertThrowsWithErrorCode(
         IllegalStateException.class,
+        ErrorCode.MALFORMED_TOKEN_STRING,
         () -> parser.signatureIsValid(TOKEN_STRING_2PARTS, getVerifiers())
     );
   }
@@ -283,18 +319,6 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
     assertTrue(parser.issuedAtIsValid(checkToken, clock.now()));
   }
 
-  private boolean verifyTimeFrame(Instant issuedAt, Instant expiration) throws Exception {
-    AbstractJsonTokenParser parser = getAbstractJsonTokenParser();
-    JsonToken checkToken = getJsonTokenWithTimeRange(issuedAt, expiration);
-
-    try {
-      parser.verify(checkToken, getVerifiers());
-      return true;
-    } catch (IllegalStateException e) {
-      return false;
-    }
-  }
-
   private JsonToken getJsonTokenWithTimeRange(
       Instant issuedAt, Instant expiration) throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
@@ -323,4 +347,5 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   private AbstractJsonTokenParser getAbstractJsonTokenParser(Checker... checkers) {
     return new AbstractJsonTokenParser(clock, checkers){};
   }
+
 }

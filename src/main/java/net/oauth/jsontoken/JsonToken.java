@@ -25,6 +25,8 @@ import javax.annotation.Nullable;
 import net.oauth.jsontoken.crypto.AsciiStringSigner;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Signer;
+import net.oauth.jsontoken.exceptions.ErrorCode;
+import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
 
@@ -249,15 +251,24 @@ public class JsonToken {
    */
   public SignatureAlgorithm getSignatureAlgorithm() {
     if (header == null) {
-      throw new IllegalStateException("JWT has no algorithm or header");
+      throw new IllegalStateException(
+          "JWT has no algorithm or header",
+          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
     }
 
     JsonElement algorithmName = header.get(ALGORITHM_HEADER);
     if (algorithmName == null) {
-      throw new IllegalStateException("JWT header is missing the required '" +
-          ALGORITHM_HEADER + "' parameter");
+      throw new IllegalStateException(
+          "JWT header is missing the required '" + ALGORITHM_HEADER + "' parameter",
+          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
     }
-    return SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
+
+    try {
+      return SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException(
+          new InvalidJsonTokenException(ErrorCode.UNSUPPORTED_ALGORITHM));
+    }
   }
 
   public String getTokenString() {
@@ -269,7 +280,9 @@ public class JsonToken {
    */
   public JsonObject getHeader() {
     if (header == null) {
-      throw new IllegalStateException("JWT has no header");
+      throw new IllegalStateException(
+          "JWT has no header",
+          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
     }
     return header;
   }
@@ -329,7 +342,9 @@ public class JsonToken {
     }
 
     if (signer == null) {
-      throw new SignatureException("can't sign JsonToken with signer.");
+      throw new SignatureException(
+          "can't sign JsonToken with signer",
+          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
     }
     String signature;
     // now, generate the signature

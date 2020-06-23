@@ -23,6 +23,8 @@ import java.security.SignatureException;
 import java.util.List;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProviders;
+import net.oauth.jsontoken.exceptions.ErrorCode;
+import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 
 /**
  * Class that parses and verifies JSON Tokens.
@@ -107,7 +109,9 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
         .getVerifierProvider(jsonToken.getSignatureAlgorithm())
         .findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     if (verifiers == null) {
-      throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());
+      throw new IllegalStateException(
+          "No valid verifier for issuer: " + jsonToken.getIssuer(),
+          new InvalidJsonTokenException(ErrorCode.NO_VERIFIER));
     }
     return verifiers;
   }

@@ -16,11 +16,12 @@
  */
 package net.oauth.jsontoken;
 
+import static org.junit.Assert.assertThrows;
+
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.net.URI;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.EncodedKeySpec;
@@ -34,13 +35,14 @@ import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.DefaultPublicKeyLocator;
 import net.oauth.jsontoken.discovery.IdentityServerDescriptorProvider;
 import net.oauth.jsontoken.discovery.JsonServerInfo;
-import net.oauth.jsontoken.discovery.ServerInfo;
-import net.oauth.jsontoken.discovery.ServerInfoResolver;
 import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
+import net.oauth.jsontoken.exceptions.ErrorCode;
+import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
+import org.junit.function.ThrowingRunnable;
 
 public abstract class JsonTokenTestBase extends TestCase {
 
@@ -83,7 +85,7 @@ public abstract class JsonTokenTestBase extends TestCase {
 
   protected static final String TOKEN_STRING = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
   protected static final String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Wugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
-  protected static final String TOKEN_STRING_CORRUPT_PAYLOAD = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3&&&&&nb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
+  protected static final String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ";
   protected static final String TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM = "eyJhbGciOiJIUzUxMiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.44qsiZg1Hnf95N-2wNqd1htgDlE7X0BSUMMkboMcZ5QLKbmVATozMuzdoE0MAhU-IdWUuICFbzu_wcDEXDTLug";
   protected static final String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
 
@@ -109,21 +111,12 @@ public abstract class JsonTokenTestBase extends TestCase {
   protected void setUp() throws Exception {
     final Verifier hmacVerifier = new HmacSHA256Verifier(SYMMETRIC_KEY);
 
-    VerifierProvider hmacLocator = new VerifierProvider() {
-      @Override
-      public List<Verifier> findVerifier(String signerId, String keyId) {
-        return Lists.newArrayList(hmacVerifier);
-      }
-    };
+    VerifierProvider hmacLocator = (signerId, keyId) -> Lists.newArrayList(hmacVerifier);
 
     VerifierProvider rsaLocator = new DefaultPublicKeyLocator(
         new IdentityServerDescriptorProvider(),
-        new ServerInfoResolver() {
-          @Override
-          public ServerInfo resolve(URI uri) {
-            return JsonServerInfo.getDocument(SERVER_INFO_DOCUMENT);
-          }
-        });
+        uri -> JsonServerInfo.getDocument(SERVER_INFO_DOCUMENT)
+    );
 
     locators = new VerifierProviders();
     locators.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocator);
@@ -134,12 +127,8 @@ public abstract class JsonTokenTestBase extends TestCase {
     privateKey = (RSAPrivateKey) fac.generatePrivate(spec);
 
     final Verifier hmacVerifierFromRuby = new HmacSHA256Verifier("secret".getBytes());
-    VerifierProvider hmacLocatorFromRuby = new VerifierProvider() {
-      @Override
-      public List<Verifier> findVerifier(String signerId, String keyId) {
-        return Lists.newArrayList(hmacVerifierFromRuby);
-      }
-    };
+    VerifierProvider hmacLocatorFromRuby =
+        (signerId, keyId) -> Lists.newArrayList(hmacVerifierFromRuby);
     locatorsFromRuby = new VerifierProviders();
     locatorsFromRuby.setVerifierProvider(SignatureAlgorithm.HS256, hmacLocatorFromRuby);
 
@@ -160,6 +149,18 @@ public abstract class JsonTokenTestBase extends TestCase {
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 
+  protected <T extends Throwable, C extends Throwable> void assertThrowsWithErrorCode
+      (Class<T> throwsClass, ErrorCode errorCode, ThrowingRunnable func) {
+    Throwable t = assertThrows(
+        throwsClass,
+        () -> func.run()
+    );
+
+    assertTrue(InvalidJsonTokenException.class.isInstance(t.getCause()));
+    assertTrue(((InvalidJsonTokenException) t.getCause()).getErrorCode().equals(errorCode));
+
+  }
+
   /**
    * Deserializes the token string such that tokenStrings without signatures are allowed.
    * Only supports token strings with at least two parts.
@@ -173,4 +174,5 @@ public abstract class JsonTokenTestBase extends TestCase {
         .getAsJsonObject();
     return new JsonToken(header, payload, clock, tokenString);
   }
+
 }

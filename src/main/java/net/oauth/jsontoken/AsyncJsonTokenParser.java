@@ -29,6 +29,8 @@ import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.AsyncVerifierProvider;
 import net.oauth.jsontoken.discovery.AsyncVerifierProviders;
+import net.oauth.jsontoken.exceptions.ErrorCode;
+import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 
 /**
  * The asynchronous counterpart of {@link JsonTokenParser}.
@@ -117,8 +119,9 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       AsyncVerifierProvider provider =
           asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
       if (provider == null) {
-        throw new IllegalArgumentException("Signature algorithm not supported: "
-            + signatureAlgorithm);
+        throw new IllegalArgumentException(
+            "Signature algorithm not supported: " + signatureAlgorithm,
+            new InvalidJsonTokenException(ErrorCode.UNSUPPORTED_ALGORITHM));
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
@@ -128,8 +131,9 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
     Function<List<Verifier>, List<Verifier>> checkNullFunction =
         verifiers -> {
           if (verifiers == null) {
-            throw new IllegalStateException("No valid verifier for issuer: "
-                + jsonToken.getIssuer());
+            throw new IllegalStateException(
+                "No valid verifier for issuer: " + jsonToken.getIssuer(),
+                new InvalidJsonTokenException(ErrorCode.NO_VERIFIER));
           }
           return verifiers;
         };
