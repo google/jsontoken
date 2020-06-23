@@ -131,11 +131,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   }
 
   private <T extends Throwable> void assertFailsWithCause(Class<T> throwableClass, ThrowingRunnable runnable) {
-    ExecutionException e = assertThrows(
-        ExecutionException.class,
-        runnable
-    );
-
+    ExecutionException e = assertThrows(ExecutionException.class, runnable);
     assertTrue(throwableClass.isInstance(e.getCause()));
   }
 
