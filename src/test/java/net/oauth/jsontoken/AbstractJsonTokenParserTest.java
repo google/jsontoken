@@ -19,14 +19,14 @@ package net.oauth.jsontoken;
 import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonParseException;
+import java.security.SignatureException;
+import java.util.ArrayList;
+import java.util.List;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
-import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
 
