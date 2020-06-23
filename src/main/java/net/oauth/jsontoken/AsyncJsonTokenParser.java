@@ -112,7 +112,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
       AsyncVerifierProvider provider = asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
       if (provider == null) {
-        throw new IllegalStateException("No valid provider for the algorithm: " + signatureAlgorithm);
+        throw new IllegalArgumentException("Signature algorithm not supported: " + signatureAlgorithm);
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
