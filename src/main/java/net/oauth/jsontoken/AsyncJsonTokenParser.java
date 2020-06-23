@@ -48,7 +48,10 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * @param checkers an array of checkers that validates the parameters in the JSON token.
    */
   public AsyncJsonTokenParser(
-      Clock clock, AsyncVerifierProviders asyncVerifierProviders, Executor executor, Checker... checkers) {
+      Clock clock,
+      AsyncVerifierProviders asyncVerifierProviders,
+      Executor executor,
+      Checker... checkers) {
     super(clock, checkers);
     this.asyncVerifierProviders = Preconditions.checkNotNull(asyncVerifierProviders);
     this.executor = Preconditions.checkNotNull(executor);
@@ -68,10 +71,11 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   public ListenableFuture<Void> verify(JsonToken jsonToken) {
     ListenableFuture<List<Verifier>> futureVerifiers = provideVerifiers(jsonToken);
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
-    AsyncFunction<List<Verifier>, Void> verifyFunction = verifiers -> {
-      verify(jsonToken, verifiers);
-      return Futures.immediateVoidFuture();
-    };
+    AsyncFunction<List<Verifier>, Void> verifyFunction =
+        verifiers -> {
+          verify(jsonToken, verifiers);
+          return Futures.immediateVoidFuture();
+        };
 
     return Futures.transformAsync(futureVerifiers, verifyFunction, executor);
   }
@@ -110,21 +114,25 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
     ListenableFuture<List<Verifier>> futureVerifiers;
     try {
       SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
-      AsyncVerifierProvider provider = asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
+      AsyncVerifierProvider provider =
+          asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
       if (provider == null) {
-        throw new IllegalArgumentException("Signature algorithm not supported: " + signatureAlgorithm);
+        throw new IllegalArgumentException("Signature algorithm not supported: "
+            + signatureAlgorithm);
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
       return Futures.immediateFailedFuture(e);
     }
 
-    Function<List<Verifier>, List<Verifier>> checkNullFunction = verifiers -> {
-      if (verifiers == null) {
-        throw new IllegalStateException("No valid verifier for issuer: " + jsonToken.getIssuer());
-      }
-      return verifiers;
-    };
+    Function<List<Verifier>, List<Verifier>> checkNullFunction =
+        verifiers -> {
+          if (verifiers == null) {
+            throw new IllegalStateException("No valid verifier for issuer: "
+                + jsonToken.getIssuer());
+          }
+          return verifiers;
+        };
 
     return Futures.transform(futureVerifiers, checkNullFunction, executor);
   }

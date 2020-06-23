@@ -133,8 +133,6 @@ public abstract class JsonTokenTestBase extends TestCase {
     KeyFactory fac = KeyFactory.getInstance("RSA");
     privateKey = (RSAPrivateKey) fac.generatePrivate(spec);
 
-
-    //final Verifier hmacVerifierFromRuby = new HmacSHA256Verifier("R9bPJ_QRlcgK_hDLgu1Klg".getBytes());
     final Verifier hmacVerifierFromRuby = new HmacSHA256Verifier("secret".getBytes());
     VerifierProvider hmacLocatorFromRuby = new VerifierProvider() {
       @Override
@@ -169,8 +167,10 @@ public abstract class JsonTokenTestBase extends TestCase {
   protected JsonToken naiveDeserialize(String tokenString) {
     List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
     JsonParser jsonParser = new JsonParser();
-    JsonObject header = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0))).getAsJsonObject();
-    JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1))).getAsJsonObject();
+    JsonObject header = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0)))
+        .getAsJsonObject();
+    JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1)))
+        .getAsJsonObject();
     return new JsonToken(header, payload, clock, tokenString);
   }
 }

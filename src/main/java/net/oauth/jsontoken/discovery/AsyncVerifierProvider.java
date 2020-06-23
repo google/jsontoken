@@ -29,8 +29,9 @@ import net.oauth.jsontoken.crypto.Verifier;
  * different types of verification keys.
  *
  * For symmetric signing keys, an implementation of {@link AsyncVerifierProvider} presumably will
- * always look up the key in a local database. For public signing keys, the {@link AsyncVerifierProvider}
- * implementation may fetch the public verification keys when needed from the public internet.
+ * always look up the key in a local database. For public signing keys, the
+ * {@link AsyncVerifierProvider} implementation may fetch the public verification keys when needed
+ * from the public internet.
  */
 public interface AsyncVerifierProvider {
 

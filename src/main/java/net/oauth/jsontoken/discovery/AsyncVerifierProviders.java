@@ -24,10 +24,10 @@ import net.oauth.jsontoken.crypto.Verifier;
 /**
  * The asynchronous counterpart of {@link VerifierProviders}.
  * An interface that must be implemented by JSON Token verifiers. The {@link AsyncJsonTokenParser}
- * uses the {@link AsyncVerifierProviders} implementation to locate verification keys. In particular, 
- * it will first look up the {@link AsyncVerifierProvider} for the signature algorithm used in the JSON 
- * Token and the ask the {@link AsyncVerifierProvider} to provide a future that will return
- * a {@link Verifier} to check the validity of the JSON Token.
+ * uses the {@link AsyncVerifierProviders} implementation to locate verification keys. In
+ * particular, it will first look up the {@link AsyncVerifierProvider} for the signature algorithm
+ * used in the JSON Token and the ask the {@link AsyncVerifierProvider} to provide a future that
+ * will return a {@link Verifier} to check the validity of the JSON Token.
  */
 public interface AsyncVerifierProviders {
 

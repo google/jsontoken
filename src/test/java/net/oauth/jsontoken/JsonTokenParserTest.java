@@ -144,7 +144,8 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerify_failChecker() throws Exception {
-    JsonTokenParser parser = getJsonTokenParser(locators, new IgnoreAudience(), new AlwaysFailAudience());
+    JsonTokenParser parser =
+        getJsonTokenParser(locators, new IgnoreAudience(), new AlwaysFailAudience());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertThrows(
         SignatureException.class,
@@ -400,7 +401,8 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     }
   }
 
-  private JsonToken getJsonTokenWithTimeRange(Instant issuedAt, Instant expiration) throws Exception {
+  private JsonToken getJsonTokenWithTimeRange(
+      Instant issuedAt, Instant expiration) throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
     JsonToken token = new JsonToken(signer, clock);
     if (issuedAt != null) {

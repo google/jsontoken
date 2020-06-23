@@ -114,7 +114,8 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerifyAndDeserialize_tokenFromRuby() throws Exception {
-    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(asyncLocatorsFromRuby, new IgnoreAudience());
+    AsyncJsonTokenParser parser =
+        getAsyncJsonTokenParser(asyncLocatorsFromRuby, new IgnoreAudience());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_FROM_RUBY).get();
 
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
@@ -126,11 +127,13 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     return new AsyncJsonTokenParser(clock, asyncLocators, executor, new IgnoreAudience());
   }
 
-  private AsyncJsonTokenParser getAsyncJsonTokenParser(AsyncVerifierProviders providers, Checker... checkers) {
+  private AsyncJsonTokenParser getAsyncJsonTokenParser(
+      AsyncVerifierProviders providers, Checker... checkers) {
     return new AsyncJsonTokenParser(clock, providers, executor, checkers);
   }
 
-  private <T extends Throwable> void assertFailsWithCause(Class<T> throwableClass, ThrowingRunnable runnable) {
+  private <T extends Throwable> void assertFailsWithCause(
+      Class<T> throwableClass, ThrowingRunnable runnable) {
     ExecutionException e = assertThrows(ExecutionException.class, runnable);
     assertTrue(throwableClass.isInstance(e.getCause()));
   }
