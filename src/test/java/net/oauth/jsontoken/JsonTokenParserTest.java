@@ -53,7 +53,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     VerifierProviders noLocators = new VerifierProviders();
     noLocators.setVerifierProvider(SignatureAlgorithm.HS256, noLocator);
 
-    JsonTokenParser parser = getJsonTokenParser(noLocators, new IgnoreAudience());
+    JsonTokenParser parser = getJsonTokenParser(noLocators, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertThrows(
         IllegalStateException.class,
@@ -85,7 +85,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testVerifyAndDeserialize_tokenFromRuby() throws Exception {
-    JsonTokenParser parser = getJsonTokenParser(locatorsFromRuby, new IgnoreAudience());
+    JsonTokenParser parser = getJsonTokenParser(locatorsFromRuby, new AlwaysPassChecker());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_FROM_RUBY);
 
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
@@ -131,7 +131,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   private JsonTokenParser getJsonTokenParser() {
-    return new JsonTokenParser(clock, locators, new IgnoreAudience());
+    return new JsonTokenParser(clock, locators, new AlwaysPassChecker());
   }
 
   private JsonTokenParser getJsonTokenParser(VerifierProviders providers, Checker... checkers) {
