@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
+import javax.annotation.Nullable;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
@@ -48,6 +49,7 @@ public class VerifierProviders {
   /**
    * Returns the {@link VerifierProvider} for the given {@link SignatureAlgorithm}.
    */
+  @Nullable
   public VerifierProvider getVerifierProvider(SignatureAlgorithm alg) {
     return map.get(alg);
   }
