@@ -20,17 +20,13 @@ import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
+import java.security.SignatureException;
+import javax.annotation.Nullable;
 import net.oauth.jsontoken.crypto.AsciiStringSigner;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Signer;
-
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
-
-import javax.annotation.Nullable;
-import java.security.SignatureException;
-
 
 /**
  * A JSON Token.

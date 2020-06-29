@@ -17,7 +17,6 @@
 package net.oauth.jsontoken;
 
 import com.google.gson.JsonObject;
-
 import java.security.SignatureException;
 
 /**
@@ -31,6 +30,6 @@ public interface Checker {
    * @param payload the payload component of a JsonToken (JWT)
    * @throws SignatureException if the audience doesn't match.
    */
-  public void check(JsonObject payload) throws SignatureException;
+  void check(JsonObject payload) throws SignatureException;
 
 }
