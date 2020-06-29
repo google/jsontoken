@@ -136,7 +136,7 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_failChecker() throws Exception {
     AbstractJsonTokenParser parser =
-        getAbstractJsonTokenParser(new IgnoreAudience(), new AlwaysFailAudience());
+        getAbstractJsonTokenParser(new AlwaysPassChecker(), new AlwaysFailChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertThrows(
         SignatureException.class,
@@ -181,7 +181,7 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testDeserialize_emptySignature() throws Exception {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new IgnoreAudience());
+    JsonTokenParser parser = new JsonTokenParser(clock, locators, new AlwaysPassChecker());
     parser.deserialize(TOKEN_STRING_EMPTY_SIG);
   }
 
@@ -317,7 +317,7 @@ public class AbstractJsonTokenParserTest extends JsonTokenTestBase {
   }
 
   private AbstractJsonTokenParser getAbstractJsonTokenParser() {
-    return new AbstractJsonTokenParser(clock, new IgnoreAudience()){};
+    return new AbstractJsonTokenParser(clock, new AlwaysPassChecker()){};
   }
 
   private AbstractJsonTokenParser getAbstractJsonTokenParser(Checker... checkers) {

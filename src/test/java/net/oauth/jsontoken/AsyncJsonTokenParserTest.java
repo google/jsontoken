@@ -81,7 +81,8 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
       }
       return null;
     };
-    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noLocators, new IgnoreAudience());
+
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noLocators, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
 
     assertFailsWithCause(
@@ -92,7 +93,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerify_noProviders() throws Exception {
     AsyncVerifierProviders noProviders = alg -> null;
-    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noProviders, new IgnoreAudience());
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noProviders, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
 
     assertFailsWithCause(
@@ -126,7 +127,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerifyAndDeserialize_tokenFromRuby() throws Exception {
     AsyncJsonTokenParser parser =
-        getAsyncJsonTokenParser(asyncLocatorsFromRuby, new IgnoreAudience());
+        getAsyncJsonTokenParser(asyncLocatorsFromRuby, new AlwaysPassChecker());
     JsonToken token = parser.verifyAndDeserialize(TOKEN_FROM_RUBY).get();
 
     assertEquals(SignatureAlgorithm.HS256, token.getSignatureAlgorithm());
@@ -135,7 +136,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   }
 
   private AsyncJsonTokenParser getAsyncJsonTokenParser() {
-    return new AsyncJsonTokenParser(clock, asyncLocators, executor, new IgnoreAudience());
+    return new AsyncJsonTokenParser(clock, asyncLocators, executor, new AlwaysPassChecker());
   }
 
   private AsyncJsonTokenParser getAsyncJsonTokenParser(

@@ -19,12 +19,12 @@ package net.oauth.jsontoken;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import java.security.SignatureException;
+import java.util.List;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
-import java.security.SignatureException;
-import java.util.List;
 
 /**
  * Class that parses and verifies JSON Tokens.
