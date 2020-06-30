@@ -251,16 +251,14 @@ public class JsonToken {
    */
   public SignatureAlgorithm getSignatureAlgorithm() {
     if (header == null) {
-      throw new IllegalStateException(
-          "JWT has no algorithm or header",
-          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
+      throw new IllegalStateException("JWT has no algorithm or header");
     }
 
     JsonElement algorithmName = header.get(ALGORITHM_HEADER);
     if (algorithmName == null) {
       throw new IllegalStateException(
           "JWT header is missing the required '" + ALGORITHM_HEADER + "' parameter",
-          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
+          new InvalidJsonTokenException(ErrorCode.BAD_HEADER));
     }
 
     try {
@@ -280,9 +278,7 @@ public class JsonToken {
    */
   public JsonObject getHeader() {
     if (header == null) {
-      throw new IllegalStateException(
-          "JWT has no header",
-          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
+      throw new IllegalStateException("JWT has no header");
     }
     return header;
   }
@@ -344,8 +340,9 @@ public class JsonToken {
     if (signer == null) {
       throw new SignatureException(
           "can't sign JsonToken with signer",
-          new InvalidJsonTokenException(ErrorCode.INTERNAL_ERROR));
+          new IllegalStateException());
     }
+
     String signature;
     // now, generate the signature
     AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);

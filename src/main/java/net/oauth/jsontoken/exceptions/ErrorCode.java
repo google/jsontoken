@@ -1,6 +1,12 @@
 package net.oauth.jsontoken.exceptions;
 
 public enum ErrorCode {
+
+ /**
+  * The header is missing required parameters.
+  */
+ BAD_HEADER,
+
  /**
   * Signature failed verification.
   */
@@ -17,11 +23,6 @@ public enum ErrorCode {
  EXPIRED_TOKEN,
 
  /**
-  * Something went wrong internally.
-  */
- INTERNAL_ERROR,
-
- /**
   * Token string is corrupted and/or does not contain three components.
   */
  MALFORMED_TOKEN_STRING,
@@ -32,7 +33,7 @@ public enum ErrorCode {
  NO_VERIFIER,
 
  /**
-  * Generic catch-all for unknown and ambiguous exceptions.
+  * Generic catch-all for exceptions with scenarios that are not pre-defined.
   */
  UNKNOWN,
 

@@ -1,10 +1,9 @@
 package net.oauth.jsontoken.exceptions;
 
-public class InvalidJsonTokenException extends Exception {
+public final class InvalidJsonTokenException extends Exception {
   private final ErrorCode errorCode;
 
   public InvalidJsonTokenException(ErrorCode errorCode) {
-    super();
     this.errorCode = errorCode;
   }
 

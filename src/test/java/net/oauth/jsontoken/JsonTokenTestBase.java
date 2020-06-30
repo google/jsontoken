@@ -149,13 +149,9 @@ public abstract class JsonTokenTestBase extends TestCase {
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
   }
 
-  protected <T extends Throwable, C extends Throwable> void assertThrowsWithErrorCode
+  protected <T extends Throwable> void assertThrowsWithErrorCode
       (Class<T> throwsClass, ErrorCode errorCode, ThrowingRunnable func) {
-    Throwable t = assertThrows(
-        throwsClass,
-        () -> func.run()
-    );
-
+    Throwable t = assertThrows(throwsClass, func);
     assertTrue(InvalidJsonTokenException.class.isInstance(t.getCause()));
     assertTrue(((InvalidJsonTokenException) t.getCause()).getErrorCode().equals(errorCode));
 

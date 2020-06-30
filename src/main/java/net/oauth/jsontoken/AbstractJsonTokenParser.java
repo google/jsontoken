@@ -112,12 +112,12 @@ abstract class AbstractJsonTokenParser {
       }
 
       if (!clock.isCurrentTimeInInterval(issuedAt, expiration)) {
-        if (clock.isCurrentTimeInInterval(new Instant(0), issuedAt)) {
-          throw new IllegalStateException(
-              errorMessage, new InvalidJsonTokenException(ErrorCode.BAD_TIME_RANGE));
-        } else {
+        if (clock.now().isAfter(expiration)) {
           throw new IllegalStateException(
               errorMessage, new InvalidJsonTokenException(ErrorCode.EXPIRED_TOKEN));
+        } else {
+          throw new IllegalStateException(
+              errorMessage, new InvalidJsonTokenException(ErrorCode.BAD_TIME_RANGE));
         }
       }
     }
