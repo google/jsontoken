@@ -265,6 +265,7 @@ public class JsonToken {
       return SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(
+          e.getMessage(),
           new InvalidJsonTokenException(ErrorCode.UNSUPPORTED_ALGORITHM));
     }
   }
