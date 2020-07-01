@@ -23,6 +23,12 @@ public enum ErrorCode {
  EXPIRED_TOKEN,
 
  /**
+  * The token is in an illegal state because of incorrect use of the library.
+  * If this error code appears, immediately rethrow as an {@link IllegalStateException}.
+  */
+ ILLEGAL_STATE,
+
+ /**
   * Token string is corrupted and/or does not contain three components.
   */
  MALFORMED_TOKEN_STRING,

@@ -154,7 +154,6 @@ public abstract class JsonTokenTestBase extends TestCase {
     Throwable t = assertThrows(throwsClass, func);
     assertTrue(InvalidJsonTokenException.class.isInstance(t.getCause()));
     assertTrue(((InvalidJsonTokenException) t.getCause()).getErrorCode().equals(errorCode));
-
   }
 
   /**

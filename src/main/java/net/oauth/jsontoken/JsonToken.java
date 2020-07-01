@@ -340,7 +340,7 @@ public class JsonToken {
     if (signer == null) {
       throw new SignatureException(
           "can't sign JsonToken with signer",
-          new IllegalStateException());
+          new InvalidJsonTokenException(ErrorCode.ILLEGAL_STATE));
     }
 
     String signature;

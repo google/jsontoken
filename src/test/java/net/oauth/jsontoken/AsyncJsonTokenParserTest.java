@@ -89,8 +89,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noLocators, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
-    assertFailsWithCauseAndErrorCode(
-        IllegalStateException.class,
+    assertFailsWithErrorCode(
         ErrorCode.NO_VERIFIER,
         () -> parser.verify(checkToken).get()
     );
@@ -145,10 +144,18 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     ExecutionException e = assertThrows(ExecutionException.class, runnable);
     assertTrue(throwableClass.isInstance(e.getCause()));
 
-    Throwable t = e.getCause().getCause();
-    assertNotNull(t);
-    assertTrue(InvalidJsonTokenException.class.isInstance(t));
-    assertTrue(((InvalidJsonTokenException) t).getErrorCode().equals(errorCode));
+    Throwable cause = e.getCause().getCause();
+    assertNotNull(cause);
+    assertTrue(InvalidJsonTokenException.class.isInstance(cause));
+    assertTrue(((InvalidJsonTokenException) cause).getErrorCode().equals(errorCode));
+  }
+
+  private void assertFailsWithErrorCode(ErrorCode errorCode, ThrowingRunnable runnable) {
+    ExecutionException e = assertThrows(ExecutionException.class, runnable);
+    assertTrue(InvalidJsonTokenException.class.isInstance(e.getCause()));
+
+    InvalidJsonTokenException cause = (InvalidJsonTokenException) e.getCause();
+    assertTrue(cause.getErrorCode().equals(errorCode));
   }
 
 }
