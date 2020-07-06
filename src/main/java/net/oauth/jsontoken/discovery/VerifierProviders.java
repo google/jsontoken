@@ -17,11 +17,10 @@
 package net.oauth.jsontoken.discovery;
 
 import com.google.common.collect.Maps;
-import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
-import net.oauth.jsontoken.crypto.Verifier;
 
 /**
  * A collection of {@link VerifierProvider}s, one for each signature algorithm.
@@ -31,7 +30,7 @@ import net.oauth.jsontoken.crypto.Verifier;
  * will use different ways to look up verification keys - for example, symmetric keys
  * will always be pre-negotiated and looked up in a local database, while public
  * verification keys can be looked up on demand), and the ask the {@link VerifierProvider}
- * to provide a {@link List<Verifier>} to check the validity of the JSON Token.
+ * to provide a {@code List<Verifier>} to check the validity of the JSON Token.
  */
 public class VerifierProviders {
 
@@ -47,6 +46,7 @@ public class VerifierProviders {
   /**
    * Returns the {@link VerifierProvider} for the given {@link SignatureAlgorithm}.
    */
+  @Nullable
   public VerifierProvider getVerifierProvider(SignatureAlgorithm alg) {
     return map.get(alg);
   }

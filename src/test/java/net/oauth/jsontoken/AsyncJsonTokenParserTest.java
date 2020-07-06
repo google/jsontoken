@@ -84,8 +84,20 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noLocators, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
+
     assertFailsWithCause(
         IllegalStateException.class,
+        () -> parser.verify(checkToken).get()
+    );
+  }
+
+  public void testVerify_noProviders() throws Exception {
+    AsyncVerifierProviders noProviders = alg -> null;
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noProviders, new AlwaysPassChecker());
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
+
+    assertFailsWithCause(
+        IllegalArgumentException.class,
         () -> parser.verify(checkToken).get()
     );
   }

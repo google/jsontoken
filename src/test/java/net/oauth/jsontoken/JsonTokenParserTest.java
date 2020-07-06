@@ -55,8 +55,20 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     JsonTokenParser parser = getJsonTokenParser(noLocators, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
+
     assertThrows(
         IllegalStateException.class,
+        () -> parser.verify(checkToken)
+    );
+  }
+
+  public void testVerify_noProviders() throws Exception {
+    VerifierProviders noProviders = new VerifierProviders();
+    JsonTokenParser parser = getJsonTokenParser(noProviders, new AlwaysPassChecker());
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
+
+    assertThrows(
+        IllegalArgumentException.class,
         () -> parser.verify(checkToken)
     );
   }
