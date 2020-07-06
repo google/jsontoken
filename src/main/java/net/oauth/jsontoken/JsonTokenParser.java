@@ -21,7 +21,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.security.SignatureException;
 import java.util.List;
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
+import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
 import net.oauth.jsontoken.exceptions.ErrorCode;
 import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
@@ -105,14 +107,20 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    */
   private List<Verifier> provideVerifiers(JsonToken jsonToken) {
     Preconditions.checkNotNull(verifierProviders);
-    List<Verifier> verifiers = verifierProviders
-        .getVerifierProvider(jsonToken.getSignatureAlgorithm())
-        .findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
+    SignatureAlgorithm signatureAlgorithm = jsonToken.getSignatureAlgorithm();
+    VerifierProvider provider = verifierProviders.getVerifierProvider(signatureAlgorithm);
+    if (provider == null) {
+      throw new IllegalArgumentException("Signature algorithm not supported: "
+          + signatureAlgorithm);
+    }
+
+    List<Verifier> verifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     if (verifiers == null) {
       throw new IllegalStateException(
           "No valid verifier for issuer: " + jsonToken.getIssuer(),
           new InvalidJsonTokenException(ErrorCode.NO_VERIFIER));
     }
+
     return verifiers;
   }
 

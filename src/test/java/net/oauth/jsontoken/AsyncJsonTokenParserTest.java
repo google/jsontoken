@@ -95,6 +95,17 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     );
   }
 
+  public void testVerify_noProviders() throws Exception {
+    AsyncVerifierProviders noProviders = alg -> null;
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noProviders, new AlwaysPassChecker());
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
+
+    assertFailsWithErrorCode(
+        ErrorCode.UNSUPPORTED_ALGORITHM,
+        () -> parser.verify(checkToken).get()
+    );
+  }
+
   public void testVerifyAndDeserialize_valid() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
     JsonToken token = parser.verifyAndDeserialize(TOKEN_STRING).get();
