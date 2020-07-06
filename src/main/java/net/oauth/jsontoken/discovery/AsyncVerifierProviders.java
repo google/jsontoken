@@ -19,7 +19,6 @@ package net.oauth.jsontoken.discovery;
 import javax.annotation.Nullable;
 import net.oauth.jsontoken.AsyncJsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
-import net.oauth.jsontoken.crypto.Verifier;
 
 /**
  * The asynchronous counterpart of {@link VerifierProviders}.
@@ -27,7 +26,7 @@ import net.oauth.jsontoken.crypto.Verifier;
  * uses the {@link AsyncVerifierProviders} implementation to locate verification keys. In
  * particular, it will first look up the {@link AsyncVerifierProvider} for the signature algorithm
  * used in the JSON Token and the ask the {@link AsyncVerifierProvider} to provide a future that
- * will return a {@link Verifier} to check the validity of the JSON Token.
+ * will return a {@code List<Verifier>} to check the validity of the JSON Token.
  */
 public interface AsyncVerifierProviders {
 

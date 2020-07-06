@@ -33,12 +33,12 @@ import net.oauth.jsontoken.crypto.Verifier;
 public interface VerifierProvider {
 
   /**
-   * Returns the {@link List<Verifier>} that represents a certain verification
+   * Returns the {@code List<Verifier>} that represents a certain verification
    * key, given the key's id and its issuer.
    * @param issuer the id of the issuer that's using the key.
    * @param keyId the id of the key, if keyId mismatches, return a list of 
    * possible verification keys.
-   * @return a {@link List<Verifier>} object that represents the verification key.
+   * @return a {@code List<Verifier>} object that represents the verification key.
    */
   List<Verifier> findVerifier(String issuer, String keyId);
 
