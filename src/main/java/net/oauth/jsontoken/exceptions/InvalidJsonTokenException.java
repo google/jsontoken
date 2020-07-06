@@ -12,11 +12,6 @@ public final class InvalidJsonTokenException extends Exception {
     this.errorCode = errorCode;
   }
 
-  public InvalidJsonTokenException(ErrorCode errorCode, String message, Throwable cause) {
-    super(message, cause);
-    this.errorCode = errorCode;
-  }
-
   public InvalidJsonTokenException(ErrorCode errorCode, Throwable cause) {
     super(cause);
     this.errorCode = errorCode;

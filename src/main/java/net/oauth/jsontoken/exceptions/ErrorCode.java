@@ -34,7 +34,7 @@ public enum ErrorCode {
  MALFORMED_TOKEN_STRING,
 
  /**
-  * There are no verifiers available for a given issuer.
+  * There are no verifiers available for a given issuer and keyId.
   */
  NO_VERIFIER,
 

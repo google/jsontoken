@@ -131,7 +131,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
     AsyncFunction<List<Verifier>, List<Verifier>> checkNullFunction =
         verifiers -> {
-          if (verifiers == null) {
+          if (verifiers == null || verifiers.isEmpty()) {
             return Futures.immediateFailedFuture(
                 new InvalidJsonTokenException(
                     ErrorCode.NO_VERIFIER,
