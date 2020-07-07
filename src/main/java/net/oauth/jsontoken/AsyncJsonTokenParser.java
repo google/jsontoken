@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -63,8 +64,16 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * (iat, exp). Uses {@link AsyncVerifierProviders} to obtain the secret key.
    * This method is not expected to throw exceptions when returning a future. However,
    * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} includes the possible exceptions
-   * as thrown by {@link JsonTokenParser#verify(JsonToken)}.
+   * in which {@link ExecutionException#getCause()} is an {@link InvalidJsonTokenException}
+   * with an error code of:
+   * {@link ErrorCode#BAD_HEADER} if the header does not have all of the required parameters,
+   * {@link ErrorCode#BAD_SIGNATURE} if the signature is invalid,
+   * {@link ErrorCode#BAD_TIME_RANGE} if the IAT is after EXP or the token is in the future,
+   * {@link ErrorCode#EXPIRED_TOKEN} if the token is expired,
+   * {@link ErrorCode#MALFORMED_TOKEN_STRING} if the tokenString is not a properly formed JWT,
+   * {@link ErrorCode#NO_VERIFIER} if there is no valid verifier for the (issuer, keyId) pair,
+   * {@link ErrorCode#UNKNOWN} if any of the checkers fail,
+   * {@link ErrorCode#UNSUPPORTED_ALGORITHM} if the signature algorithm is unsupported
    *
    * @param jsonToken
    * @return a {@link ListenableFuture} that will fail if the token fails verification.
@@ -74,7 +83,11 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
     AsyncFunction<List<Verifier>, Void> verifyFunction =
         verifiers -> {
-          verify(jsonToken, verifiers);
+          try {
+            verify(jsonToken, verifiers);
+          } catch (Exception e) {
+            return getFailedFuture(e);
+          }
           return Futures.immediateVoidFuture();
         };
 
@@ -85,8 +98,16 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * Parses and verifies a JSON Token.
    * This method is not expected to throw exceptions when returning a future. However,
    * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} includes the same possible exceptions
-   * thrown by {@link JsonTokenParser#verifyAndDeserialize(String)}.
+   * in which {@link ExecutionException#getCause()} is an {@link InvalidJsonTokenException}
+   * with an error code of:
+   * {@link ErrorCode#BAD_HEADER} if the header does not have all of the required parameters,
+   * {@link ErrorCode#BAD_SIGNATURE} if the signature is invalid,
+   * {@link ErrorCode#BAD_TIME_RANGE} if the IAT or EXP is invalid (IAT after EXP or future token),
+   * {@link ErrorCode#EXPIRED_TOKEN} if the token is expired,
+   * {@link ErrorCode#MALFORMED_TOKEN_STRING} if tokenString is not a properly formed JWT,
+   * {@link ErrorCode#NO_VERIFIER} if there is no valid verifier for the (issuer, keyId) pair,
+   * {@link ErrorCode#UNKNOWN} if any of the checkers fail,
+   * {@link ErrorCode#UNSUPPORTED_ALGORITHM} if the signature algorithm is unsupported
    *
    * @param tokenString the serialized token that is to parsed and verified.
    * @return a {@link ListenableFuture} that will return the deserialized {@link JsonObject},
@@ -98,7 +119,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
     try {
       jsonToken = deserialize(tokenString);
     } catch (Exception e) {
-      return Futures.immediateFailedFuture(e);
+      return getFailedFuture(e);
     }
 
     return Futures.transform(verify(jsonToken), unused -> jsonToken, executor);
@@ -107,6 +128,13 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   /**
    * Use {@link AsyncVerifierProviders} to get future that will return a list of verifiers
    * for this token.
+   * This method is not expected to throw exceptions when returning a future. However,
+   * when getting the result of the future, an {@link ExecutionException} may be thrown
+   * in which {@link ExecutionException#getCause()} is an {@link InvalidJsonTokenException}
+   * with an error code of:
+   * {@link ErrorCode#BAD_HEADER} if the header does not have all of the required parameters,
+   * {@link ErrorCode#NO_VERIFIER} if there is no valid verifier for the (issuer, keyId) pair,
+   * {@link ErrorCode#UNSUPPORTED_ALGORITHM} if the signature algorithm is unsupported
    *
    * @param jsonToken
    * @return a {@link ListenableFuture} that will return a list of verifiers
@@ -125,7 +153,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
-      return Futures.immediateFailedFuture(e);
+      return getFailedFuture(e);
     }
 
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
@@ -141,6 +169,37 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
         };
 
     return Futures.transformAsync(futureVerifiers, checkNullFunction, executor);
+  }
+
+  /**
+   * Converts exceptions (when applicable) to {@link InvalidJsonTokenException}
+   * for better exception handling in the asynchronous parser.
+   *
+   * @return a failed {@link ListenableFuture}
+   */
+  private ListenableFuture getFailedFuture(Exception e) {
+    Throwable cause = e.getCause();
+    if (cause != null && InvalidJsonTokenException.class.isInstance(cause)) {
+      InvalidJsonTokenException invalidJsonTokenException = (InvalidJsonTokenException) cause;
+      if (invalidJsonTokenException.getErrorCode().equals(ErrorCode.ILLEGAL_STATE)) {
+        return Futures.immediateFailedFuture(
+            new IllegalStateException(e));
+      }
+      return Futures.immediateFailedFuture(
+          new InvalidJsonTokenException(invalidJsonTokenException.getErrorCode(), e));
+    }
+
+    if (JsonParseException.class.isInstance(e)) {
+      return Futures.immediateFailedFuture(
+          new InvalidJsonTokenException(ErrorCode.MALFORMED_TOKEN_STRING, e));
+    }
+
+    if (RuntimeException.class.isInstance(e)) {
+      return Futures.immediateFailedFuture(e);
+    }
+
+    return Futures.immediateFailedFuture(
+        new InvalidJsonTokenException(ErrorCode.UNKNOWN, e));
   }
 
 }
