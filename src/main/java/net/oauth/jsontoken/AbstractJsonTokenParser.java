@@ -25,6 +25,8 @@ import java.security.SignatureException;
 import java.util.List;
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.Verifier;
+import net.oauth.jsontoken.exceptions.ErrorCode;
+import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 import org.apache.commons.codec.binary.Base64;
 import org.joda.time.Instant;
 
@@ -83,9 +85,10 @@ abstract class AbstractJsonTokenParser {
    *   or if tokenString is not a properly formatted JWT
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
-    if (! signatureIsValid(jsonToken.getTokenString(), verifiers)) {
-      throw new SignatureException("Invalid signature for token: " +
-          jsonToken.getTokenString());
+    if (!signatureIsValid(jsonToken.getTokenString(), verifiers)) {
+      throw new SignatureException(
+          "Invalid signature for token: " + jsonToken.getTokenString(),
+          new InvalidJsonTokenException(ErrorCode.BAD_SIGNATURE));
     }
 
     Instant issuedAt = jsonToken.getIssuedAt();
@@ -100,10 +103,22 @@ abstract class AbstractJsonTokenParser {
     }
 
     if (issuedAt != null && expiration != null) {
-      if (issuedAt.isAfter(expiration)
-          || ! clock.isCurrentTimeInInterval(issuedAt, expiration)) {
-        throw new IllegalStateException(String.format("Invalid iat and/or exp. iat: %s exp: %s "
-            + "now: %s", jsonToken.getIssuedAt(), jsonToken.getExpiration(), clock.now()));
+      String errorMessage = String.format("Invalid iat and/or exp. iat: %s exp: %s now: %s",
+          jsonToken.getIssuedAt(), jsonToken.getExpiration(), clock.now());
+
+      if (issuedAt.isAfter(expiration)) {
+        throw new IllegalStateException(
+            errorMessage, new InvalidJsonTokenException(ErrorCode.BAD_TIME_RANGE));
+      }
+
+      if (!clock.isCurrentTimeInInterval(issuedAt, expiration)) {
+        if (clock.now().isAfter(expiration)) {
+          throw new IllegalStateException(
+              errorMessage, new InvalidJsonTokenException(ErrorCode.EXPIRED_TOKEN));
+        } else {
+          throw new IllegalStateException(
+              errorMessage, new InvalidJsonTokenException(ErrorCode.BAD_TIME_RANGE));
+        }
       }
     }
 
@@ -173,8 +188,10 @@ abstract class AbstractJsonTokenParser {
   private List<String> splitTokenString(String tokenString) {
     List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
     if (pieces.size() != 3) {
-      throw new IllegalStateException("Expected JWT to have 3 segments separated by '" +
-          JsonTokenUtil.DELIMITER + "', but it has " + pieces.size() + " segments");
+      throw new IllegalStateException(
+          "Expected JWT to have 3 segments separated by '" +
+              JsonTokenUtil.DELIMITER + "', but it has " + pieces.size() + " segments",
+          new InvalidJsonTokenException(ErrorCode.MALFORMED_TOKEN_STRING));
     }
     return pieces;
   }

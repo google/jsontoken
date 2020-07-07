@@ -16,7 +16,6 @@
  */
 package net.oauth.jsontoken;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
@@ -29,6 +28,8 @@ import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.AsyncVerifierProvider;
 import net.oauth.jsontoken.discovery.AsyncVerifierProviders;
+import net.oauth.jsontoken.exceptions.ErrorCode;
+import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 
 /**
  * The asynchronous counterpart of {@link JsonTokenParser}.
@@ -117,24 +118,29 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       AsyncVerifierProvider provider =
           asyncVerifierProviders.getVerifierProvider(signatureAlgorithm);
       if (provider == null) {
-        throw new IllegalArgumentException("Signature algorithm not supported: "
-            + signatureAlgorithm);
+        return Futures.immediateFailedFuture(
+            new InvalidJsonTokenException(
+                ErrorCode.UNSUPPORTED_ALGORITHM,
+                "Signature algorithm not supported: " + signatureAlgorithm));
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
       return Futures.immediateFailedFuture(e);
     }
 
-    Function<List<Verifier>, List<Verifier>> checkNullFunction =
+    // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
+    AsyncFunction<List<Verifier>, List<Verifier>> checkNullFunction =
         verifiers -> {
-          if (verifiers == null) {
-            throw new IllegalStateException("No valid verifier for issuer: "
-                + jsonToken.getIssuer());
+          if (verifiers == null || verifiers.isEmpty()) {
+            return Futures.immediateFailedFuture(
+                new InvalidJsonTokenException(
+                    ErrorCode.NO_VERIFIER,
+                    "No valid verifier for issuer: " + jsonToken.getIssuer()));
           }
-          return verifiers;
+          return Futures.immediateFuture(verifiers);
         };
 
-    return Futures.transform(futureVerifiers, checkNullFunction, executor);
+    return Futures.transformAsync(futureVerifiers, checkNullFunction, executor);
   }
 
 }

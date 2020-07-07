@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.security.SignatureException;
 import java.util.regex.Pattern;
@@ -28,6 +27,7 @@ import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
+import net.oauth.jsontoken.exceptions.ErrorCode;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
 
@@ -42,8 +42,9 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_unsupportedSignature() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
-    assertThrows(
+    assertThrowsWithErrorCode(
         IllegalArgumentException.class,
+        ErrorCode.UNSUPPORTED_ALGORITHM,
         () -> parser.verify(checkToken)
     );
   }
@@ -56,8 +57,9 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonTokenParser parser = getJsonTokenParser(noLocators, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
 
-    assertThrows(
+    assertThrowsWithErrorCode(
         IllegalStateException.class,
+        ErrorCode.NO_VERIFIER,
         () -> parser.verify(checkToken)
     );
   }
@@ -82,9 +84,10 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerifyAndDeserialize_deserializeFail() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    assertThrows(
-        JsonParseException.class,
-        () -> parser.verifyAndDeserialize(TOKEN_STRING_CORRUPT_PAYLOAD)
+    assertThrowsWithErrorCode(
+        IllegalStateException.class,
+        ErrorCode.MALFORMED_TOKEN_STRING,
+        () -> parser.verifyAndDeserialize(TOKEN_STRING_2PARTS)
     );
   }
 
