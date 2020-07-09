@@ -59,7 +59,7 @@ abstract class AbstractJsonTokenParser {
    * @throws JsonParseException if the header or payload of tokenString is corrupted
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
-  JsonToken abstractDeserialize(String tokenString) {
+  final JsonToken deserializeInternal(String tokenString) {
     List<String> pieces = splitTokenString(tokenString);
     String jwtHeaderSegment = pieces.get(0);
     String jwtPayloadSegment = pieces.get(1);
@@ -84,9 +84,9 @@ abstract class AbstractJsonTokenParser {
    * @throws IllegalStateException when exp or iat are invalid
    *   or if tokenString is not a properly formatted JWT
    */
-  void abstractVerify(JsonToken jsonToken, List<Verifier> verifiers)
+  final void verifyInternal(JsonToken jsonToken, List<Verifier> verifiers)
       throws SignatureException {
-    if (!abstractSignatureIsValid(jsonToken.getTokenString(), verifiers)) {
+    if (!signatureIsValidInternal(jsonToken.getTokenString(), verifiers)) {
       throw new SignatureException(
           "Invalid signature for token: " + jsonToken.getTokenString(),
           new InvalidJsonTokenException(ErrorCode.BAD_SIGNATURE));
@@ -138,7 +138,7 @@ abstract class AbstractJsonTokenParser {
    *   secret keys.
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
-  boolean abstractSignatureIsValid(String tokenString, List<Verifier> verifiers) {
+  final boolean signatureIsValidInternal(String tokenString, List<Verifier> verifiers) {
     List<String> pieces = splitTokenString(tokenString);
     byte[] signature = Base64.decodeBase64(pieces.get(2));
     String baseString = JsonTokenUtil.toDotFormat(pieces.get(0), pieces.get(1));

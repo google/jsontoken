@@ -99,7 +99,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
   /**
    * Decodes the JWT token string into a JsonToken object. Does not perform
    * any validation of headers or claims.
-   * Identical to {@link AbstractJsonTokenParser#abstractDeserialize(String)}.
+   * Identical to {@link AbstractJsonTokenParser#deserializeInternal(String)}.
    *
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
@@ -107,7 +107,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public JsonToken deserialize(String tokenString) {
-    return abstractDeserialize(tokenString);
+    return deserializeInternal(tokenString);
   }
 
   /*
@@ -123,12 +123,12 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    *   or if tokenString is not a properly formatted JWT
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
-    abstractVerify(jsonToken, verifiers);
+    verifyInternal(jsonToken, verifiers);
   }
 
   /**
    * Verifies that a JSON Web Token's signature is valid.
-   * Identical to {@link AbstractJsonTokenParser#abstractSignatureIsValid(String, List)}.
+   * Identical to {@link AbstractJsonTokenParser#signatureIsValidInternal(String, List)}.
    *
    * @param tokenString the encoded and signed JSON Web Token to verify.
    * @param verifiers used to verify the signature. These usually encapsulate
@@ -136,7 +136,7 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
-    return abstractSignatureIsValid(tokenString, verifiers);
+    return signatureIsValidInternal(tokenString, verifiers);
   }
 
   /**

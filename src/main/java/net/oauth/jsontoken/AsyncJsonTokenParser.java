@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import java.security.SignatureException;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -98,7 +99,9 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
           return Futures.immediateVoidFuture();
         };
 
-    return Futures.transformAsync(futureVerifiers, verifyFunction, executor);
+    ListenableFuture<Void> result =
+        Futures.transformAsync(futureVerifiers, verifyFunction, executor);
+    return mapExceptionFuture(result);
   }
 
   /**
@@ -139,13 +142,15 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       return Futures.immediateFailedFuture(e);
     }
 
-    return Futures.transform(verify(jsonToken), unused -> jsonToken, executor);
+    ListenableFuture<JsonToken> result =
+        Futures.transform(verify(jsonToken), unused -> jsonToken, executor);
+    return mapExceptionFuture(result);
   }
 
   /**
    * Decodes the JWT token string into a JsonToken object. Does not perform
    * any validation of headers or claims.
-   * Identical to {@link AbstractJsonTokenParser#abstractDeserialize(String)},
+   * Identical to {@link AbstractJsonTokenParser#deserializeInternal(String)},
    * except exceptions are caught and rethrown as {@link InvalidJsonTokenException}.
    *
    * @param tokenString The original encoded representation of a JWT
@@ -154,19 +159,14 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    *   if the tokenString is not a properly formatted JWT.
    */
   public JsonToken deserialize(String tokenString) throws InvalidJsonTokenException {
-    try {
-      return abstractDeserialize(tokenString);
-    } catch (RuntimeException e) {
-      rethrowException(e);
-      throw new IllegalStateException("This should never be reached.");
-    }
+    return mapExceptionAndThrow(() -> deserializeInternal(tokenString));
   }
 
   /**
    * Verifies that the jsonToken has a valid signature and valid standard claims
    * (iat, exp). Does not need VerifierProviders because verifiers are passed in
    * directly.
-   * Identical to {@link AbstractJsonTokenParser#abstractVerify(JsonToken, List)},
+   * Identical to {@link AbstractJsonTokenParser#verifyInternal(JsonToken, List)},
    * except exceptions are caught and rethrown as {@link InvalidJsonTokenException}.
    *
    * @param jsonToken the token to verify
@@ -184,17 +184,15 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers)
       throws InvalidJsonTokenException {
-    try {
-      abstractVerify(jsonToken, verifiers);
-    } catch (SignatureException | RuntimeException e) {
-      rethrowException(e);
-      throw new IllegalStateException("This should never be reached.");
-    }
+    mapExceptionAndThrow(() -> {
+      verifyInternal(jsonToken, verifiers);
+      return null;
+    });
   }
 
   /**
    * Verifies that a JSON Web Token's signature is valid.
-   * Identical to {@link AbstractJsonTokenParser#abstractSignatureIsValid(String, List)},
+   * Identical to {@link AbstractJsonTokenParser#signatureIsValidInternal(String, List)},
    * except exceptions are caught and rethrown as {@link InvalidJsonTokenException}.
    *
    * @param tokenString the encoded and signed JSON Web Token to verify.
@@ -205,12 +203,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers)
       throws InvalidJsonTokenException {
-    try {
-      return abstractSignatureIsValid(tokenString, verifiers);
-    } catch (RuntimeException e) {
-      rethrowException(e);
-      throw new IllegalStateException("This should never be reached.");
-    }
+    return mapExceptionAndThrow(() -> signatureIsValidInternal(tokenString, verifiers));
   }
 
   /**
@@ -246,7 +239,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
       }
       futureVerifiers = provider.findVerifier(jsonToken.getIssuer(), jsonToken.getKeyId());
     } catch (Exception e) {
-      return Futures.immediateFailedFuture(getRethrownException(e));
+      return Futures.immediateFailedFuture(e);
     }
 
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
@@ -268,7 +261,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * Converts exceptions (when applicable) to {@link InvalidJsonTokenException}
    * for better exception handling in the asynchronous parser.
    */
-  private Exception getRethrownException(Exception originalException) {
+  private Exception mapException(Exception originalException) {
     Throwable cause = originalException.getCause();
     if (cause instanceof InvalidJsonTokenException) {
       InvalidJsonTokenException invalidJsonTokenException = (InvalidJsonTokenException) cause;
@@ -292,16 +285,33 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Rethrows {@link SignatureException} or any {@link RuntimeException}s.
+   * Rethrows {@link SignatureException}, any {@link RuntimeException}s, or any {@link Exception}
+   * where {@link Exception#getCause()} is {@link InvalidJsonTokenException}.
    */
-  private void rethrowException(Exception originalException) throws InvalidJsonTokenException {
-    Exception rethrownException = getRethrownException(originalException);
-    if (rethrownException instanceof InvalidJsonTokenException) {
-      throw (InvalidJsonTokenException) rethrownException;
+  private <T> T mapExceptionAndThrow(Callable<T> callable) throws InvalidJsonTokenException {
+    try {
+      return callable.call();
+    } catch (Exception e) {
+      Exception rethrownException = mapException(e);
+      if (rethrownException instanceof InvalidJsonTokenException) {
+        throw (InvalidJsonTokenException) rethrownException;
+      }
+      if (rethrownException instanceof RuntimeException) {
+        throw (RuntimeException) rethrownException;
+      }
+
+      throw new IllegalStateException("Unexpected checked exception.", rethrownException);
     }
-    if (rethrownException instanceof RuntimeException) {
-      throw (RuntimeException) rethrownException;
-    }
+  }
+
+  /**
+   * Catches failed futures and rethrows the underlying exception as a new future.
+   */
+  private <T> ListenableFuture<T> mapExceptionFuture(ListenableFuture<T> result) {
+    return Futures.catchingAsync(result, Exception.class,
+        exception -> {
+          throw mapException(exception);
+        }, executor);
   }
 
 }
