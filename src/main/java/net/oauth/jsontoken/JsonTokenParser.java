@@ -110,11 +110,11 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
     return deserializeInternal(tokenString);
   }
 
-  /*
+  /**
    * Verifies that the jsonToken has a valid signature and valid standard claims
    * (iat, exp). Does not need VerifierProviders because verifiers are passed in
    * directly.
-   * Identical to {@link AbstractJsonTokenParser#abstractVerify(String)}.
+   * Identical to {@link AbstractJsonTokenParser#verifyInternal(JsonToken, List)}
    *
    * @param jsonToken the token to verify
    * @throws SignatureException when the signature is invalid

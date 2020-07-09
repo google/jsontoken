@@ -101,7 +101,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
 
     ListenableFuture<Void> result =
         Futures.transformAsync(futureVerifiers, verifyFunction, executor);
-    return mapExceptionFuture(result);
+    return mapExceptions(result);
   }
 
   /**
@@ -144,7 +144,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
 
     ListenableFuture<JsonToken> result =
         Futures.transform(verify(jsonToken), unused -> jsonToken, executor);
-    return mapExceptionFuture(result);
+    return mapExceptions(result);
   }
 
   /**
@@ -159,7 +159,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    *   if the tokenString is not a properly formatted JWT.
    */
   public JsonToken deserialize(String tokenString) throws InvalidJsonTokenException {
-    return mapExceptionAndThrow(() -> deserializeInternal(tokenString));
+    return mapExceptions(() -> deserializeInternal(tokenString));
   }
 
   /**
@@ -184,7 +184,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers)
       throws InvalidJsonTokenException {
-    mapExceptionAndThrow(() -> {
+    mapExceptions(() -> {
       verifyInternal(jsonToken, verifiers);
       return null;
     });
@@ -203,7 +203,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers)
       throws InvalidJsonTokenException {
-    return mapExceptionAndThrow(() -> signatureIsValidInternal(tokenString, verifiers));
+    return mapExceptions(() -> signatureIsValidInternal(tokenString, verifiers));
   }
 
   /**
@@ -258,8 +258,8 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Converts exceptions (when applicable) to {@link InvalidJsonTokenException}
-   * for better exception handling in the asynchronous parser.
+   * Remaps exceptions, when applicable, to {@link InvalidJsonTokenException} for improved
+   * exception handling in the asynchronous parser. Otherwise, the original exception is returned.
    */
   private Exception mapException(Exception originalException) {
     Throwable cause = originalException.getCause();
@@ -285,10 +285,10 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Rethrows {@link SignatureException}, any {@link RuntimeException}s, or any {@link Exception}
-   * where {@link Exception#getCause()} is {@link InvalidJsonTokenException}.
+   * Rethrows any {@link SignatureException}, any {@link RuntimeException}s, or any
+   * {@link Exception} where {@link Exception#getCause()} is {@link InvalidJsonTokenException}.
    */
-  private <T> T mapExceptionAndThrow(Callable<T> callable) throws InvalidJsonTokenException {
+  private <T> T mapExceptions(Callable<T> callable) throws InvalidJsonTokenException {
     try {
       return callable.call();
     } catch (Exception e) {
@@ -305,9 +305,10 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Catches failed futures and rethrows the underlying exception as a new future.
+   * Catches any failed futures and returns a new future with a mapped exception.
+   * Unlike {@link #mapExceptions(Callable)}, this function supports all exceptions.
    */
-  private <T> ListenableFuture<T> mapExceptionFuture(ListenableFuture<T> result) {
+  private <T> ListenableFuture<T> mapExceptions(ListenableFuture<T> result) {
     return Futures.catchingAsync(result, Exception.class,
         exception -> {
           throw mapException(exception);
