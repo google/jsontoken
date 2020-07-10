@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import javax.annotation.Nonnull;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.discovery.AsyncVerifierProvider;
@@ -90,6 +91,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * @param jsonToken
    * @return a {@link ListenableFuture} that will fail if the token fails verification.
    */
+  @Nonnull
   public ListenableFuture<Void> verify(JsonToken jsonToken) {
     ListenableFuture<List<Verifier>> futureVerifiers = provideVerifiers(jsonToken);
     // Use AsyncFunction instead of Function to allow for checked exceptions to propagate forward
@@ -134,6 +136,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * suitable for passing to the constructor of {@link JsonToken}
    * or equivalent constructor of {@link JsonToken} subclasses.
    */
+  @Nonnull
   public ListenableFuture<JsonToken> verifyAndDeserialize(String tokenString) {
     JsonToken jsonToken;
     try {
@@ -225,6 +228,7 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * @param jsonToken
    * @return a {@link ListenableFuture} that will return a list of verifiers
    */
+  @Nonnull
   private ListenableFuture<List<Verifier>> provideVerifiers(JsonToken jsonToken) {
     ListenableFuture<List<Verifier>> futureVerifiers;
     try {
