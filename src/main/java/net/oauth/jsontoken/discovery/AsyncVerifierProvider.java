@@ -18,6 +18,7 @@ package net.oauth.jsontoken.discovery;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.List;
+import javax.annotation.Nonnull;
 import net.oauth.jsontoken.AsyncJsonTokenParser;
 import net.oauth.jsontoken.crypto.Verifier;
 
@@ -36,14 +37,15 @@ import net.oauth.jsontoken.crypto.Verifier;
 public interface AsyncVerifierProvider {
 
   /**
-   * Returns a {@link ListenableFuture}, which asynchronously returns a {@link List<Verifier>}
+   * Returns a {@link ListenableFuture}, which asynchronously returns a {@code List<Verifier>}
    * that represents a certain verification key, given the key's id and its issuer.
    * @param issuer the id of the issuer that's using the key.
    * @param keyId the id of the key, if keyId mismatches, return a list of
    *   possible verification keys.
-   * @return a {@link ListenableFuture} object that asynchronously returns a {@link List<Verifier>}
+   * @return a {@link ListenableFuture} object that asynchronously returns a {@code List<Verifier>}
    * that represents the verification key.
    */
+  @Nonnull
   ListenableFuture<List<Verifier>> findVerifier(String issuer, String keyId);
 
 }
