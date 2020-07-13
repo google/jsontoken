@@ -87,6 +87,8 @@ public abstract class JsonTokenTestBase extends TestCase {
   protected static final String TOKEN_STRING_BAD_SIG = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Wugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
   protected static final String TOKEN_STRING_2PARTS = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ";
   protected static final String TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM = "eyJhbGciOiJIUzUxMiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.44qsiZg1Hnf95N-2wNqd1htgDlE7X0BSUMMkboMcZ5QLKbmVATozMuzdoE0MAhU-IdWUuICFbzu_wcDEXDTLug";
+  protected static final String TOKEN_STRING_CORRUPT_HEADER = "fyJhbGciOiJIUzI1NiIsImtpZCI6ImtleTIifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.Xugb4nb5kLV3NTpOLaz9er5PhAI5mFehHst_33EUFHs";
+  protected static final String TOKEN_STRING_HEADER_MISSING_ALG = "eyJ3cm9uZ1BhcmFtIjoiSFMyNTYifQ.eyJpc3MiOiJnb29nbGUuY29tIiwiYmFyIjoxNSwiZm9vIjoic29tZSB2YWx1ZSIsImF1ZCI6Imh0dHA6Ly93d3cuZ29vZ2xlLmNvbSIsImlhdCI6MTI3NjY2OTcyMiwiZXhwIjoxMjc2NjY5NzIzfQ.mBtVwsgT2uZJqu2zyUzbCXF4tfo8jSSlOeRI0Tv222o";
   protected static final String TOKEN_FROM_RUBY = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJoZWxsbyI6ICJ3b3JsZCJ9.tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8";
 
   protected static final Duration SKEW = Duration.standardMinutes(1);
@@ -152,7 +154,7 @@ public abstract class JsonTokenTestBase extends TestCase {
   protected <T extends Throwable> void assertThrowsWithErrorCode
       (Class<T> throwsClass, ErrorCode errorCode, ThrowingRunnable func) {
     Throwable t = assertThrows(throwsClass, func);
-    assertTrue(InvalidJsonTokenException.class.isInstance(t.getCause()));
+    assertTrue(t.getCause() instanceof InvalidJsonTokenException);
     assertTrue(((InvalidJsonTokenException) t.getCause()).getErrorCode().equals(errorCode));
   }
 
@@ -168,6 +170,11 @@ public abstract class JsonTokenTestBase extends TestCase {
     JsonObject payload = jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1)))
         .getAsJsonObject();
     return new JsonToken(header, payload, clock, tokenString);
+  }
+
+  protected List<Verifier> getVerifiers() {
+    return locators.getVerifierProvider(SignatureAlgorithm.HS256)
+        .findVerifier("google.com", "key2");
   }
 
 }

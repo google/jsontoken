@@ -97,8 +97,51 @@ public class JsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
+   * Decodes the JWT token string into a JsonToken object. Does not perform
+   * any validation of headers or claims.
+   * Identical to {@link AbstractJsonTokenParser#deserializeInternal(String)}.
+   *
+   * @param tokenString The original encoded representation of a JWT
+   * @return Unverified contents of the JWT as a JsonToken
+   * @throws JsonParseException if the header or payload of tokenString is corrupted
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
+   */
+  public JsonToken deserialize(String tokenString) {
+    return deserializeInternal(tokenString);
+  }
+
+  /**
+   * Verifies that the jsonToken has a valid signature and valid standard claims
+   * (iat, exp). Does not need VerifierProviders because verifiers are passed in
+   * directly.
+   * Identical to {@link AbstractJsonTokenParser#verifyInternal(JsonToken, List)}
+   *
+   * @param jsonToken the token to verify
+   * @throws SignatureException when the signature is invalid
+   *   or if any of the checkers fail
+   * @throws IllegalStateException when exp or iat are invalid
+   *   or if tokenString is not a properly formatted JWT
+   */
+  public void verify(JsonToken jsonToken, List<Verifier> verifiers) throws SignatureException {
+    verifyInternal(jsonToken, verifiers);
+  }
+
+  /**
+   * Verifies that a JSON Web Token's signature is valid.
+   * Identical to {@link AbstractJsonTokenParser#signatureIsValidInternal(String, List)}.
+   *
+   * @param tokenString the encoded and signed JSON Web Token to verify.
+   * @param verifiers used to verify the signature. These usually encapsulate
+   *   secret keys.
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT
+   */
+  public boolean signatureIsValid(String tokenString, List<Verifier> verifiers) {
+    return signatureIsValidInternal(tokenString, verifiers);
+  }
+
+  /**
    * Use VerifierProviders to get a list of verifiers for this token
-   * 
+   *
    * @param jsonToken
    * @return list of verifiers
    * @throws IllegalArgumentException if the signature algorithm is not supported

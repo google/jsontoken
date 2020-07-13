@@ -3,8 +3,10 @@ package net.oauth.jsontoken;
 import static org.junit.Assert.assertThrows;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.security.SignatureException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -61,20 +63,27 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
   public void testVerify_badSignature() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_BAD_SIG);
-    assertFailsWithCauseAndErrorCode(
-        SignatureException.class,
+    assertFailsWithErrorCode(
         ErrorCode.BAD_SIGNATURE,
-        () -> parser.verify(checkToken).get()
+        parser.verify(checkToken)
+    );
+  }
+
+  public void testVerify_headerMissingAlg() throws Exception {
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING_HEADER_MISSING_ALG);
+    assertFailsWithErrorCode(
+        ErrorCode.BAD_HEADER,
+        parser.verify(checkToken)
     );
   }
 
   public void testVerify_unsupportedSignature() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING_UNSUPPORTED_SIGNATURE_ALGORITHM);
-    assertFailsWithCauseAndErrorCode(
-        IllegalArgumentException.class,
+    assertFailsWithErrorCode(
         ErrorCode.UNSUPPORTED_ALGORITHM,
-        () -> parser.verify(checkToken).get()
+        parser.verify(checkToken)
     );
   }
 
@@ -91,7 +100,7 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
     assertFailsWithErrorCode(
         ErrorCode.NO_VERIFIER,
-        () -> parser.verify(checkToken).get()
+        parser.verify(checkToken)
     );
   }
 
@@ -99,10 +108,9 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     AsyncVerifierProviders noProviders = alg -> null;
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser(noProviders, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
-
     assertFailsWithErrorCode(
         ErrorCode.UNSUPPORTED_ALGORITHM,
-        () -> parser.verify(checkToken).get()
+        parser.verify(checkToken)
     );
   }
 
@@ -115,19 +123,17 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
 
   public void testVerifyAndDeserialize_deserializeFail() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
-    assertFailsWithCauseAndErrorCode(
-        IllegalStateException.class,
+    assertFailsWithErrorCode(
         ErrorCode.MALFORMED_TOKEN_STRING,
-        () -> parser.verifyAndDeserialize(TOKEN_STRING_2PARTS).get()
+        parser.verifyAndDeserialize(TOKEN_STRING_2PARTS)
     );
   }
 
   public void testVerifyAndDeserialize_verifyFail() throws Exception {
     AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
-    assertFailsWithCauseAndErrorCode(
-        SignatureException.class,
+    assertFailsWithErrorCode(
         ErrorCode.BAD_SIGNATURE,
-        () -> parser.verifyAndDeserialize(TOKEN_STRING_BAD_SIG).get()
+        parser.verifyAndDeserialize(TOKEN_STRING_BAD_SIG)
     );
   }
 
@@ -141,6 +147,57 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     assertEquals("world", token.getParamAsPrimitive("hello").getAsString());
   }
 
+  public void testDeserialize_corruptHeader() throws Exception {
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
+    InvalidJsonTokenException e = assertErrorCode(
+        ErrorCode.MALFORMED_TOKEN_STRING,
+        () -> parser.deserialize(TOKEN_STRING_CORRUPT_HEADER)
+    );
+
+    assertTrue(e.getCause() instanceof JsonParseException);
+  }
+
+  public void testVerifyWithVerifiers_unknownCause() throws Exception {
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser(asyncLocators, new AlwaysFailChecker());
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
+    assertErrorCode(
+        ErrorCode.UNKNOWN,
+        () -> parser.verify(checkToken, getVerifiers())
+    );
+  }
+
+  public void testVerifyWithVerifiers_nullSignature() throws Exception {
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
+    JsonToken checkToken = naiveDeserialize(TOKEN_STRING_2PARTS);
+    assertErrorCode(
+        ErrorCode.MALFORMED_TOKEN_STRING,
+        () -> parser.verify(checkToken, getVerifiers())
+    );
+  }
+
+  public void testSignatureIsValid_nullSignature() throws Exception {
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
+    assertErrorCode(
+        ErrorCode.MALFORMED_TOKEN_STRING,
+        () -> parser.signatureIsValid(TOKEN_STRING_2PARTS, getVerifiers())
+    );
+  }
+
+  /**
+   * Ensure that legitimate runtime exceptions get through rethrowing exceptions.
+   */
+  public void testRethrownException_runtimeException() throws Exception {
+    AsyncJsonTokenParser parser = getAsyncJsonTokenParser();
+    JsonToken checkToken = new JsonToken(new JsonObject());
+    ExecutionException e = assertThrows(
+        ExecutionException.class,
+        () -> parser.verify(checkToken).get()
+    );
+
+    assertTrue(e.getCause() instanceof IllegalStateException);
+    assertTrue(e.getCause().getMessage().equals("JWT has no algorithm or header"));
+  }
+
   private AsyncJsonTokenParser getAsyncJsonTokenParser() {
     return new AsyncJsonTokenParser(clock, asyncLocators, executor, new AlwaysPassChecker());
   }
@@ -150,23 +207,21 @@ public class AsyncJsonTokenParserTest extends JsonTokenTestBase {
     return new AsyncJsonTokenParser(clock, providers, executor, checkers);
   }
 
-  private <T extends Throwable> void assertFailsWithCauseAndErrorCode(
-      Class<T> throwableClass, ErrorCode errorCode, ThrowingRunnable runnable) {
-    ExecutionException e = assertThrows(ExecutionException.class, runnable);
-    assertTrue(throwableClass.isInstance(e.getCause()));
-
-    Throwable cause = e.getCause().getCause();
-    assertNotNull(cause);
-    assertTrue(InvalidJsonTokenException.class.isInstance(cause));
-    assertTrue(((InvalidJsonTokenException) cause).getErrorCode().equals(errorCode));
+  private InvalidJsonTokenException assertErrorCode(
+      ErrorCode errorCode, ThrowingRunnable runnable) {
+    InvalidJsonTokenException originalException =
+        assertThrows(InvalidJsonTokenException.class, runnable);
+    assertTrue(originalException.getErrorCode().equals(errorCode));
+    return originalException;
   }
 
-  private void assertFailsWithErrorCode(ErrorCode errorCode, ThrowingRunnable runnable) {
-    ExecutionException e = assertThrows(ExecutionException.class, runnable);
-    assertTrue(InvalidJsonTokenException.class.isInstance(e.getCause()));
+  private void assertFailsWithErrorCode(ErrorCode errorCode, ListenableFuture future) {
+    ExecutionException executionException = assertThrows(ExecutionException.class, () -> future.get());
+    Throwable originalException = executionException.getCause();
+    assertTrue(originalException instanceof InvalidJsonTokenException);
 
-    InvalidJsonTokenException cause = (InvalidJsonTokenException) e.getCause();
-    assertTrue(cause.getErrorCode().equals(errorCode));
+    InvalidJsonTokenException invalidJsonTokenException =
+        (InvalidJsonTokenException) originalException;
+    assertTrue(invalidJsonTokenException.getErrorCode().equals(errorCode));
   }
-
 }
