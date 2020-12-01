@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,27 +12,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.discovery;
 
 import com.google.common.collect.Lists;
-
+import java.net.URI;
+import java.util.List;
 import net.oauth.jsontoken.crypto.RsaSHA256Verifier;
 import net.oauth.jsontoken.crypto.Verifier;
 
-import java.net.URI;
-import java.util.List;
-
 /**
- * Default strategy for locating public verification keys. Unlike secret (symmetric)
- * verification keys, public verification keys can be published by token issuers
- * at URLs called "server descriptors".
+ * Default strategy for locating public verification keys. Unlike secret (symmetric) verification
+ * keys, public verification keys can be published by token issuers at URLs called "server
+ * descriptors".
  *
- * The default strategy to find a public verification key consists of first mapping
- * an issuer id to a server descriptor, and then fetching the ServerInfo document from
- * the server descriptor URL. Finally, the key is looked up int the ServerInfo document
- * by key id.
+ * <p>The default strategy to find a public verification key consists of first mapping an issuer id
+ * to a server descriptor, and then fetching the ServerInfo document from the server descriptor URL.
+ * Finally, the key is looked up int the ServerInfo document by key id.
  */
 public class DefaultPublicKeyLocator implements VerifierProvider {
 
@@ -42,13 +38,13 @@ public class DefaultPublicKeyLocator implements VerifierProvider {
   /**
    * Public constructor.
    *
-   * @param descriptorProvider A {@link ServerDescriptorProvider} that maps
-   *   issuer ids to server descriptors (URLs).
-   * @param resolver A {@link ServerInfoResolver}, i.e., an object that can fetch
-   *   and parse a server info document, given a server descriptor.
+   * @param descriptorProvider A {@link ServerDescriptorProvider} that maps issuer ids to server
+   *     descriptors (URLs).
+   * @param resolver A {@link ServerInfoResolver}, i.e., an object that can fetch and parse a server
+   *     info document, given a server descriptor.
    */
-  public DefaultPublicKeyLocator(ServerDescriptorProvider descriptorProvider,
-      ServerInfoResolver resolver) {
+  public DefaultPublicKeyLocator(
+      ServerDescriptorProvider descriptorProvider, ServerInfoResolver resolver) {
     this.descriptorProvider = descriptorProvider;
     this.descriptorResolver = resolver;
   }
@@ -60,8 +56,9 @@ public class DefaultPublicKeyLocator implements VerifierProvider {
   @Override
   public List<Verifier> findVerifier(String issuer, String keyId) {
     URI serverDescriptor = descriptorProvider.getServerDescriptor(issuer);
-    Verifier rsaVerifier = 
-      new RsaSHA256Verifier(descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
+    Verifier rsaVerifier =
+        new RsaSHA256Verifier(
+            descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
     return Lists.newArrayList(rsaVerifier);
   }
 }

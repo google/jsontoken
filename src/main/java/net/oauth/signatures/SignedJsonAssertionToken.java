@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,37 +12,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.signatures;
 
+import com.google.gson.JsonPrimitive;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.SignatureException;
-
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.crypto.Signer;
-import org.joda.time.Duration;
 
-import com.google.common.base.Preconditions;
-import com.google.gson.JsonPrimitive;
-
-/**
- * A signed Json Assertion
- */
+/** A signed Json Assertion */
 public class SignedJsonAssertionToken extends JsonToken {
-  
+
   public static final String JWT = "jwt";
-  
+
   public static final String GRANT_TYPE = "grant_type";
   public static final String GRANT_TYPE_VALUE = "http://oauth.net/grant_type/jwt/1.0/bearer";
-  
+
   // addition JSON token payload fields for signed json assertion
   public static final String SUBJECT = "subject";
   public static final String SCOPE = "scope";
   public static final String NONCE = "nonce";
-  
+
   public SignedJsonAssertionToken(Signer signer, Clock clock) {
     super(signer, clock);
   }
@@ -50,7 +43,7 @@ public class SignedJsonAssertionToken extends JsonToken {
   public SignedJsonAssertionToken(Signer signer) {
     super(signer);
   }
-  
+
   public SignedJsonAssertionToken(JsonToken token) {
     super(token.getPayloadAsJsonObject());
   }
@@ -63,12 +56,12 @@ public class SignedJsonAssertionToken extends JsonToken {
   public void setSubject(String m) {
     setParam(SUBJECT, m);
   }
-  
+
   public String getScope() {
     JsonPrimitive scopeJson = getParamAsPrimitive(SCOPE);
     return scopeJson == null ? null : scopeJson.getAsString();
   }
-  
+
   public void setScope(String scope) {
     setParam(SCOPE, scope);
   }
@@ -81,7 +74,7 @@ public class SignedJsonAssertionToken extends JsonToken {
   public void setNonce(String n) {
     setParam(NONCE, n);
   }
-  
+
   public String getJsonAssertionPostBody() throws SignatureException {
     StringBuffer buffer = new StringBuffer();
     buffer.append(GRANT_TYPE).append("=").append(GRANT_TYPE_VALUE);
@@ -98,14 +91,14 @@ public class SignedJsonAssertionToken extends JsonToken {
   public String serializeAndSign() throws SignatureException {
     return super.serializeAndSign();
   }
-  
+
   @Override
   protected String computeSignatureBaseString() {
     if (getIssuedAt() == null) {
       setIssuedAt(clock.now());
     }
     if (getExpiration() == null) {
-      setExpiration(getIssuedAt().plus(Duration.standardMinutes(DEFAULT_LIFETIME_IN_MINS)));
+      setExpiration(getIssuedAt().plus(DEFAULT_LIFETIME));
     }
     return super.computeSignatureBaseString();
   }

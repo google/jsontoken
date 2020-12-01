@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.signatures;
 
 import net.oauth.jsontoken.JsonTokenTestBase;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.Signer;
-
-import org.joda.time.Instant;
 
 public class SignedTokenBuilderTest extends JsonTokenTestBase {
 
@@ -40,7 +37,8 @@ public class SignedTokenBuilderTest extends JsonTokenTestBase {
     assertEquals("http://www.example.com/api", token.getAudience());
 
     SignedOAuthTokenParser parser = new SignedOAuthTokenParser(locators, null);
-    SignedOAuthToken compare = parser.parseToken(token.serializeAndSign(), "GET", "HTTP://www.Example.Com/api");
+    SignedOAuthToken compare =
+        parser.parseToken(token.serializeAndSign(), "GET", "HTTP://www.Example.Com/api");
 
     assertEquals("GET", compare.getMethod());
     assertEquals("nonce", compare.getNonce());

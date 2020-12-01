@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.security.SignatureException;
+import java.time.Duration;
+import java.time.Instant;
 import javax.annotation.Nullable;
 import net.oauth.jsontoken.crypto.AsciiStringSigner;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -28,41 +30,38 @@ import net.oauth.jsontoken.crypto.Signer;
 import net.oauth.jsontoken.exceptions.ErrorCode;
 import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 import org.apache.commons.codec.binary.Base64;
-import org.joda.time.Instant;
 
-/**
- * A JSON Token.
- */
+/** A JSON Token. */
 public class JsonToken {
   // header names
-  public final static String ALGORITHM_HEADER = "alg";
-  public final static String KEY_ID_HEADER = "kid";
-  public final static String TYPE_HEADER = "typ";
-	
+  public static final String ALGORITHM_HEADER = "alg";
+  public static final String KEY_ID_HEADER = "kid";
+  public static final String TYPE_HEADER = "typ";
+
   // standard claim names (payload parameters)
-  public final static String ISSUER = "iss";
-  public final static String ISSUED_AT = "iat";
-  public final static String EXPIRATION = "exp";
-  public final static String AUDIENCE = "aud";
-  
+  public static final String ISSUER = "iss";
+  public static final String ISSUED_AT = "iat";
+  public static final String EXPIRATION = "exp";
+  public static final String AUDIENCE = "aud";
+
   // default encoding for all Json token
-  public final static String BASE64URL_ENCODING = "base64url";
-  
-  public final static int DEFAULT_LIFETIME_IN_MINS = 2;
+  public static final String BASE64URL_ENCODING = "base64url";
+
+  public static final Duration DEFAULT_LIFETIME = Duration.ofMinutes(2);
 
   protected final Clock clock;
   private final JsonObject header;
   private final JsonObject payload;
   private final String tokenString;
-  
+
   // The following fields are only valid when signing the token.
   private final Signer signer;
   private String signature;
   private String baseString;
-  
-  
+
   /**
    * Public constructor, use empty data type.
+   *
    * @param signer the signer that will sign the token.
    */
   public JsonToken(Signer signer) {
@@ -71,17 +70,16 @@ public class JsonToken {
 
   /**
    * Public constructor.
+   *
    * @param signer the signer that will sign the token
-   * @param clock a clock whose notion of current time will determine the not-before timestamp
-   *   of the token, if not explicitly set.
+   * @param clock a clock whose notion of current time will determine the not-before timestamp of
+   *     the token, if not explicitly set.
    */
   public JsonToken(Signer signer, Clock clock) {
-    Preconditions.checkNotNull(signer);
-    Preconditions.checkNotNull(clock);
+    this.signer = checkNotNull(signer);
+    this.clock = checkNotNull(clock);
     this.header = createHeader(signer);
     this.payload = new JsonObject();
-    this.signer = signer;
-    this.clock = clock;
     this.signature = null;
     this.baseString = null;
     this.tokenString = null;
@@ -93,17 +91,16 @@ public class JsonToken {
   }
 
   /**
-   * Public constructor used when parsing a JsonToken {@link JsonToken}
-   * (as opposed to create a token). This constructor takes Json payload
-   * and clock as parameters, set all other signing related parameters to null.
+   * Public constructor used when parsing a JsonToken {@link JsonToken} (as opposed to create a
+   * token). This constructor takes Json payload and clock as parameters, set all other signing
+   * related parameters to null.
    *
    * @param payload A payload JSON object.
-   * @param clock a clock whose notion of current time will determine the not-before timestamp
-   *   of the token, if not explicitly set.
+   * @param clock a clock whose notion of current time will determine the not-before timestamp of
+   *     the token, if not explicitly set.
    * @param tokenString The original token string we parsed to get this payload.
    */
-  public JsonToken(JsonObject header, JsonObject payload, Clock clock, 
-      String tokenString) {
+  public JsonToken(JsonObject header, JsonObject payload, Clock clock, String tokenString) {
     this.header = header;
     this.payload = payload;
     this.clock = clock;
@@ -112,11 +109,11 @@ public class JsonToken {
     this.signer = null;
     this.tokenString = tokenString;
   }
-  
+
   /**
-   * Public constructor used when parsing a JsonToken {@link JsonToken}
-   * (as opposed to create a token). This constructor takes Json payload
-   * as parameter, set all other signing related parameters to null.
+   * Public constructor used when parsing a JsonToken {@link JsonToken} (as opposed to create a
+   * token). This constructor takes Json payload as parameter, set all other signing related
+   * parameters to null.
    *
    * @param payload A payload JSON object.
    */
@@ -131,13 +128,13 @@ public class JsonToken {
   }
 
   /**
-   * Public constructor used when parsing a JsonToken {@link JsonToken}
-   * (as opposed to create a token). This constructor takes Json payload
-   * and clock as parameters, set all other signing related parameters to null.
+   * Public constructor used when parsing a JsonToken {@link JsonToken} (as opposed to create a
+   * token). This constructor takes Json payload and clock as parameters, set all other signing
+   * related parameters to null.
    *
    * @param payload A payload JSON object.
-   * @param clock a clock whose notion of current time will determine the not-before timestamp
-   *   of the token, if not explicitly set.
+   * @param clock a clock whose notion of current time will determine the not-before timestamp of
+   *     the token, if not explicitly set.
    */
   public JsonToken(JsonObject payload, Clock clock) {
     this.header = null;
@@ -153,8 +150,8 @@ public class JsonToken {
    * Returns the serialized representation of this token, i.e.,
    * keyId.sig.base64(payload).base64(data_type).base64(encoding).base64(alg)
    *
-   * This is what a client (token issuer) would send to a token verifier over the
-   * wire.
+   * <p>This is what a client (token issuer) would send to a token verifier over the wire.
+   *
    * @throws SignatureException if the token can't be signed.
    */
   public String serializeAndSign() throws SignatureException {
@@ -163,9 +160,7 @@ public class JsonToken {
     return JsonTokenUtil.toDotFormat(baseString, sig);
   }
 
-  /**
-   * Returns a human-readable version of the token.
-   */
+  /** Returns a human-readable version of the token. */
   @Override
   public String toString() {
     return JsonTokenUtil.toJson(payload);
@@ -178,30 +173,30 @@ public class JsonToken {
 
   @Nullable
   public Instant getIssuedAt() {
-    Long issuedAt = getParamAsLong(ISSUED_AT);
-    if (issuedAt == null) {
-      return null;
-    }
-    // JWT represents time in seconds, Instants expect milliseconds
-    return new Instant(issuedAt * 1000);
+    return getParamAsInstant(ISSUED_AT);
   }
 
+  /**
+   * Sets the {@code iat} (issued at) timestamp parameter.
+   *
+   * <p><b>Note:</b> sub-second precision is truncated.
+   */
   public void setIssuedAt(Instant instant) {
-    setParam(ISSUED_AT, instant.getMillis() / 1000);
+    setParam(ISSUED_AT, instant.getEpochSecond());
   }
 
   @Nullable
   public Instant getExpiration() {
-    Long expiration = getParamAsLong(EXPIRATION);
-    if (expiration == null) {
-      return null;
-    }
-    // JWT represents time in seconds, Instants expect milliseconds
-    return new Instant(expiration * 1000);
+    return getParamAsInstant(EXPIRATION);
   }
 
+  /**
+   * Sets the {@code exp} (expiration) timestamp parameter.
+   *
+   * <p><b>Note:</b> sub-second precision is truncated.
+   */
   public void setExpiration(Instant instant) {
-    setParam(EXPIRATION, instant.getMillis() / 1000);
+    setParam(EXPIRATION, instant.getEpochSecond());
   }
 
   @Nullable
@@ -265,8 +260,7 @@ public class JsonToken {
       return SignatureAlgorithm.getFromJsonName(algorithmName.getAsString());
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException(
-          e.getMessage(),
-          new InvalidJsonTokenException(ErrorCode.UNSUPPORTED_ALGORITHM));
+          e.getMessage(), new InvalidJsonTokenException(ErrorCode.UNSUPPORTED_ALGORITHM));
     }
   }
 
@@ -274,9 +268,7 @@ public class JsonToken {
     return tokenString;
   }
 
-  /**
-   * @throws IllegalStateException if the header does not exist
-   */
+  /** @throws IllegalStateException if the header does not exist */
   public JsonObject getHeader() {
     if (header == null) {
       throw new IllegalStateException("JWT has no header");
@@ -291,11 +283,12 @@ public class JsonToken {
   }
 
   @Nullable
-  private Long getParamAsLong(String param) {
+  private Instant getParamAsInstant(String param) {
     JsonPrimitive primitive = getParamAsPrimitive(param);
     if (primitive != null && (primitive.isNumber() || primitive.isString())) {
       try {
-        return primitive.getAsLong();
+        // JWT represents time in seconds
+        return Instant.ofEpochSecond(primitive.getAsLong());
       } catch (NumberFormatException e) {
         return null;
       }
@@ -303,17 +296,14 @@ public class JsonToken {
     return null;
   }
 
-  /**
-   * @throws IllegalStateException if the header does not exist
-   */
+  /** @throws IllegalStateException if the header does not exist */
   protected String computeSignatureBaseString() {
     if (baseString != null && !baseString.isEmpty()) {
       return baseString;
     }
-    baseString = JsonTokenUtil.toDotFormat(
-        JsonTokenUtil.toBase64(getHeader()),
-        JsonTokenUtil.toBase64(payload)
-        );
+    baseString =
+        JsonTokenUtil.toDotFormat(
+            JsonTokenUtil.toBase64(getHeader()), JsonTokenUtil.toBase64(payload));
     return baseString;
   }
 
@@ -330,9 +320,7 @@ public class JsonToken {
     return newHeader;
   }
 
-  /**
-   * @throws SignatureException if the signer does not exist
-   */
+  /** @throws SignatureException if the signer does not exist */
   private String getSignature() throws SignatureException {
     if (signature != null && !signature.isEmpty()) {
       return signature;
@@ -344,12 +332,8 @@ public class JsonToken {
           new InvalidJsonTokenException(ErrorCode.ILLEGAL_STATE));
     }
 
-    String signature;
     // now, generate the signature
     AsciiStringSigner asciiSigner = new AsciiStringSigner(signer);
-    signature = Base64.encodeBase64URLSafeString(asciiSigner.sign(baseString));
-    
-    return signature;
+    return Base64.encodeBase64URLSafeString(asciiSigner.sign(baseString));
   }
-  
 }

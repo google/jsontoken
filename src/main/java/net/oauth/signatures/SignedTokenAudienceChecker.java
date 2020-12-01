@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.signatures;
-
-import java.net.URI;
-import java.security.SignatureException;
-
-import net.oauth.jsontoken.Checker;
-import net.oauth.jsontoken.JsonToken;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
+import java.net.URI;
+import java.security.SignatureException;
+import net.oauth.jsontoken.Checker;
+import net.oauth.jsontoken.JsonToken;
 
 /**
- * Audience checker for signed OAuth tokens. For such tokens, the audience in the token
- * is the URL of the accessed resource, and has to match it exactly (save some case-insensitivities
- * in the host name).
+ * Audience checker for signed OAuth tokens. For such tokens, the audience in the token is the URL
+ * of the accessed resource, and has to match it exactly (save some case-insensitivities in the host
+ * name).
  */
 public class SignedTokenAudienceChecker implements Checker {
 
@@ -38,24 +35,24 @@ public class SignedTokenAudienceChecker implements Checker {
 
   /**
    * Public constructor.
+   *
    * @param uri the URI against which the signed OAuth token was exercised.
    */
   public SignedTokenAudienceChecker(String uri) {
     this.serverUri = uri;
   }
 
-  /**
-   * @see net.oauth.jsontoken.Checker#check(com.google.gson.JsonObject)
-   */
+  /** @see net.oauth.jsontoken.Checker#check(com.google.gson.JsonObject) */
   @Override
   public void check(JsonObject payload) throws SignatureException {
-    checkUri(serverUri,
+    checkUri(
+        serverUri,
         Preconditions.checkNotNull(
-            payload.get(JsonToken.AUDIENCE).getAsString(),
-            "Audience cannot be null!"));
+            payload.get(JsonToken.AUDIENCE).getAsString(), "Audience cannot be null!"));
   }
 
-  private static void checkUri(String ourUriString, String tokenUriString) throws SignatureException {
+  private static void checkUri(String ourUriString, String tokenUriString)
+      throws SignatureException {
     URI ourUri = URI.create(ourUriString);
     URI tokenUri = URI.create(tokenUriString);
 
@@ -64,7 +61,8 @@ public class SignedTokenAudienceChecker implements Checker {
     }
 
     if (!ourUri.getAuthority().equalsIgnoreCase(tokenUri.getAuthority())) {
-      throw new SignatureException("authority in token URI (" + tokenUri.getAuthority() + ") is wrong");
+      throw new SignatureException(
+          "authority in token URI (" + tokenUri.getAuthority() + ") is wrong");
     }
 
     if (!Objects.equal(ourUri.getPath(), tokenUri.getPath())) {

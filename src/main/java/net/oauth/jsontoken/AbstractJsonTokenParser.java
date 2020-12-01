@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken;
 
@@ -22,17 +21,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.security.SignatureException;
+import java.time.Instant;
 import java.util.List;
 import net.oauth.jsontoken.crypto.AsciiStringVerifier;
 import net.oauth.jsontoken.crypto.Verifier;
 import net.oauth.jsontoken.exceptions.ErrorCode;
 import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 import org.apache.commons.codec.binary.Base64;
-import org.joda.time.Instant;
 
 /**
- * Class that provides common functions
- * used by {@link JsonTokenParser} and {@link AsyncJsonTokenParser}.
+ * Class that provides common functions used by {@link JsonTokenParser} and {@link
+ * AsyncJsonTokenParser}.
  */
 abstract class AbstractJsonTokenParser {
   private final Clock clock;
@@ -41,8 +40,7 @@ abstract class AbstractJsonTokenParser {
   /**
    * Creates a new {@link AbstractJsonTokenParser}.
    *
-   * @param clock a clock object that will decide whether a given token is
-   *   currently valid or not.
+   * @param clock a clock object that will decide whether a given token is currently valid or not.
    * @param checkers an array of checkers that validates the parameters in the JSON token.
    */
   AbstractJsonTokenParser(Clock clock, Checker... checkers) {
@@ -51,8 +49,8 @@ abstract class AbstractJsonTokenParser {
   }
 
   /**
-   * Decodes the JWT token string into a JsonToken object. Does not perform
-   * any validation of headers or claims.
+   * Decodes the JWT token string into a JsonToken object. Does not perform any validation of
+   * headers or claims.
    *
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
@@ -64,25 +62,22 @@ abstract class AbstractJsonTokenParser {
     String jwtHeaderSegment = pieces.get(0);
     String jwtPayloadSegment = pieces.get(1);
     JsonParser parser = new JsonParser();
-    JsonObject header = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment))
-        .getAsJsonObject();
-    JsonObject payload = parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtPayloadSegment))
-        .getAsJsonObject();
+    JsonObject header =
+        parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment)).getAsJsonObject();
+    JsonObject payload =
+        parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtPayloadSegment)).getAsJsonObject();
 
-    JsonToken jsonToken = new JsonToken(header, payload, clock, tokenString);
-    return jsonToken;
+    return new JsonToken(header, payload, clock, tokenString);
   }
 
   /**
-   * Verifies that the jsonToken has a valid signature and valid standard claims
-   * (iat, exp). Does not need VerifierProviders because verifiers are passed in
-   * directly.
+   * Verifies that the jsonToken has a valid signature and valid standard claims (iat, exp). Does
+   * not need VerifierProviders because verifiers are passed in directly.
    *
    * @param jsonToken the token to verify
-   * @throws SignatureException when the signature is invalid
-   *   or if any of the checkers fail
-   * @throws IllegalStateException when exp or iat are invalid
-   *   or if tokenString is not a properly formatted JWT
+   * @throws SignatureException when the signature is invalid or if any of the checkers fail
+   * @throws IllegalStateException when exp or iat are invalid or if tokenString is not a properly
+   *     formatted JWT
    */
   final void verifyInternal(JsonToken jsonToken, List<Verifier> verifiers)
       throws SignatureException {
@@ -96,16 +91,19 @@ abstract class AbstractJsonTokenParser {
     Instant expiration = jsonToken.getExpiration();
 
     if (issuedAt == null && expiration != null) {
-      issuedAt = new Instant(0);
+      issuedAt = Instant.EPOCH;
     }
 
     if (issuedAt != null && expiration == null) {
-      expiration = new Instant(Long.MAX_VALUE);
+      // TODO(kak): Should this be Instant.MAX instead?
+      expiration = Instant.ofEpochMilli(Long.MAX_VALUE);
     }
 
     if (issuedAt != null && expiration != null) {
-      String errorMessage = String.format("Invalid iat and/or exp. iat: %s exp: %s now: %s",
-          jsonToken.getIssuedAt(), jsonToken.getExpiration(), clock.now());
+      String errorMessage =
+          String.format(
+              "Invalid iat and/or exp. iat: %s exp: %s now: %s",
+              jsonToken.getIssuedAt(), jsonToken.getExpiration(), clock.now());
 
       if (issuedAt.isAfter(expiration)) {
         throw new IllegalStateException(
@@ -134,8 +132,7 @@ abstract class AbstractJsonTokenParser {
    * Verifies that a JSON Web Token's signature is valid.
    *
    * @param tokenString the encoded and signed JSON Web Token to verify.
-   * @param verifiers used to verify the signature. These usually encapsulate
-   *   secret keys.
+   * @param verifiers used to verify the signature. These usually encapsulate secret keys.
    * @throws IllegalStateException if tokenString is not a properly formatted JWT
    */
   final boolean signatureIsValidInternal(String tokenString, List<Verifier> verifiers) {
@@ -190,11 +187,13 @@ abstract class AbstractJsonTokenParser {
     List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
     if (pieces.size() != 3) {
       throw new IllegalStateException(
-          "Expected JWT to have 3 segments separated by '" +
-              JsonTokenUtil.DELIMITER + "', but it has " + pieces.size() + " segments",
+          "Expected JWT to have 3 segments separated by '"
+              + JsonTokenUtil.DELIMITER
+              + "', but it has "
+              + pieces.size()
+              + " segments",
           new InvalidJsonTokenException(ErrorCode.MALFORMED_TOKEN_STRING));
     }
     return pieces;
   }
-
 }

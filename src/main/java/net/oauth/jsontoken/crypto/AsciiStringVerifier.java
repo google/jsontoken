@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
 
+import java.security.SignatureException;
 import org.apache.commons.codec.binary.StringUtils;
 
-import java.security.SignatureException;
-
 /**
- * A Verifier that can verify Strings (as opposed to byte arrays), assuming
- * that the String contains characters in the US-ASCII charset.
+ * A Verifier that can verify Strings (as opposed to byte arrays), assuming that the String contains
+ * characters in the US-ASCII charset.
  */
 public class AsciiStringVerifier {
 
@@ -39,6 +37,7 @@ public class AsciiStringVerifier {
 
   /**
    * Verifies a signature on an ASCII string.
+   *
    * @param source the source that was signed.
    * @param signature the signature on the source.
    * @throws SignatureException if the signature doesn't verify.

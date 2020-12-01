@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.signatures;
 
@@ -34,10 +33,10 @@ public class SignedJsonAssertionBuilderTest extends JsonTokenTestBase {
     assertEquals("nonce", token.getNonce());
     assertEquals("http://www.example.com/api", token.getAudience());
 
-    SignedJsonAssertionTokenParser parser = new SignedJsonAssertionTokenParser(
-        locators, null);
-    SignedJsonAssertionToken compare = parser.parseToken(token.serializeAndSign(), "HTTP://www.Example.Com/api");
-    
+    SignedJsonAssertionTokenParser parser = new SignedJsonAssertionTokenParser(locators, null);
+    SignedJsonAssertionToken compare =
+        parser.parseToken(token.serializeAndSign(), "HTTP://www.Example.Com/api");
+
     assertEquals("nonce", compare.getNonce());
     assertEquals("http://www.example.com/api", compare.getAudience());
   }

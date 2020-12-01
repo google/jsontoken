@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.discovery;
 
@@ -23,29 +22,29 @@ import net.oauth.jsontoken.AsyncJsonTokenParser;
 import net.oauth.jsontoken.crypto.Verifier;
 
 /**
- * The asynchronous counterpart of {@link VerifierProvider}.
- * An interface that must be implemented by JSON Token verifiers. The {@link AsyncJsonTokenParser}
- * uses {@link AsyncVerifierProvider} implementations to find verification keys asynchronously with
- * which to verify the parsed JSON Token. There are different implementations of this interface for
- * different types of verification keys.
+ * The asynchronous counterpart of {@link VerifierProvider}. An interface that must be implemented
+ * by JSON Token verifiers. The {@link AsyncJsonTokenParser} uses {@link AsyncVerifierProvider}
+ * implementations to find verification keys asynchronously with which to verify the parsed JSON
+ * Token. There are different implementations of this interface for different types of verification
+ * keys.
  *
- * For symmetric signing keys, an implementation of {@link AsyncVerifierProvider} presumably will
- * always look up the key in a local database. For public signing keys, the
- * {@link AsyncVerifierProvider} implementation may fetch the public verification keys when needed
- * from the public internet.
+ * <p>For symmetric signing keys, an implementation of {@link AsyncVerifierProvider} presumably will
+ * always look up the key in a local database. For public signing keys, the {@link
+ * AsyncVerifierProvider} implementation may fetch the public verification keys when needed from the
+ * public internet.
  */
 public interface AsyncVerifierProvider {
 
   /**
-   * Returns a {@link ListenableFuture}, which asynchronously returns a {@code List<Verifier>}
-   * that represents a certain verification key, given the key's id and its issuer.
+   * Returns a {@link ListenableFuture}, which asynchronously returns a {@code List<Verifier>} that
+   * represents a certain verification key, given the key's id and its issuer.
+   *
    * @param issuer the id of the issuer that's using the key.
-   * @param keyId the id of the key, if keyId mismatches, return a list of
-   *   possible verification keys.
+   * @param keyId the id of the key, if keyId mismatches, return a list of possible verification
+   *     keys.
    * @return a {@link ListenableFuture} object that asynchronously returns a {@code List<Verifier>}
-   * that represents the verification key.
+   *     that represents the verification key.
    */
   @Nonnull
   ListenableFuture<List<Verifier>> findVerifier(String issuer, String keyId);
-
 }

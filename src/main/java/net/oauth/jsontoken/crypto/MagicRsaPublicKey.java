@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
-
-import org.apache.commons.codec.binary.Base64;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -25,6 +22,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.regex.Pattern;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Class that can parse "magic key" RSA public key representations, which are of the form
@@ -36,15 +34,14 @@ public class MagicRsaPublicKey {
 
   /**
    * Public constructor.
+   *
    * @param magicKey the serialized key (of the form RSA.modulus.exponent).
    */
   public MagicRsaPublicKey(String magicKey) {
     this.publicKey = parseKey(magicKey);
   }
 
-  /**
-   * Returns the public key represented by the "magic" serialized key.
-   */
+  /** Returns the public key represented by the "magic" serialized key. */
   public PublicKey getKey() {
     return publicKey;
   }

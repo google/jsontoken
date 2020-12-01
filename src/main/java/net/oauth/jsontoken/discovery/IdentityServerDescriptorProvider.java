@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +12,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.discovery;
 
 import java.net.URI;
 
 /**
- * A {@link ServerDescriptorProvider} that returns the issuer id as the server
- * descriptor. If a JSON Token issuer uses their own server descriptor as their
- * issuer id, then the JSON Token verifier would use this implementation of
- * {@link ServerDescriptorProvider} with the {@link DefaultPublicKeyLocator}.
+ * A {@link ServerDescriptorProvider} that returns the issuer id as the server descriptor. If a JSON
+ * Token issuer uses their own server descriptor as their issuer id, then the JSON Token verifier
+ * would use this implementation of {@link ServerDescriptorProvider} with the {@link
+ * DefaultPublicKeyLocator}.
  *
- * For example, some OAuth Servers might use their Client's server descriptors
- * as client_ids, and then use this implementation of {@link ServerDescriptorProvider}
- * with the {@link DefaultPublicKeyLocator}.
+ * <p>For example, some OAuth Servers might use their Client's server descriptors as client_ids, and
+ * then use this implementation of {@link ServerDescriptorProvider} with the {@link
+ * DefaultPublicKeyLocator}.
  */
 public class IdentityServerDescriptorProvider implements ServerDescriptorProvider {
 
