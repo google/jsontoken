@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken;
 
-import org.joda.time.Instant;
+import java.time.Instant;
 
-/**
- * Clock interface.
- */
+/** Clock interface. */
 public interface Clock {
 
-  /**
-   * Returns current time.
-   */
+  /** Returns current time. */
   Instant now();
 
   /**
-   * Determines whether the current time falls within the interval defined by the
-   * start and intervalLength parameters. Implementations are free to fudge this a
-   * little bit to take into account possible clock skew.
+   * Determines whether the current time falls within the interval defined by {@code start} and
+   * {@code end}. Implementations are free to fudge this a little bit to take into account possible
+   * clock skew.
    */
   boolean isCurrentTimeInInterval(Instant start, Instant end);
 }

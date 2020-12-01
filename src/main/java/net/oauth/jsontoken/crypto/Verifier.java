@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
 
 import java.security.SignatureException;
 
-/**
- * Interface that a JSON Token verifier has to implement.
- */
+/** Interface that a JSON Token verifier has to implement. */
 public interface Verifier {
 
   /**
    * Verifies a signature on an array of bytes.
+   *
    * @param source The bytes that were signed.
    * @param signature The signature on the bytes.
    * @throws SignatureException If the signature doesn't match, or if some other error occurred.
    */
-  public void verifySignature(byte[] source, byte[] signature) throws SignatureException;
-
+  void verifySignature(byte[] source, byte[] signature) throws SignatureException;
 }

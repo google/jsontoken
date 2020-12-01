@@ -20,5 +20,4 @@ public final class InvalidJsonTokenException extends Exception {
   public ErrorCode getErrorCode() {
     return errorCode;
   }
-
 }

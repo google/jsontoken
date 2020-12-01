@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +12,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.discovery;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-
-import net.oauth.jsontoken.crypto.MagicRsaPublicKey;
-
 import java.security.PublicKey;
 import java.util.Map;
+import net.oauth.jsontoken.crypto.MagicRsaPublicKey;
 
 /**
- * Implementation of the {@link ServerInfo} interface that assumes the
- * server info document is in JSON format. It can parse such a JSON-formatted
- * server info document and exposes its contents through the requisite
- * methods of the {@link ServerInfo} interface.
+ * Implementation of the {@link ServerInfo} interface that assumes the server info document is in
+ * JSON format. It can parse such a JSON-formatted server info document and exposes its contents
+ * through the requisite methods of the {@link ServerInfo} interface.
  */
 public class JsonServerInfo implements ServerInfo {
 
@@ -37,8 +33,8 @@ public class JsonServerInfo implements ServerInfo {
   private final Map<String, String> verificationKeys = Maps.newHashMap();
 
   /**
-   * Parses a JSON-formatted server info document and returns it as a
-   * {@link JsonServerInfo} object.
+   * Parses a JSON-formatted server info document and returns it as a {@link JsonServerInfo} object.
+   *
    * @param json the contents of the JSON-formatted server info document.
    */
   public static JsonServerInfo getDocument(String json) {

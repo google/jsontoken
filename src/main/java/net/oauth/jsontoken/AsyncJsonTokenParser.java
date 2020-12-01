@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken;
 
@@ -36,8 +35,8 @@ import net.oauth.jsontoken.exceptions.ErrorCode;
 import net.oauth.jsontoken.exceptions.InvalidJsonTokenException;
 
 /**
- * The asynchronous counterpart of {@link JsonTokenParser}.
- * Class that parses and verifies JSON Tokens asynchronously.
+ * The asynchronous counterpart of {@link JsonTokenParser}. Class that parses and verifies JSON
+ * Tokens asynchronously.
  */
 public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   private final AsyncVerifierProviders asyncVerifierProviders;
@@ -47,8 +46,8 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
    * Creates a new {@link AsyncJsonTokenParser}.
    *
    * @param clock a clock object that will decide whether a given token is currently valid or not.
-   * @param asyncVerifierProviders an object that provides signature verifiers asynchronously
-   *   based on a signature algorithm, the signer, and key ids.
+   * @param asyncVerifierProviders an object that provides signature verifiers asynchronously based
+   *     on a signature algorithm, the signer, and key ids.
    * @param executor an executor to run the tasks before and after getting the verifiers
    * @param checkers an array of checkers that validates the parameters in the JSON token.
    */
@@ -63,29 +62,22 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Verifies that the jsonToken has a valid signature and valid standard claims
-   * (iat, exp). Uses {@link AsyncVerifierProviders} to obtain the secret key.
-   * This method is not expected to throw exceptions when returning a future. However,
-   * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} is an {@link InvalidJsonTokenException}
-   * with an error code of:
+   * Verifies that the jsonToken has a valid signature and valid standard claims (iat, exp). Uses
+   * {@link AsyncVerifierProviders} to obtain the secret key. This method is not expected to throw
+   * exceptions when returning a future. However, when getting the result of the future, an {@link
+   * ExecutionException} may be thrown in which {@link ExecutionException#getCause()} is an {@link
+   * InvalidJsonTokenException} with an error code of:
+   *
    * <ul>
-   *   <li>{@link ErrorCode#BAD_HEADER}:
-   *     if the header does not have all of the required parameters</li>
-   *   <li>{@link ErrorCode#BAD_SIGNATURE}:
-   *     if the signature is invalid</li>
-   *   <li>{@link ErrorCode#BAD_TIME_RANGE}:
-   *     if the IAT is after EXP or the token is in the future</li>
-   *   <li>{@link ErrorCode#EXPIRED_TOKEN}:
-   *     if the token is expired</li>
-   *   <li>{@link ErrorCode#MALFORMED_TOKEN_STRING}:
-   *     if the tokenString is not a properly formatted JWT</li>
-   *   <li>{@link ErrorCode#NO_VERIFIER}:
-   *     if there is no valid verifier for the (issuer, keyId) pair</li>
-   *   <li>{@link ErrorCode#UNKNOWN}:
-   *     if any of the checkers fail</li>
-   *   <li>{@link ErrorCode#UNSUPPORTED_ALGORITHM}:
-   *     if the signature algorithm is unsupported</li>
+   *   <li>{@link ErrorCode#BAD_HEADER}: if the header does not have all of the required parameters
+   *   <li>{@link ErrorCode#BAD_SIGNATURE}: if the signature is invalid
+   *   <li>{@link ErrorCode#BAD_TIME_RANGE}: if the IAT is after EXP or the token is in the future
+   *   <li>{@link ErrorCode#EXPIRED_TOKEN}: if the token is expired
+   *   <li>{@link ErrorCode#MALFORMED_TOKEN_STRING}: if the tokenString is not a properly formatted
+   *       JWT
+   *   <li>{@link ErrorCode#NO_VERIFIER}: if there is no valid verifier for the (issuer, keyId) pair
+   *   <li>{@link ErrorCode#UNKNOWN}: if any of the checkers fail
+   *   <li>{@link ErrorCode#UNSUPPORTED_ALGORITHM}: if the signature algorithm is unsupported
    * </ul>
    *
    * @param jsonToken
@@ -107,34 +99,26 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Parses and verifies a JSON Token.
-   * This method is not expected to throw exceptions when returning a future. However,
-   * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} is an {@link InvalidJsonTokenException}
-   * with an error code of:
+   * Parses and verifies a JSON Token. This method is not expected to throw exceptions when
+   * returning a future. However, when getting the result of the future, an {@link
+   * ExecutionException} may be thrown in which {@link ExecutionException#getCause()} is an {@link
+   * InvalidJsonTokenException} with an error code of:
+   *
    * <ul>
-   *   <li>{@link ErrorCode#BAD_HEADER}
-   *     if the header does not have all of the required parameters</li>
-   *   <li>{@link ErrorCode#BAD_SIGNATURE}
-   *     if the signature is invalid</li>
-   *   <li>{@link ErrorCode#BAD_TIME_RANGE}
-   *     if the IAT is after EXP or the token is in the future</li>
-   *   <li>{@link ErrorCode#EXPIRED_TOKEN}
-   *     if the token is expired</li>
-   *   <li>{@link ErrorCode#MALFORMED_TOKEN_STRING}
-   *     if the tokenString is not a properly formed JWT</li>
-   *   <li>{@link ErrorCode#NO_VERIFIER}
-   *     if there is no valid verifier for the (issuer, keyId) pair</li>
-   *   <li>{@link ErrorCode#UNKNOWN}
-   *     if any of the checkers fail</li>
-   *   <li>{@link ErrorCode#UNSUPPORTED_ALGORITHM}
-   *     if the signature algorithm is unsupported</li>
+   *   <li>{@link ErrorCode#BAD_HEADER} if the header does not have all of the required parameters
+   *   <li>{@link ErrorCode#BAD_SIGNATURE} if the signature is invalid
+   *   <li>{@link ErrorCode#BAD_TIME_RANGE} if the IAT is after EXP or the token is in the future
+   *   <li>{@link ErrorCode#EXPIRED_TOKEN} if the token is expired
+   *   <li>{@link ErrorCode#MALFORMED_TOKEN_STRING} if the tokenString is not a properly formed JWT
+   *   <li>{@link ErrorCode#NO_VERIFIER} if there is no valid verifier for the (issuer, keyId) pair
+   *   <li>{@link ErrorCode#UNKNOWN} if any of the checkers fail
+   *   <li>{@link ErrorCode#UNSUPPORTED_ALGORITHM} if the signature algorithm is unsupported
    * </ul>
    *
    * @param tokenString the serialized token that is to parsed and verified.
    * @return a {@link ListenableFuture} that will return the deserialized {@link JsonObject},
-   * suitable for passing to the constructor of {@link JsonToken}
-   * or equivalent constructor of {@link JsonToken} subclasses.
+   *     suitable for passing to the constructor of {@link JsonToken} or equivalent constructor of
+   *     {@link JsonToken} subclasses.
    */
   @Nonnull
   public ListenableFuture<JsonToken> verifyAndDeserialize(String tokenString) {
@@ -151,58 +135,54 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Decodes the JWT token string into a JsonToken object. Does not perform
-   * any validation of headers or claims.
-   * Identical to {@link AbstractJsonTokenParser#deserializeInternal(String)},
+   * Decodes the JWT token string into a JsonToken object. Does not perform any validation of
+   * headers or claims. Identical to {@link AbstractJsonTokenParser#deserializeInternal(String)},
    * except exceptions are caught and rethrown as {@link InvalidJsonTokenException}.
    *
    * @param tokenString The original encoded representation of a JWT
    * @return Unverified contents of the JWT as a JsonToken
-   * @throws InvalidJsonTokenException with {@link ErrorCode#MALFORMED_TOKEN_STRING}
-   *   if the tokenString is not a properly formatted JWT.
+   * @throws InvalidJsonTokenException with {@link ErrorCode#MALFORMED_TOKEN_STRING} if the
+   *     tokenString is not a properly formatted JWT.
    */
   public JsonToken deserialize(String tokenString) throws InvalidJsonTokenException {
     return mapExceptions(() -> deserializeInternal(tokenString));
   }
 
   /**
-   * Verifies that the jsonToken has a valid signature and valid standard claims
-   * (iat, exp). Does not need VerifierProviders because verifiers are passed in
-   * directly.
-   * Identical to {@link AbstractJsonTokenParser#verifyInternal(JsonToken, List)},
-   * except exceptions are caught and rethrown as {@link InvalidJsonTokenException}.
+   * Verifies that the jsonToken has a valid signature and valid standard claims (iat, exp). Does
+   * not need VerifierProviders because verifiers are passed in directly. Identical to {@link
+   * AbstractJsonTokenParser#verifyInternal(JsonToken, List)}, except exceptions are caught and
+   * rethrown as {@link InvalidJsonTokenException}.
    *
    * @param jsonToken the token to verify
    * @throws InvalidJsonTokenException with the error code
-   * <ul>
-   *   <li>{@link ErrorCode#BAD_SIGNATURE}
-   *     if the signature is invalid</li>
-   *   <li>{@link ErrorCode#BAD_TIME_RANGE}
-   *     if the IAT is after EXP or the token is in the future</li>
-   *   <li>{@link ErrorCode#MALFORMED_TOKEN_STRING}
-   *     if the tokenString is not a properly formed JWT</li>
-   *   <li>{@link ErrorCode#UNKNOWN}
-   *     if any of the checkers fail</li>
-   * </ul>
+   *     <ul>
+   *       <li>{@link ErrorCode#BAD_SIGNATURE} if the signature is invalid
+   *       <li>{@link ErrorCode#BAD_TIME_RANGE} if the IAT is after EXP or the token is in the
+   *           future
+   *       <li>{@link ErrorCode#MALFORMED_TOKEN_STRING} if the tokenString is not a properly formed
+   *           JWT
+   *       <li>{@link ErrorCode#UNKNOWN} if any of the checkers fail
+   *     </ul>
    */
   public void verify(JsonToken jsonToken, List<Verifier> verifiers)
       throws InvalidJsonTokenException {
-    mapExceptions(() -> {
-      verifyInternal(jsonToken, verifiers);
-      return null;
-    });
+    mapExceptions(
+        () -> {
+          verifyInternal(jsonToken, verifiers);
+          return null;
+        });
   }
 
   /**
-   * Verifies that a JSON Web Token's signature is valid.
-   * Identical to {@link AbstractJsonTokenParser#signatureIsValidInternal(String, List)},
-   * except exceptions are caught and rethrown as {@link InvalidJsonTokenException}.
+   * Verifies that a JSON Web Token's signature is valid. Identical to {@link
+   * AbstractJsonTokenParser#signatureIsValidInternal(String, List)}, except exceptions are caught
+   * and rethrown as {@link InvalidJsonTokenException}.
    *
    * @param tokenString the encoded and signed JSON Web Token to verify.
-   * @param verifiers used to verify the signature. These usually encapsulate
-   *   secret keys.
-   * @throws InvalidJsonTokenException with {@link ErrorCode#MALFORMED_TOKEN_STRING}
-   *   if the tokenString is not a properly formatted JWT.
+   * @param verifiers used to verify the signature. These usually encapsulate secret keys.
+   * @throws InvalidJsonTokenException with {@link ErrorCode#MALFORMED_TOKEN_STRING} if the
+   *     tokenString is not a properly formatted JWT.
    */
   public boolean signatureIsValid(String tokenString, List<Verifier> verifiers)
       throws InvalidJsonTokenException {
@@ -210,19 +190,15 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Use {@link AsyncVerifierProviders} to get future that will return a list of verifiers
-   * for this token.
-   * This method is not expected to throw exceptions when returning a future. However,
-   * when getting the result of the future, an {@link ExecutionException} may be thrown
-   * in which {@link ExecutionException#getCause()} is an {@link InvalidJsonTokenException}
-   * with an error code of:
+   * Use {@link AsyncVerifierProviders} to get future that will return a list of verifiers for this
+   * token. This method is not expected to throw exceptions when returning a future. However, when
+   * getting the result of the future, an {@link ExecutionException} may be thrown in which {@link
+   * ExecutionException#getCause()} is an {@link InvalidJsonTokenException} with an error code of:
+   *
    * <ul>
-   *   <li>{@link ErrorCode#BAD_HEADER}
-   *     if the header does not have all of the required parameters</li>
-   *   <li>{@link ErrorCode#NO_VERIFIER}
-   *     if there is no valid verifier for the (issuer, keyId) pair</li>
-   *   <li>{@link ErrorCode#UNSUPPORTED_ALGORITHM}
-   *     if the signature algorithm is unsupported</li>
+   *   <li>{@link ErrorCode#BAD_HEADER} if the header does not have all of the required parameters
+   *   <li>{@link ErrorCode#NO_VERIFIER} if there is no valid verifier for the (issuer, keyId) pair
+   *   <li>{@link ErrorCode#UNSUPPORTED_ALGORITHM} if the signature algorithm is unsupported
    * </ul>
    *
    * @param jsonToken
@@ -262,8 +238,8 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Remaps exceptions, when applicable, to {@link InvalidJsonTokenException} for improved
-   * exception handling in the asynchronous parser. Otherwise, the original exception is returned.
+   * Remaps exceptions, when applicable, to {@link InvalidJsonTokenException} for improved exception
+   * handling in the asynchronous parser. Otherwise, the original exception is returned.
    */
   private Exception mapException(Exception originalException) {
     Throwable cause = originalException.getCause();
@@ -289,8 +265,8 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Rethrows any {@link SignatureException}, any {@link RuntimeException}s, or any
-   * {@link Exception} where {@link Exception#getCause()} is {@link InvalidJsonTokenException}.
+   * Rethrows any {@link SignatureException}, any {@link RuntimeException}s, or any {@link
+   * Exception} where {@link Exception#getCause()} is {@link InvalidJsonTokenException}.
    */
   private <T> T mapExceptions(Callable<T> callable) throws InvalidJsonTokenException {
     try {
@@ -309,14 +285,16 @@ public final class AsyncJsonTokenParser extends AbstractJsonTokenParser {
   }
 
   /**
-   * Catches any failed futures and returns a new future with a mapped exception.
-   * Unlike {@link #mapExceptions(Callable)}, this function supports all exceptions.
+   * Catches any failed futures and returns a new future with a mapped exception. Unlike {@link
+   * #mapExceptions(Callable)}, this function supports all exceptions.
    */
   private <T> ListenableFuture<T> mapExceptions(ListenableFuture<T> result) {
-    return Futures.catchingAsync(result, Exception.class,
+    return Futures.catchingAsync(
+        result,
+        Exception.class,
         exception -> {
           throw mapException(exception);
-        }, executor);
+        },
+        executor);
   }
-
 }

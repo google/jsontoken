@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2012 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
 
 import static org.junit.Assert.assertThrows;
 
-import junit.framework.TestCase;
 import java.security.SignatureException;
+import junit.framework.TestCase;
 
-/**
- * Basic unit tests for the {@link HmacSHA256Verifier} class.
- */
+/** Basic unit tests for the {@link HmacSHA256Verifier} class. */
 public class HmacSHA256VerifierTest extends TestCase {
   private static final byte[] SYMMETRIC_KEY = "kjdhasdkjhaskdjhaskdjhaskdjh".getBytes();
   private static final byte[] SOURCE = "randomdatatobesignedfortest".getBytes();
@@ -44,9 +41,6 @@ public class HmacSHA256VerifierTest extends TestCase {
     byte[] signature = signer.sign(SOURCE);
     signature[0] ^= 1;
 
-    assertThrows(
-        SignatureException.class,
-        () -> verifier.verifySignature(SOURCE, signature)
-    );
+    assertThrows(SignatureException.class, () -> verifier.verifySignature(SOURCE, signature));
   }
 }

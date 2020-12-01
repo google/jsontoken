@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken;
 
@@ -22,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.security.SignatureException;
+import java.time.Duration;
 import java.util.regex.Pattern;
 import net.oauth.jsontoken.crypto.RsaSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -45,8 +45,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertThrowsWithErrorCode(
         IllegalArgumentException.class,
         ErrorCode.UNSUPPORTED_ALGORITHM,
-        () -> parser.verify(checkToken)
-    );
+        () -> parser.verify(checkToken));
   }
 
   public void testVerify_noVerifiers() throws Exception {
@@ -58,10 +57,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
 
     assertThrowsWithErrorCode(
-        IllegalStateException.class,
-        ErrorCode.NO_VERIFIER,
-        () -> parser.verify(checkToken)
-    );
+        IllegalStateException.class, ErrorCode.NO_VERIFIER, () -> parser.verify(checkToken));
   }
 
   public void testVerify_noProviders() throws Exception {
@@ -69,10 +65,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonTokenParser parser = getJsonTokenParser(noProviders, new AlwaysPassChecker());
     JsonToken checkToken = naiveDeserialize(TOKEN_STRING);
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> parser.verify(checkToken)
-    );
+    assertThrows(IllegalArgumentException.class, () -> parser.verify(checkToken));
   }
 
   public void testVerifyAndDeserialize_valid() throws Exception {
@@ -87,16 +80,12 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertThrowsWithErrorCode(
         IllegalStateException.class,
         ErrorCode.MALFORMED_TOKEN_STRING,
-        () -> parser.verifyAndDeserialize(TOKEN_STRING_2PARTS)
-    );
+        () -> parser.verifyAndDeserialize(TOKEN_STRING_2PARTS));
   }
 
   public void testVerifyAndDeserialize_verifyFail() throws Exception {
     JsonTokenParser parser = getJsonTokenParser();
-    assertThrows(
-        SignatureException.class,
-        () -> parser.verifyAndDeserialize(TOKEN_STRING_BAD_SIG)
-    );
+    assertThrows(SignatureException.class, () -> parser.verifyAndDeserialize(TOKEN_STRING_BAD_SIG));
   }
 
   public void testVerifyAndDeserialize_tokenFromRuby() throws Exception {
@@ -114,7 +103,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     JsonToken token = new JsonToken(signer, clock);
     token.setParam("bar", 15);
     token.setParam("foo", "some value");
-    token.setExpiration(clock.now().withDurationAdded(60, 1));
+    token.setExpiration(clock.now().plus(Duration.ofMillis(60)));
 
     String tokenString = token.serializeAndSign();
 
@@ -127,9 +116,12 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
 
     // now test what happens if we tamper with the token
-    JsonObject payload = new JsonParser().parse(
-        StringUtils.newStringUtf8(Base64.decodeBase64(tokenString.split(Pattern.quote("."))[1])))
-        .getAsJsonObject();
+    JsonObject payload =
+        new JsonParser()
+            .parse(
+                StringUtils.newStringUtf8(
+                    Base64.decodeBase64(tokenString.split(Pattern.quote("."))[1])))
+            .getAsJsonObject();
     payload.remove("bar");
     payload.addProperty("bar", 14);
     String payloadString = new Gson().toJson(payload);
@@ -139,10 +131,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     String tamperedToken = parts[0] + "." + parts[1] + "." + parts[2];
 
-    assertThrows(
-        SignatureException.class,
-        () -> parser.verifyAndDeserialize(tamperedToken)
-    );
+    assertThrows(SignatureException.class, () -> parser.verifyAndDeserialize(tamperedToken));
   }
 
   private JsonTokenParser getJsonTokenParser() {
@@ -152,5 +141,4 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   private JsonTokenParser getJsonTokenParser(VerifierProviders providers, Checker... checkers) {
     return new JsonTokenParser(clock, providers, checkers);
   }
-
 }

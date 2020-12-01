@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken;
 
 import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonObject;
+import java.security.SignatureException;
+import java.time.Duration;
 import net.oauth.jsontoken.crypto.HmacSHA256Signer;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
-import org.joda.time.Duration;
-
-import java.security.SignatureException;
 
 public class JsonTokenTest extends JsonTokenTestBase {
 
-  private static final String TOKEN_STRING_NULL_FIELDS = "eyJhbGciOiJIUzI1NiJ9.eyJoZWxsbyI6IndvcmxkIn0.URnYdSXdAAEukebqZgMq6oFjK4E9cEZlfvO8tBe_WeA";
-  private static final String TOKEN_STRING_EMPTY_PAYLOAD = "eyJhbGciOiJIUzI1NiJ9.e30.XmNK3GpH3Ys_7wsYBfq4C3M6goz71I7dTgUkuIa5lyQ";
+  private static final String TOKEN_STRING_NULL_FIELDS =
+      "eyJhbGciOiJIUzI1NiJ9.eyJoZWxsbyI6IndvcmxkIn0.URnYdSXdAAEukebqZgMq6oFjK4E9cEZlfvO8tBe_WeA";
+  private static final String TOKEN_STRING_EMPTY_PAYLOAD =
+      "eyJhbGciOiJIUzI1NiJ9.e30.XmNK3GpH3Ys_7wsYBfq4C3M6goz71I7dTgUkuIa5lyQ";
 
   public void testSignAndSerialize() throws Exception {
     HmacSHA256Signer signer = new HmacSHA256Signer("google.com", "key2", SYMMETRIC_KEY);
@@ -38,7 +38,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
     token.setParam("foo", "some value");
     token.setAudience("http://www.google.com");
     token.setIssuedAt(clock.now());
-    token.setExpiration(clock.now().plus(Duration.standardSeconds(1)));
+    token.setExpiration(clock.now().plus(Duration.ofSeconds(1)));
 
     assertEquals(TOKEN_STRING, token.serializeAndSign());
   }
@@ -60,10 +60,7 @@ public class JsonTokenTest extends JsonTokenTestBase {
 
   public void testSignAndSerialize_tokenFromJson() throws Exception {
     JsonToken token = new JsonToken(getFullHeader(), getFullPayload(), clock, TOKEN_STRING);
-    assertThrows(
-        SignatureException.class,
-        () -> token.serializeAndSign()
-    );
+    assertThrows(SignatureException.class, () -> token.serializeAndSign());
   }
 
   public void testConstructFromJson() throws Exception {
@@ -128,5 +125,4 @@ public class JsonTokenTest extends JsonTokenTestBase {
     payload.addProperty(JsonToken.EXPIRATION, 1276669723);
     return payload;
   }
-
 }

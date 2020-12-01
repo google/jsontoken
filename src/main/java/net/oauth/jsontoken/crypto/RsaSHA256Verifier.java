@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
 
@@ -22,9 +21,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 
-/**
- * A verifier that can verify signatures on byte arrays using RSA and SHA-256.
- */
+/** A verifier that can verify signatures on byte arrays using RSA and SHA-256. */
 public class RsaSHA256Verifier implements Verifier {
 
   private final PublicKey verificationKey;
@@ -32,6 +29,7 @@ public class RsaSHA256Verifier implements Verifier {
 
   /**
    * Public Constructor.
+   *
    * @param verificationKey the key used to verify the signature.
    */
   public RsaSHA256Verifier(PublicKey verificationKey) {

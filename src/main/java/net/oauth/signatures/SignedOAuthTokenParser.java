@@ -1,5 +1,4 @@
-
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,27 +12,21 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.signatures;
 
+import com.google.gson.JsonParseException;
 import java.security.SignatureException;
 import java.util.Enumeration;
-
 import javax.servlet.http.HttpServletRequest;
-
-import com.google.gson.JsonParseException;
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.SystemClock;
 import net.oauth.jsontoken.discovery.VerifierProviders;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicHeaderValueParser;
 
-/**
- * Parses signed OAuth tokens.
- */
+/** Parses signed OAuth tokens. */
 public class SignedOAuthTokenParser {
 
   private final VerifierProviders locators;
@@ -43,10 +36,10 @@ public class SignedOAuthTokenParser {
   /**
    * Public constructor.
    *
-   * @param locators an object that provides signature verifiers, based signature algorithm,
-   *   as well as on the signer and key ids.
-   * @param nonceChecker An optional nonce checker. If not null, then the parser will
-   *   call the nonce checker to make sure that the nonce has not been re-used.
+   * @param locators an object that provides signature verifiers, based signature algorithm, as well
+   *     as on the signer and key ids.
+   * @param nonceChecker An optional nonce checker. If not null, then the parser will call the nonce
+   *     checker to make sure that the nonce has not been re-used.
    */
   public SignedOAuthTokenParser(VerifierProviders locators, NonceChecker nonceChecker) {
     this(locators, nonceChecker, new SystemClock());
@@ -55,15 +48,16 @@ public class SignedOAuthTokenParser {
   /**
    * Public constructor.
    *
-   * @param locators an object that provides signature verifiers, based signature algorithm,
-   *   as well as on the signer and key ids.
-   * @param nonceChecker An optional nonce checker. If not null, then the parser will
-   *   call the nonce checker to make sure that the nonce has not been re-used.
-   * @param clock a clock that has implemented the
-   *   {@link Clock#isCurrentTimeInInterval(org.joda.time.Instant, org.joda.time.Duration)} method
-   *   with a suitable slack to account for clock skew when checking token validity.
+   * @param locators an object that provides signature verifiers, based signature algorithm, as well
+   *     as on the signer and key ids.
+   * @param nonceChecker An optional nonce checker. If not null, then the parser will call the nonce
+   *     checker to make sure that the nonce has not been re-used.
+   * @param clock a clock that has implemented the {@link
+   *     Clock#isCurrentTimeInInterval(org.joda.time.Instant, org.joda.time.Duration)} method with a
+   *     suitable slack to account for clock skew when checking token validity.
    */
-  public SignedOAuthTokenParser(VerifierProviders locators, NonceChecker nonceChecker, Clock clock) {
+  public SignedOAuthTokenParser(
+      VerifierProviders locators, NonceChecker nonceChecker, Clock clock) {
     this.locators = locators;
     this.nonceChecker = nonceChecker;
     this.clock = clock;
@@ -71,15 +65,16 @@ public class SignedOAuthTokenParser {
 
   /**
    * Extracts the signed OAuth token from the Authorization header and then verifies it.
+   *
    * @param request the {@link HttpServletRequest} that contains the signed OAuth token in the
-   *   Authorization header.
+   *     Authorization header.
    * @return the signed OAuth token.
-   * @throws SignatureException if the signature doesn't check out, or if authentication fails
-   *   for other reason (missing Authorization header, etc.).
+   * @throws SignatureException if the signature doesn't check out, or if authentication fails for
+   *     other reason (missing Authorization header, etc.).
    * @throws JsonParseException if the header or payload of tokenString is corrupted
    * @throws IllegalArgumentException if the signature algorithm is not supported
-   * @throws IllegalStateException if tokenString is not a properly formatted JWT
-   *   or if there is no valid verifier for the issuer
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT or if there is no
+   *     valid verifier for the issuer
    */
   public SignedOAuthToken parseToken(HttpServletRequest request) throws SignatureException {
 
@@ -87,10 +82,11 @@ public class SignedOAuthTokenParser {
     String header = getAuthHeader(request);
 
     if (header == null) {
-       throw new SignatureException("missing Authorization header of type 'Token'");
+      throw new SignatureException("missing Authorization header of type 'Token'");
     }
 
-    String postFix = header.substring(0, SignedOAuthToken.AUTH_METHOD.length()); // read past "Token"
+    String postFix =
+        header.substring(0, SignedOAuthToken.AUTH_METHOD.length()); // read past "Token"
     NameValuePair nvp = BasicHeaderValueParser.parseNameValuePair(postFix.trim(), null);
 
     if (nvp == null) {
@@ -120,6 +116,7 @@ public class SignedOAuthTokenParser {
   /**
    * Parses the provided signed OAuth token, and then verifies it against the provided HTTP method
    * and audience URI (in addition to checking the signature, and validity period).
+   *
    * @param tokenString the signed OAuth token (in serialized form).
    * @param method the HTTP method that was used when the token was exercised.
    * @param uri the URI against which the token was exercised.
@@ -127,11 +124,13 @@ public class SignedOAuthTokenParser {
    * @throws SignatureException if the signature (or anything else) doesn't check out.
    * @throws JsonParseException if the header or payload of tokenString is corrupted
    * @throws IllegalArgumentException if the signature algorithm is not supported
-   * @throws IllegalStateException if tokenString is not a properly formatted JWT
-   *   or if there is no valid verifier for the issuer
+   * @throws IllegalStateException if tokenString is not a properly formatted JWT or if there is no
+   *     valid verifier for the issuer
    */
-  public SignedOAuthToken parseToken(String tokenString, String method, String uri) throws SignatureException {
-    JsonTokenParser parser = new JsonTokenParser(clock, locators, new SignedTokenAudienceChecker(uri));
+  public SignedOAuthToken parseToken(String tokenString, String method, String uri)
+      throws SignatureException {
+    JsonTokenParser parser =
+        new JsonTokenParser(clock, locators, new SignedTokenAudienceChecker(uri));
 
     SignedOAuthToken token = new SignedOAuthToken(parser.verifyAndDeserialize(tokenString));
 

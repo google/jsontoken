@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +12,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
 
-/**
- * Superclass for {@link Signer}s.
- */
+/** Superclass for {@link Signer}s. */
 public abstract class AbstractSigner implements Signer {
 
   private final String issuer;
@@ -28,7 +25,7 @@ public abstract class AbstractSigner implements Signer {
    * Caller can suggest which key should be used for signing by passing 'suggestedKeyId' to signer.
    * It's up to signer whether to use the suggestedKeyId or not. The final signing key id can be
    * retrieved by calling getKeyId().
-   * 
+   *
    * @param issuer
    * @param suggestedKeyId
    */
@@ -36,7 +33,7 @@ public abstract class AbstractSigner implements Signer {
     this.issuer = issuer;
     this.keyId = suggestedKeyId;
   }
-  
+
   protected void setSigningKeyId(String keyId) {
     this.keyId = keyId;
   }

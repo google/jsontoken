@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,25 +12,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.signatures;
 
+import com.google.common.base.Preconditions;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
-
-import org.apache.commons.codec.binary.Base64;
-
 import net.oauth.jsontoken.Clock;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.crypto.Signer;
+import org.apache.commons.codec.binary.Base64;
 
-import com.google.common.base.Preconditions;
-
-/**
- * A signed OAuth token.
- */
+/** A signed OAuth token. */
 public class SignedOAuthToken extends JsonToken {
 
   public static final String AUTH_METHOD = "Token";
@@ -41,7 +35,7 @@ public class SignedOAuthToken extends JsonToken {
   public static final String BODY_HASH = "body_hash";
   public static final String OAUTH_TOKEN = "token";
   public static final String NONCE = "nonce";
-  
+
   public SignedOAuthToken(Signer signer, Clock clock) {
     super(signer, clock);
   }
@@ -49,7 +43,7 @@ public class SignedOAuthToken extends JsonToken {
   public SignedOAuthToken(Signer signer) {
     super(signer);
   }
-  
+
   public SignedOAuthToken(JsonToken token) {
     super(token.getPayloadAsJsonObject());
   }
@@ -120,4 +114,3 @@ public class SignedOAuthToken extends JsonToken {
     return Base64.encodeBase64URLSafeString(hash);
   }
 }
-

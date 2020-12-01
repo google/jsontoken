@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.discovery;
 
 import java.security.PublicKey;
 
 /**
- * Represents the document located at a server's "server descriptor" URL.
- * Such a "server info" document contains, among other things, the public
- * verification keys that can be used to verify JSON Tokens issued by this
- * server.
+ * Represents the document located at a server's "server descriptor" URL. Such a "server info"
+ * document contains, among other things, the public verification keys that can be used to verify
+ * JSON Tokens issued by this server.
  */
 public interface ServerInfo {
 
-  /**
-   * Returns the verification key with the given key id.
-   */
-  public PublicKey getVerificationKey(String keyId);
-
+  /** Returns the verification key with the given key id. */
+  PublicKey getVerificationKey(String keyId);
 }

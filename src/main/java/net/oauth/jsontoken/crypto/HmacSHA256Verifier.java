@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2010 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,20 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package net.oauth.jsontoken.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
-import java.util.Arrays;
 
-/**
- * A {@link Verifier} that uses HMAC-SHA256 to verify symmetric-key signatures on byte arrays.
- */
+/** A {@link Verifier} that uses HMAC-SHA256 to verify symmetric-key signatures on byte arrays. */
 public class HmacSHA256Verifier implements Verifier {
 
   private final HmacSHA256Signer signer;
 
   /**
    * Public constructor.
+   *
    * @param verificationKey the HMAC verification key to be used for signature verification.
    * @throws InvalidKeyException if the verificationKey cannot be used as an HMAC key.
    */
@@ -49,14 +46,14 @@ public class HmacSHA256Verifier implements Verifier {
   }
 
   /**
-   * Performs a byte-by-byte comparison of {@code first} and {@code second} parameters. This
-   * method will "NOT" short-circuit the comparison once it has detected a byte difference in
-   * order to defend against a "timing attack".
+   * Performs a byte-by-byte comparison of {@code first} and {@code second} parameters. This method
+   * will "NOT" short-circuit the comparison once it has detected a byte difference in order to
+   * defend against a "timing attack".
    *
    * @param first the first byte array used in the comparison
    * @param second the second byte array used in the comparison
-   * @return {@code true} if the {@code first} and {@code second} byte arrays are equal
-   *         otherwise {@code false}
+   * @return {@code true} if the {@code first} and {@code second} byte arrays are equal otherwise
+   *     {@code false}
    */
   private boolean compareBytes(byte[] first, byte[] second) {
     if (first == null || second == null) {

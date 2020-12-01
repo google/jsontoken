@@ -13,6 +13,7 @@ public class RsaSHA1Verifier implements Verifier {
 
   /**
    * Public Constructor.
+   *
    * @param verificationKey the key used to verify the signature.
    */
   public RsaSHA1Verifier(PublicKey verificationKey) {
