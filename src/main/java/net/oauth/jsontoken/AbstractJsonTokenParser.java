@@ -61,11 +61,13 @@ abstract class AbstractJsonTokenParser {
     List<String> pieces = splitTokenString(tokenString);
     String jwtHeaderSegment = pieces.get(0);
     String jwtPayloadSegment = pieces.get(1);
-    JsonParser parser = new JsonParser();
+
     JsonObject header =
-        parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment)).getAsJsonObject();
+        JsonParser.parseString(JsonTokenUtil.fromBase64ToJsonString(jwtHeaderSegment))
+            .getAsJsonObject();
     JsonObject payload =
-        parser.parse(JsonTokenUtil.fromBase64ToJsonString(jwtPayloadSegment)).getAsJsonObject();
+        JsonParser.parseString(JsonTokenUtil.fromBase64ToJsonString(jwtPayloadSegment))
+            .getAsJsonObject();
 
     return new JsonToken(header, payload, clock, tokenString);
   }

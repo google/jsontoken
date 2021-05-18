@@ -117,8 +117,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     // now test what happens if we tamper with the token
     JsonObject payload =
-        new JsonParser()
-            .parse(
+        JsonParser.parseString(
                 StringUtils.newStringUtf8(
                     Base64.decodeBase64(tokenString.split(Pattern.quote("."))[1])))
             .getAsJsonObject();
