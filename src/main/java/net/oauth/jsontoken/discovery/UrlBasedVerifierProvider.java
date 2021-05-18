@@ -50,8 +50,7 @@ public class UrlBasedVerifierProvider implements VerifierProvider {
           content.append(line + "\n");
         } while (line != null);
 
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = parser.parse(content.toString()).getAsJsonObject();
+        JsonObject jsonObject = JsonParser.parseString(content.toString()).getAsJsonObject();
         List<Verifier> verifiers = Lists.newArrayList();
 
         for (Map.Entry<String, JsonElement> cert : jsonObject.entrySet()) {

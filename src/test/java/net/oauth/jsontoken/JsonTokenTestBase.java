@@ -172,11 +172,12 @@ public abstract class JsonTokenTestBase extends TestCase {
    */
   protected JsonToken naiveDeserialize(String tokenString) {
     List<String> pieces = Splitter.on(JsonTokenUtil.DELIMITER).splitToList(tokenString);
-    JsonParser jsonParser = new JsonParser();
     JsonObject header =
-        jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0))).getAsJsonObject();
+        JsonParser.parseString(JsonTokenUtil.fromBase64ToJsonString(pieces.get(0)))
+            .getAsJsonObject();
     JsonObject payload =
-        jsonParser.parse(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1))).getAsJsonObject();
+        JsonParser.parseString(JsonTokenUtil.fromBase64ToJsonString(pieces.get(1)))
+            .getAsJsonObject();
     return new JsonToken(header, payload, clock, tokenString);
   }
 
