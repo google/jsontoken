@@ -35,15 +35,15 @@ final class JsonTokenUtil {
   }
 
   public static String convertToBase64(String source) {
-    return Base64.encodeBase64URLSafeString(StringUtils.getBytesUtf8(source));
+    return org.apache.commons.codec.binary.Base64.encodeBase64URLSafeString(StringUtils.getBytesUtf8(source));
   }
 
   public static String decodeFromBase64String(String encoded) {
-    return new String(Base64.decodeBase64(encoded));
+    return new String(org.apache.commons.codec.binary.Base64.decodeBase64(encoded));
   }
 
   public static String fromBase64ToJsonString(String source) {
-    return StringUtils.newStringUtf8(Base64.decodeBase64(source));
+    return StringUtils.newStringUtf8(org.apache.commons.codec.binary.Base64.decodeBase64(source));
   }
 
   public static String toDotFormat(String... parts) {
