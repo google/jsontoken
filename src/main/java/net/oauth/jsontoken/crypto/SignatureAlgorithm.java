@@ -17,9 +17,23 @@ package net.oauth.jsontoken.crypto;
 
 /** Enum of the signature algorithms supported by this package. */
 public enum SignatureAlgorithm {
+  /** HMAC with SHA-256 */
   HS256("SHA256"),
+  /**
+   * HMAC with SHA-1
+   *
+   * @deprecated SHA-1 is vulnerable to collision attacks
+   */
+  @Deprecated
   HS1("SHA1"),
+  /** RSA with SHA-256 */
   RS256("SHA256"),
+  /**
+   * RSA with SHA-1
+   *
+   * @deprecated SHA-1 is vulnerable to collision attacks
+   */
+  @Deprecated
   RS1("SHA1");
 
   private final String hashAlg;
