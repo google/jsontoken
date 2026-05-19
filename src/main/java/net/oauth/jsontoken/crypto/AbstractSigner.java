@@ -19,7 +19,7 @@ package net.oauth.jsontoken.crypto;
 public abstract class AbstractSigner implements Signer {
 
   private final String issuer;
-  private String keyId;
+  private volatile String keyId;
 
   /**
    * Caller can suggest which key should be used for signing by passing 'suggestedKeyId' to signer.

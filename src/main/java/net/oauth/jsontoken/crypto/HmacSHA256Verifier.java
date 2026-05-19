@@ -17,8 +17,10 @@ package net.oauth.jsontoken.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import javax.annotation.concurrent.ThreadSafe;
 
 /** A {@link Verifier} that uses HMAC-SHA256 to verify symmetric-key signatures on byte arrays. */
+@ThreadSafe
 public class HmacSHA256Verifier implements Verifier {
 
   private final HmacSHA256Signer signer;

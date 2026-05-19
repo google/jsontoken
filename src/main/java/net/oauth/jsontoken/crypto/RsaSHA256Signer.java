@@ -21,11 +21,22 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
+import javax.annotation.concurrent.ThreadSafe;
 
 /** Signer that can sign byte arrays using RSA and SHA-256. */
+@ThreadSafe
 public class RsaSHA256Signer extends AbstractSigner {
 
-  private final Signature signature;
+  private final ThreadLocal<Signature> signature =
+      ThreadLocal.withInitial(
+          () -> {
+            try {
+              return Signature.getInstance("SHA256withRSA");
+            } catch (NoSuchAlgorithmException e) {
+              throw new IllegalStateException("platform is missing RSAwithSHA256 signature alg", e);
+            }
+          });
+
   private final PrivateKey signingKey;
 
   /**
@@ -42,14 +53,7 @@ public class RsaSHA256Signer extends AbstractSigner {
     super(issuer, keyId);
 
     this.signingKey = key;
-
-    try {
-      this.signature = Signature.getInstance("SHA256withRSA");
-      this.signature.initSign(signingKey);
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException(
-          "platform is missing RSAwithSHA256 signature alg, or key is invalid", e);
-    }
+    this.signature.get().initSign(signingKey);
   }
 
   /*
@@ -67,12 +71,13 @@ public class RsaSHA256Signer extends AbstractSigner {
    */
   @Override
   public byte[] sign(byte[] source) throws SignatureException {
+    Signature sig = signature.get();
     try {
-      signature.initSign(signingKey);
+      sig.initSign(signingKey);
     } catch (InvalidKeyException e) {
-      throw new RuntimeException("key somehow became invalid since calling the constructor");
+      throw new RuntimeException("key somehow became invalid since calling the constructor", e);
     }
-    signature.update(source);
-    return signature.sign();
+    sig.update(source);
+    return sig.sign();
   }
 }
