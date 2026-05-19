@@ -17,16 +17,28 @@ package net.oauth.jsontoken.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import javax.annotation.concurrent.ThreadSafe;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 /** A signer that can sign byte arrays using HMAC-SHA256. */
+@ThreadSafe
 public class HmacSHA256Signer extends AbstractSigner {
 
   private static final String HMAC_SHA256_ALG = "HmacSHA256";
 
-  private final Mac hmac;
+  private static final ThreadLocal<Mac> hmac =
+      ThreadLocal.withInitial(
+          () -> {
+            try {
+              return Mac.getInstance(HMAC_SHA256_ALG);
+            } catch (NoSuchAlgorithmException e) {
+              throw new IllegalStateException(
+                  "cannot use Hmac256Signer on system without HmacSHA256 alg", e);
+            }
+          });
+
   private final SecretKey signingKey;
 
   /**
@@ -42,16 +54,10 @@ public class HmacSHA256Signer extends AbstractSigner {
     super(issuer, keyId);
 
     this.signingKey = new SecretKeySpec(keyBytes, HMAC_SHA256_ALG);
-    try {
-      this.hmac = Mac.getInstance(HMAC_SHA256_ALG);
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException(
-          "cannot use Hmac256Signer on system without HmacSHA256 alg", e);
-    }
 
     // just to make sure we catch invalid keys early, let's initialize the hmac and throw if
     // something goes wrong
-    hmac.init(signingKey);
+    hmac.get().init(signingKey);
   }
 
   /*
@@ -60,14 +66,15 @@ public class HmacSHA256Signer extends AbstractSigner {
    */
   @Override
   public byte[] sign(byte[] source) {
+    Mac mac = hmac.get();
     try {
-      hmac.init(signingKey);
+      mac.init(signingKey);
     } catch (InvalidKeyException e) {
       // this should not happen - we tested this in the constructor
       throw new IllegalStateException(
           "key somehow became invalid since calling the constructor", e);
     }
-    return hmac.doFinal(source);
+    return mac.doFinal(source);
   }
 
   /*

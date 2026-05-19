@@ -20,12 +20,23 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import javax.annotation.concurrent.ThreadSafe;
 
 /** A verifier that can verify signatures on byte arrays using RSA and SHA-256. */
+@ThreadSafe
 public class RsaSHA256Verifier implements Verifier {
 
+  private static final ThreadLocal<Signature> signer =
+      ThreadLocal.withInitial(
+          () -> {
+            try {
+              return Signature.getInstance("SHA256withRSA");
+            } catch (NoSuchAlgorithmException e) {
+              throw new IllegalStateException("platform is missing RSAwithSHA256 signature alg", e);
+            }
+          });
+
   private final PublicKey verificationKey;
-  private final Signature signer;
 
   /**
    * Public Constructor.
@@ -35,10 +46,7 @@ public class RsaSHA256Verifier implements Verifier {
   public RsaSHA256Verifier(PublicKey verificationKey) {
     this.verificationKey = verificationKey;
     try {
-      this.signer = Signature.getInstance("SHA256withRSA");
-      this.signer.initVerify(verificationKey);
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalStateException("platform is missing RSAwithSHA256 signature alg", e);
+      signer.get().initVerify(verificationKey);
     } catch (InvalidKeyException e) {
       throw new IllegalStateException("key is invalid", e);
     }
@@ -50,13 +58,14 @@ public class RsaSHA256Verifier implements Verifier {
    */
   @Override
   public void verifySignature(byte[] source, byte[] signature) throws SignatureException {
+    Signature sig = signer.get();
     try {
-      signer.initVerify(verificationKey);
+      sig.initVerify(verificationKey);
     } catch (InvalidKeyException e) {
-      throw new RuntimeException("key someone become invalid since calling the constructor");
+      throw new RuntimeException("key someone become invalid since calling the constructor", e);
     }
-    signer.update(source);
-    if (!signer.verify(signature)) {
+    sig.update(source);
+    if (!sig.verify(signature)) {
       throw new SignatureException("signature did not verify");
     }
   }
