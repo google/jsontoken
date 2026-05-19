@@ -27,7 +27,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class RsaSHA256Signer extends AbstractSigner {
 
-  private final ThreadLocal<Signature> signature =
+  private static final ThreadLocal<Signature> signature =
       ThreadLocal.withInitial(
           () -> {
             try {
@@ -53,7 +53,7 @@ public class RsaSHA256Signer extends AbstractSigner {
     super(issuer, keyId);
 
     this.signingKey = key;
-    this.signature.get().initSign(signingKey);
+    signature.get().initSign(signingKey);
   }
 
   /*

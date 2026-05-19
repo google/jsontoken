@@ -28,7 +28,7 @@ public class HmacSHA256Signer extends AbstractSigner {
 
   private static final String HMAC_SHA256_ALG = "HmacSHA256";
 
-  private final ThreadLocal<Mac> hmac =
+  private static final ThreadLocal<Mac> hmac =
       ThreadLocal.withInitial(
           () -> {
             try {

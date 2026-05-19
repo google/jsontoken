@@ -26,7 +26,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class RsaSHA256Verifier implements Verifier {
 
-  private final ThreadLocal<Signature> signer =
+  private static final ThreadLocal<Signature> signer =
       ThreadLocal.withInitial(
           () -> {
             try {
@@ -46,7 +46,7 @@ public class RsaSHA256Verifier implements Verifier {
   public RsaSHA256Verifier(PublicKey verificationKey) {
     this.verificationKey = verificationKey;
     try {
-      this.signer.get().initVerify(verificationKey);
+      signer.get().initVerify(verificationKey);
     } catch (InvalidKeyException e) {
       throw new IllegalStateException("key is invalid", e);
     }
