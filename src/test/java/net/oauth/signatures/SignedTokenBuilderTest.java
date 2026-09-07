@@ -23,7 +23,7 @@ public class SignedTokenBuilderTest extends JsonTokenTestBase {
 
   public void testSignature() throws Exception {
 
-    Signer signer = new RsaSHA256Signer("google.com", "key1", privateKey);
+    Signer signer = new RsaSHA256Signer("example.com", "key1", privateKey);
 
     SignedOAuthToken token = new SignedOAuthToken(signer);
     token.setMethod("GET");

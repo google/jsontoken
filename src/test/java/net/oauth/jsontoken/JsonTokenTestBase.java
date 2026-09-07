@@ -125,7 +125,7 @@ public abstract class JsonTokenTestBase extends TestCase {
 
     VerifierProvider rsaLocator =
         new DefaultPublicKeyLocator(
-            new IdentityServerDescriptorProvider(),
+            new IdentityServerDescriptorProvider("example.com"),
             uri -> JsonServerInfo.getDocument(SERVER_INFO_DOCUMENT));
 
     locators = new VerifierProviders();
