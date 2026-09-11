@@ -98,7 +98,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
   }
 
   public void testPublicKey() throws Exception {
-    RsaSHA256Signer signer = new RsaSHA256Signer("google.com", "key1", privateKey);
+    RsaSHA256Signer signer = new RsaSHA256Signer("example.com", "key1", privateKey);
 
     JsonToken token = new JsonToken(signer, clock);
     token.setParam("bar", 15);
@@ -111,7 +111,7 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
 
     JsonTokenParser parser = getJsonTokenParser();
     token = parser.verifyAndDeserialize(tokenString);
-    assertEquals("google.com", token.getIssuer());
+    assertEquals("example.com", token.getIssuer());
     assertEquals(15, token.getParamAsPrimitive("bar").getAsLong());
     assertEquals("some value", token.getParamAsPrimitive("foo").getAsString());
 
@@ -131,6 +131,22 @@ public class JsonTokenParserTest extends JsonTokenTestBase {
     String tamperedToken = parts[0] + "." + parts[1] + "." + parts[2];
 
     assertThrows(SignatureException.class, () -> parser.verifyAndDeserialize(tamperedToken));
+  }
+
+  public void testPublicKey_untrustedIssuer() throws Exception {
+    RsaSHA256Signer signer = new RsaSHA256Signer("attacker.com", "key1", privateKey);
+
+    JsonToken token = new JsonToken(signer, clock);
+    token.setParam("bar", 15);
+    token.setExpiration(clock.now().plus(Duration.ofMillis(60)));
+
+    String tokenString = token.serializeAndSign();
+
+    JsonTokenParser parser = getJsonTokenParser();
+    assertThrowsWithErrorCode(
+        IllegalStateException.class,
+        ErrorCode.NO_VERIFIER,
+        () -> parser.verifyAndDeserialize(tokenString));
   }
 
   private JsonTokenParser getJsonTokenParser() {

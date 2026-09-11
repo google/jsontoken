@@ -56,6 +56,9 @@ public class DefaultPublicKeyLocator implements VerifierProvider {
   @Override
   public List<Verifier> findVerifier(String issuer, String keyId) {
     URI serverDescriptor = descriptorProvider.getServerDescriptor(issuer);
+    if (serverDescriptor == null) {
+      return null;
+    }
     Verifier rsaVerifier =
         new RsaSHA256Verifier(
             descriptorResolver.resolve(serverDescriptor).getVerificationKey(keyId));
